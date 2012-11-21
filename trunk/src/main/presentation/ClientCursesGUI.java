@@ -5,7 +5,9 @@ import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
 
@@ -25,10 +27,12 @@ public class ClientCursesGUI extends GUI implements KeyListener
 	int curTeamIndex;
 	int activeCommand;
 	boolean showTopHalf;
+	boolean ballCarrierHasActed;
 	
 	Player currentPlayer;	//note that this is only in the mind of GUI; the data layer doesn't care which player is selected
 	
 	List<HighlightIcon> highlights;
+	Map<Integer, Point> jumpPossibilities;
 	
 	public ClientCursesGUI(Client theClient)
 	{
@@ -38,10 +42,12 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		curPlayerIndex = -1;
 		curTeamIndex = 0;
 		showTopHalf = true;
+		ballCarrierHasActed = true;
 		
 		currentPlayer = null;
 		
 		highlights = new ArrayList<HighlightIcon>();
+		jumpPossibilities = new HashMap<Integer, Point>();
 				
 		csi = new WSwingConsoleInterface("Crush! Deluxe", new Font("Crush Font", Font.BOLD, 8));
 		csi.setAutoRefresh(false);
@@ -52,14 +58,17 @@ public class ClientCursesGUI extends GUI implements KeyListener
 
 	public void keyPressed(KeyEvent arg0)
 	{
+		Player plyr = myClient.getData().getPlayer(curPlayerIndex);
+		Point curLocation = myClient.getData().getLocationOfPlayer(plyr);
+		
 		int code = arg0.getKeyCode();
 		
-		if (code == KeyEvent.VK_PAGE_UP && !showTopHalf)
+		if (code == KeyEvent.VK_PAGE_UP && !showTopHalf && highlights.isEmpty())
 		{
 			showTopHalf = true;
 			updateMap();
 		}
-		else if (code == KeyEvent.VK_PAGE_DOWN && showTopHalf)
+		else if (code == KeyEvent.VK_PAGE_DOWN && showTopHalf && highlights.isEmpty())
 		{
 			showTopHalf = false;
 			updateMap();
@@ -115,26 +124,27 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		
 		int prevCommand = activeCommand;
 		
-		if (code == KeyEvent.VK_M)
+		if (code == KeyEvent.VK_M && activeCommand != 2)
 		{
 			activeCommand = 0;
 			highlights.clear();
 		}
-		else if (code == KeyEvent.VK_C && canCurrentPlayerCheck())
+		else if (code == KeyEvent.VK_C && canCurrentPlayerCheck() && activeCommand != 2)
 		{
 			activeCommand = 1;
+			zoomToLocation(curLocation.x);
 			setHighlightsForCheck();
 		}		
-		else if (code == KeyEvent.VK_J && canCurrentPlayerJump())
+		else if (code == KeyEvent.VK_J && canCurrentPlayerJump() && activeCommand != 2)
 		{
-			System.out.println("PLAYER IS JUMPING");
-			
 			activeCommand = 2;
+			zoomToLocation(curLocation.x);
 			setHighlightsForJump();
 		}
-		else if (code == KeyEvent.VK_H && canCurrentPlayerHandoff())
+		else if (code == KeyEvent.VK_H && canCurrentPlayerHandoff() && activeCommand != 2)
 		{
 			activeCommand = 3;
+			zoomToLocation(curLocation.x);
 			setHighlightsForHandoff();
 			
 		}
@@ -186,6 +196,23 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		{
 			handleDirection(-1, 1);
 		}
+		else if (activeCommand == 2) //user pressed something while the jump overlays were set
+		{
+			System.out.println("CLIENT - KEY PRESSED WITH JUMP OVERLAYS: The key's numerical value is " + code);
+			
+			Point target = jumpPossibilities.get(code);
+			
+			if (target != null)	//there was a point corresponding to the key pressed
+			{
+				System.out.println("\tValid key pressed.");
+				
+				Event moveEvent = Event.move(curPlayerIndex, curLocation.x + target.x, curLocation.y + target.y, false, true);
+				sendCommand(moveEvent);
+				
+				highlights.clear();
+				activeCommand = 0;
+			}
+		}
 		
 		if (activeCommand != prevCommand)	//time to display or clear some overlays
 		{
@@ -228,6 +255,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 	private void setHighlightsForJump()
 	{
 		highlights.clear();
+		jumpPossibilities.clear();
 		
 		boolean canJump[][] = new boolean[5][5];	//might make this global, then clear it after each jump
 		
@@ -307,6 +335,10 @@ public class ClientCursesGUI extends GUI implements KeyListener
 				if (canJump[i][j])
 				{
 					highlights.add(new HighlightIcon(centerX - 2 + i, centerY - 2 + j, HI_JUMP));
+					
+					Point coords = new Point(i - 2, j - 2);
+					Integer letter = highlights.size() + 64;
+					jumpPossibilities.put(letter, coords);
 				}
 			}
 		}
@@ -334,7 +366,9 @@ public class ClientCursesGUI extends GUI implements KeyListener
 					{
 						int checkOdds = HI_CHECK_EVEN;
 						
-						int dif = plyr.getAttributeWithModifiers(Player.ATT_CH) - target.getAttributeWithModifiers(Player.ATT_CH);
+						int dif = (getAssistBonus(plyr, target) + plyr.getAttributeWithModifiers(Player.ATT_CH)) - (getAssistBonus(target, plyr) + target.getAttributeWithModifiers(Player.ATT_CH));
+						
+						// TODO take assists into account when coloring the overlays
 						
 						if (dif >= 20)
 							checkOdds = HI_CHECK_GOOD;
@@ -375,6 +409,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		{
 			highlights.clear();
 			activeCommand = 0;
+			ballCarrierHasActed = false;
 			
 			curTeamIndex = myClient.getData().getCurrentTeam();
 		}
@@ -407,9 +442,78 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		}
 		else if (e.getType() == Event.EVENT_EJECT)
 		{
-			//for now, just refresh the interface to show dead statuses and such
-			curPlayerIndex = getFirstEligiblePlayer();
+			//first of all, alert the user
+			Player plyr = myClient.getData().getPlayer(e.flags[0]);
+			int duration = e.flags[1];
+			int type = e.flags[2];
+			
+			String name = plyr.name;
+			int team = myClient.getData().getTeamOfPlayer(plyr);
+			
+			int messageType = JOptionPane.INFORMATION_MESSAGE;
+			String title = "";
+			String message = "";
+			
+			String[] attributes = {" Action Points (AP)",
+								   " Checking (CH)",
+								   " Strength (ST)",
+								   " Toughness (TG)",
+								   " Reflexes (RF)",
+								   " Jumping (JP)",
+								   " Hands (HD)",
+								   " Dodge (DA)"};
+			
+			if (type == Event.EJECT_BLOB)
+			{
+				title = "Mutation!";
+				message = name + " on Team " + team + " has been mutated by a teleported accident.";
+				messageType = JOptionPane.QUESTION_MESSAGE;
+			}
+			else if (type == Event.EJECT_REF)
+			{
+				title = "Ejection!";
+				message = name + " on Team " + team + " has been ejected for the following items:\n" +
+						"item1\n" +
+						"item2";
+				messageType = JOptionPane.INFORMATION_MESSAGE;
+			}
+			else if (type == Event.EJECT_TRIVIAL)
+			{
+				title = "Injury!";
+				message = name + " on Team " + team + " has been injured.\n\n" +
+						"Injury Status:\n" +
+						"Trivial";
+				messageType = JOptionPane.WARNING_MESSAGE;
+			}
+			else if (type == Event.EJECT_SERIOUS)
+			{
+				title = "Injury!";
+				message = name + " on Team " + team + " has been injured.\n\n" +
+						"Injury Status:\n" +
+						"Serious Injury\n\n" +
+						"Out for " + duration + " games.\n" +
+						"-" + e.flags[4] + attributes[e.flags[3]] + "\n" +
+						"-" + e.flags[6] + attributes[e.flags[5]];
+				messageType = JOptionPane.WARNING_MESSAGE;
+			}
+			else if (type == Event.EJECT_DEATH)
+			{
+				title = "Fatality!";
+				message = name + " on Team " + team + " has been killed.";
+				messageType = JOptionPane.ERROR_MESSAGE;
+			}
+			
+			
+			JOptionPane.showMessageDialog(null, message, title, messageType);
+			
+			//refresh the interface to show dead statuses and such
+			curPlayerIndex = getFirstEligiblePlayer();	// TODO does this not work?
+			plyr = myClient.getData().getPlayer(curPlayerIndex);
+			Point pnt = myClient.getData().getLocationOfPlayer(plyr);
+			setActivePlayer(curPlayerIndex);
+			updateMap();
 			refreshInterface();
+			zoomToLocation(pnt.x);
 		}
 		else if (e.getType() == Event.EVENT_TELE)
 		{
@@ -431,11 +535,17 @@ public class ClientCursesGUI extends GUI implements KeyListener
 			zoomToLocation(pnt.x);
 		}
 		//checking is in here because if the player gets hurt, it'll be handled by an eject event anyway
-		else if (e.getType() == Event.EVENT_MOVE || e.getType() == Event.EVENT_BIN || e.getType() == Event.EVENT_GETBALL || e.getType() == Event.EVENT_CHECK)
-		{
+		else if (e.getType() == Event.EVENT_MOVE || e.getType() == Event.EVENT_BIN || e.getType() == Event.EVENT_GETBALL || e.getType() == Event.EVENT_CHECK || e.getType() == Event.EVENT_STS)
+		{	
 			Player plyr = myClient.getData().getPlayer(e.flags[0]);
 			Point pnt = myClient.getData().getLocationOfPlayer(plyr);
 			
+			if (plyr == myClient.getData().getBallCarrier() && e.getType() != Event.EVENT_GETBALL)
+				ballCarrierHasActed = true;
+			
+			System.out.println("CLIENT - RECEIVE EVENT: Event received of type " + e.getType());
+			
+			updateMap();		//make sure stun highlights are displayed
 			refreshInterface();
 			zoomToLocation(pnt.x);
 		}
@@ -448,10 +558,10 @@ public class ClientCursesGUI extends GUI implements KeyListener
 	
 	private void zoomToLocation(int row)
 	{
-		if (row > 19 && showTopHalf)
+		if (row > 18 && showTopHalf)
 			showTopHalf = false;
 		
-		if (row < 9 && !showTopHalf)
+		if (row < 11 && !showTopHalf)
 			showTopHalf = true;
 		
 		updateMap();
@@ -537,14 +647,18 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		String name = "";
 		int selectedIndex = -1;
 		
-		int ch = 0;
-		int st = 0;
-		int tg = 0;
-		int rf = 0;
-		int jp = 0;
-		int hd = 0;
-		int da = 0;
-		int ap = 0;
+		int[] baseAtt = new int[8];
+		int[] modAtt = new int[8];
+		CSIColor[] clrAtt = new CSIColor[8];
+		
+		for (int i = 0; i < 8; i++)
+		{
+			baseAtt[i] = 0;
+			modAtt[i] = 0;
+			clrAtt[i] = CSIColor.DENIM;
+		}
+		
+		int totAp = 0;
 		int curAp = 0;
 		
 		if (curPlayerIndex > -1 && curPlayerIndex >= curTeamIndex * 9)	//don't update this stuff if the current player isn't on the current team
@@ -552,17 +666,21 @@ public class ClientCursesGUI extends GUI implements KeyListener
 			selectedIndex = curPlayerIndex - (curTeamIndex * 9) + 1;
 			
 			Player p = myClient.getData().getPlayer(curPlayerIndex);
-			ch = p.getAttributeWithModifiers(Player.ATT_CH);
-			st = p.getAttributeWithModifiers(Player.ATT_ST);
-			tg = p.getAttributeWithModifiers(Player.ATT_TG);
-			rf = p.getAttributeWithModifiers(Player.ATT_RF);
-			jp = p.getAttributeWithModifiers(Player.ATT_JP);
-			hd = p.getAttributeWithModifiers(Player.ATT_HD);
-			da = p.getAttributeWithModifiers(Player.ATT_DA);
-			ap = p.getAttributeWithModifiers(Player.ATT_AP);
 			
 			name = p.name;
 			curAp = p.currentAP;
+			totAp = p.getAttributeWithModifiers(Player.ATT_AP);
+			
+			for (int i = 1; i < 8; i++)
+			{
+				baseAtt[i] = p.getAttributeWithoutModifiers(i);
+				modAtt[i] = p.getAttributeWithModifiers(i);
+				
+				if (baseAtt[i] < modAtt[i])
+					clrAtt[i] = CSIColor.ORANGE;
+				else if (baseAtt[i] > modAtt[i])
+					clrAtt[i] = CSIColor.DARK_RED;
+			}
 			
 			//System.out.println("refreshInterface(): Team is " + curTeamIndex + " and player is " + curPlayerIndex);
 			
@@ -579,16 +697,13 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		
 		csi.print(1, 21, String.valueOf(selectedIndex), CSIColor.WHITE);
 		csi.print(3, 21, name, CSIColor.WHITE);
-		csi.print(18, 22, String.valueOf(ch), CSIColor.DENIM);
-		csi.print(22, 22, String.valueOf(st), CSIColor.DENIM);
-		csi.print(26, 22, String.valueOf(tg), CSIColor.DENIM);
-		csi.print(30, 22, String.valueOf(rf), CSIColor.DENIM);
-		csi.print(34, 22, String.valueOf(jp), CSIColor.DENIM);
-		csi.print(38, 22, String.valueOf(hd), CSIColor.DENIM);
-		csi.print(42, 22, String.valueOf(da), CSIColor.DENIM);
-		csi.print(1, 22, String.valueOf(ap), CSIColor.DENIM);
+		csi.print(1, 22, String.valueOf(totAp), CSIColor.DENIM);
 		csi.print(12, 22, String.valueOf(curAp), CSIColor.BRIGHT_GREEN);
 		
+		for (int i = 1; i < 8; i++)
+		{
+			csi.print(14 + (4 * i), 22, String.valueOf(modAtt[i]), clrAtt[i]);
+		}
 		
 		int startingIndex = curTeamIndex * 9;
 		
@@ -610,7 +725,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 				else if (status == Player.STS_LATE)
 					toColor = CSIColor.WHITE;
 				else if (status == Player.STS_STUN)
-					toColor = CSIColor.WHEAT;
+					toColor = CSIColor.YELLOW;
 				else if (status == Player.STS_HURT)
 					toColor = CSIColor.ORANGE;
 				else if (status == Player.STS_DEAD)
@@ -689,6 +804,8 @@ public class ClientCursesGUI extends GUI implements KeyListener
 			
 			int row = hi.x + rowAdjust;
 			int col = hi.y + colAdjust;
+			
+			System.out.println("CLIENT - UPDATE MAP: Values are " + col + ", " + row + ", " + icon + ", " + fg + ", " + bg + ".");
 			
 			csi.print(col, row, icon, fg, bg);
 		}
@@ -773,6 +890,11 @@ public class ClientCursesGUI extends GUI implements KeyListener
 				if (binStatus == Field.STATE_SUCCESS)
 					fg = CSIColor.GREEN;
 			}
+			else if (tile == 6)
+			{
+				fg = CSIColor.YELLOW;
+				icon = "*";
+			}
 			//etc.
 		}
 		else	//player here
@@ -847,7 +969,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		
 		if (activeCommand == 0)	//move
 		{
-			Event moveEvent = Event.move(curPlayerIndex, curLocation.x + rowChange, curLocation.y + colChange, false);
+			Event moveEvent = Event.move(curPlayerIndex, curLocation.x + rowChange, curLocation.y + colChange, false, false);
 			sendCommand(moveEvent);
 		}
 		
@@ -870,7 +992,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 					highlights.clear();
 					activeCommand = 0;
 					int targetIndex = myClient.getData().getIndexOfPlayer(target);
-					Event checkEvent = Event.check(curPlayerIndex, targetIndex, -2);	//-2 just means we don't have a result yet
+					Event checkEvent = Event.check(curPlayerIndex, targetIndex, -2, false);	//-2 just means we don't have a result yet
 					sendCommand(checkEvent);
 				}
 			}
@@ -1006,9 +1128,8 @@ public class ClientCursesGUI extends GUI implements KeyListener
 	private boolean canCurrentPlayerHandoff() {
 		if (!canCurrentPlayerAct()) return false;
 		
-		//still need a check if the player has just gotten up; this can happen if they get up this turn and get the ball handed to them
-		
-		if (currentPlayer.currentAP == currentPlayer.getAttributeWithModifiers(Player.ATT_AP) && myClient.getData().getBallCarrier() == currentPlayer)
+		System.out.println("CLIENT - HANDOFF CHECK: acted bool has a value of " + ballCarrierHasActed);
+		if (!ballCarrierHasActed && myClient.getData().getBallCarrier() == currentPlayer && currentPlayer.currentAP >= 10)
 			return true;
 		return false;
 	}
@@ -1025,6 +1146,48 @@ public class ClientCursesGUI extends GUI implements KeyListener
 	public void keyTyped(KeyEvent arg0) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	//checks how many teammates surround a player, and returns 10 times that number
+	//coord is the target location, team is the value a player needs to be to add to the bonus
+	private int getAssistBonus(Player ally, Player target)
+	{
+		//tactics negates assist bonuses
+		if (target.hasSkill[Player.SKILL_TACTICS])
+			return 0;
+		
+		int team = myClient.getData().getTeamOfPlayer(ally);
+		Point coords = myClient.getData().getLocationOfPlayer(target);
+		
+		//bonus starts at -10 because the check is going to pick up the player involved in the attack
+		int toRet = -10;
+		
+		for (int i = -1; i <= 1; i++)
+		{
+			for (int j = -1; j <= 1; j++)
+			{
+				if (i == 0 && j == 0)
+					continue;
+				
+				int x = coords.x + i;
+				int y = coords.y + j;
+				Player p = myClient.getData().getPlayerAtLocation(x, y);
+				
+				//if the player is there, is standing, and is co-aligned
+				if (p != null && p.getStatus() == Player.STS_OKAY && myClient.getData().getTeamOfPlayer(p) == team)
+				{
+					toRet += 10;
+					
+					//teammates with guard help even more
+					if (p.hasSkill[Player.SKILL_GUARD])
+						toRet += 5;
+					
+					System.out.println("ENGINE - GET ASSIST: Teammate found; assist bonus is now " + toRet + ".");
+				}
+			}
+		}
+		
+		return toRet;
 	}
 	
 	//inner class for general icon data

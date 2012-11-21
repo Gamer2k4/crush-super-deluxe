@@ -35,9 +35,27 @@ public class Player
 	public static final int STS_DEAD = 7;
 	public static final int STS_OUT = 8;
 	
-	public static final int SKILL_CHARGE = 20;	//update with a real number later
-	public static final int SKILL_SCOOP = 15;	//update with a real number later
-	public static final int SKILL_INTUITION = 10;	//update with a real number later
+	//update these with real numbers later
+	public static final int SKILL_RESILIENT = 20;
+	public static final int SKILL_JUGGERNAUT = 19;
+	public static final int SKILL_VICIOUS = 18;
+	public static final int SKILL_DOOMSTRIKE = 17;
+	public static final int SKILL_FIST_OF_IRON = 16;
+	public static final int SKILL_COMBO = 15;
+	public static final int SKILL_AWE = 14;
+	public static final int SKILL_STOIC = 13;
+	public static final int SKILL_CHECKMASTER = 12;
+	public static final int SKILL_GYMNASTICS = 11;
+	public static final int SKILL_QUICKENING = 10;
+	public static final int SKILL_JUGGLING = 9;
+	public static final int SKILL_BOXING = 8;
+	public static final int SKILL_BRUTAL = 7;
+	public static final int SKILL_STALWART = 6;
+	public static final int SKILL_GUARD = 5;
+	public static final int SKILL_TACTICS = 4;
+	public static final int SKILL_CHARGE = 3;
+	public static final int SKILL_SCOOP = 2;
+	public static final int SKILL_INTUITION = 1;
 	
 	public static List<String> NAMES_CURMIAN = null;
 	public static List<String> NAMES_DRAGORAN = null;
@@ -47,6 +65,18 @@ public class Player
 	public static List<String> NAMES_NYNAX = null;
 	public static List<String> NAMES_SLITH = null;
 	public static List<String> NAMES_XJS9000 = null;
+	
+	public static final int INJURY_KNOCKDOWN = 0;
+	public static final int INJURY_STUN = 1;
+	public static final int INJURY_TRIVIAL = 2;
+	public static final int INJURY_MINOR = 3;
+	public static final int INJURY_CRIPPLE_10 = 4;
+	public static final int INJURY_CRIPPLE_15 = 5;
+	public static final int INJURY_CRIPPLE_20 = 6;
+	public static final int INJURY_DEATH_1 = 7;
+	public static final int INJURY_DEATH_2 = 8;
+	public static final int INJURY_DEATH_3 = 9;
+	public static final int INJURY_DEATH_4 = 10;
 	
 	private static boolean namesDefined = false;
 	
@@ -166,12 +196,15 @@ public class Player
 		{
 			hasSkill[i] = false;
 		}
+		
+		healInjuries();
 	}
 	
 	public int status;	//BLOB, DECK, LATE, HURT, STUN, DEAD, DOWN, and OKAY
 	public String name;
 	public int race;
 	private int[] attributes = new int[8];
+	private int[] injuries = new int[8];
 	public boolean[] hasSkill = new boolean[28];
 	public int currentAP;
 	
@@ -195,6 +228,7 @@ public class Player
 		for (int i = 0; i < 8; i++)
 		{
 			toRet.attributes[i] = attributes[i];
+			toRet.injuries[i] = injuries[i];
 		}
 		
 		return toRet;
@@ -206,7 +240,49 @@ public class Player
 		careerStats.updateWithResults(gameStats);
 	}
 	
+	public void applyInjury(int attribute, int value)
+	{
+		injuries[attribute] -= value;
+	}
+	
+	public void healInjuries()
+	{
+		for (int i = 0; i < 8; i++)
+		{
+			injuries[i] = 0;
+		}
+	}
+	
 	public int getAttributeWithModifiers(int attribute)
+	{
+		int bonus = 0;
+		
+		if (attribute == Player.ATT_ST && hasSkill[Player.SKILL_BRUTAL])
+			bonus += 10;
+		if (attribute == Player.ATT_TG && hasSkill[Player.SKILL_STALWART])
+			bonus += 10;
+		if (attribute == Player.ATT_CH && hasSkill[Player.SKILL_CHECKMASTER])
+			bonus += 10;
+		if (attribute == Player.ATT_JP && hasSkill[Player.SKILL_GYMNASTICS])
+			bonus += 10;
+		if (attribute == Player.ATT_DA && hasSkill[Player.SKILL_GYMNASTICS])
+			bonus += 10;
+		if (attribute == Player.ATT_RF && hasSkill[Player.SKILL_BOXING])
+			bonus += 10;
+		if (attribute == Player.ATT_HD && hasSkill[Player.SKILL_JUGGLING])
+			bonus += 10;
+		if (attribute == Player.ATT_AP && hasSkill[Player.SKILL_QUICKENING])
+			bonus += 10;
+		
+		int toRet = attributes[attribute] + injuries[attribute] + bonus;
+		
+		if (toRet > 99) toRet = 99;
+		if (toRet < 1) toRet = 1;
+		
+		return toRet;
+	}
+	
+	public int getAttributeWithoutModifiers(int attribute)
 	{
 		return attributes[attribute];
 	}
