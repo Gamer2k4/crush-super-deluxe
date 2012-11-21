@@ -159,6 +159,18 @@ public class Data
 				}
 			}
 		}
+		else if (theEvent.getType() == Event.EVENT_STS)
+		{	
+			//this ONLY changes a player's status (used for LATE, EGO, and basic stunning)
+			//attributes are left untouched (if they need to be altered, another event should be sent
+			Player p = getPlayer(theEvent.flags[0]);
+			
+			if (p != null)
+			{
+				p.status = theEvent.flags[2];
+				p.currentAP = 0;	// TODO I don't like this, but it's easiest.  This also makes Juggernaut simple.
+			}
+		}
 		else if (theEvent.getType() == Event.EVENT_MOVE)
 		{
 			//again, this is sanitized, so each move event should be from one legal tile to one legal adjacent tile
@@ -166,9 +178,21 @@ public class Data
 			
 			Player p = getPlayer(theEvent.flags[0]);
 			Point destination = new Point(theEvent.flags[2], theEvent.flags[3]);
+			boolean isJumping = (theEvent.flags[5] == 1);
 			
 			p.currentAP -= 10;
-			updatePlayerLocation(p, destination);
+			
+			//if this is a jump, we don't want to blindly wipe out someone the player is jumping over
+			if (isJumping)
+				updatePlayerLocationForJump(p, destination);
+			else
+				updatePlayerLocation(p, destination);
+			
+			//because a jump is treated as two move events, it automatically reduces the AP by 20.  For non-Curmians,
+			//it should cumulatively be reduced an additional 10AP (5AP per move event).
+			
+			if (isJumping && p.getRace() != Player.RACE_CURMIAN)
+				p.currentAP -= 5;
 		}
 		else if (theEvent.getType() == Event.EVENT_TELE)
 		{
@@ -276,7 +300,9 @@ public class Data
 			int result = theEvent.flags[2];
 			
 			//deduct the proper amount of AP
-			if (attacker.hasSkill[Player.SKILL_CHARGE])
+			if (theEvent.flags[3] == 1)		//if this is a reflex check
+				attacker.currentAP -= 0;	//technically unnecessary, but it makes sense this way
+			else if (attacker.hasSkill[Player.SKILL_CHARGE])
 				attacker.currentAP -= 10;
 			else
 				attacker.currentAP -= 20;
@@ -317,7 +343,10 @@ public class Data
 		{
 			Player p = getPlayer(theEvent.flags[0]);
 			
-			//adjust stats later, but this is sufficient for now
+			//get the player off the field
+			clearPlayerLocation(p);
+			
+			//set player status
 			if (theEvent.flags[2] == Event.EJECT_REF)
 			{
 				p.status = Player.STS_OUT;
@@ -338,6 +367,13 @@ public class Data
 			{
 				p.status = Player.STS_DEAD;
 			}
+			
+			//damage the player's attributes if there was an injury
+			p.applyInjury(theEvent.flags[3], theEvent.flags[4]);
+			p.applyInjury(theEvent.flags[5], theEvent.flags[6]);
+			
+			// TODO kill the player if he dies (might be as simple as a boolean on the Player object, so hall of fames and such can still exist
+			//		this might actually just be done by setting p.status equal to STS_DEAD (which is already done)
 		}
 	}
 	
@@ -350,7 +386,8 @@ public class Data
 	{
 		List<String> mapStrings = new ArrayList<String>();
 		
-		mapStrings.add("000000000000000000000000000000022221111005111111500111122220022221111004111111400111122220022221111111111111111111122220022221111111111111111111122220011111111111111111111111111110011111111111111111111111111110011111111001111111100111111110011111111003111111300111111110000111100000011110000001111000000111100000011110000001111000054111113001111111100311111450011111111001111111100111111110011111111111111111111111111110011111111111111111111111111110011111111111111111111111111110011111111111111111111111111110011111111001111111100111111110054111113001111111100311111450000111100000011110000001111000000111100000011110000001111000011111111003111111300111111110011111111001111111100111111110011111111111111111111111111110011111111111111111111111111110022221111111111111111111122220022221111111111111111111122220022221111004111111400111122220022221111005111111500111122220000000000000000000000000000000");
+		/* gadel spyre */	mapStrings.add("000000000000000000000000000000022221115003111111100511122220022221114001111111100411122220022221111001111111111111122220022221111001111111111111122220011111111001111111111111111110011111111001111111111111111110011111111001111111100111111110011111111003111111100111111450000111100000011110000001111000000111100000011110000001111000000111100003111111500001111000000111100001111111400001111000000111161111111111111161111000000111161111111111111161113000000311161111111111111161111000000111161111111111111161111000000111100004111111100001111000000111100005111111300001111000000111100000011110000001111000000111100000011110000001111000054111111001111111300111111110011111111001111111100111111110011111111111111111100111111110011111111111111111100111111110022221111111111111100111122220022221111111111111100111122220022221111001111111100411122220022221145001111111300511122220000000000000000000000000000000");
+		/* savanna */		mapStrings.add("000000000000000000000000000000022221111005111111500111122220022221111004111111400111122220022221111111111111111111122220022221111111111111111111122220011111111111111111111111111110011111111111111111111111111110011111111001111111100111111110011111111003111111300111111110000111100000011110000001111000000111100000011110000001111000054111113001111111100311111450011111111001111111100111111110011111111111111111111111111110011111111111111111111111111110011111111111111111111111111110011111111111111111111111111110011111111001111111100111111110054111113001111111100311111450000111100000011110000001111000000111100000011110000001111000011111111003111111300111111110011111111001111111100111111110011111111111111111111111111110011111111111111111111111111110022221111111111111111111122220022221111111111111111111122220022221111004111111400111122220022221111005111111500111122220000000000000000000000000000000");
 		
 		if (mapNum < 0)
 		{
@@ -369,7 +406,7 @@ public class Data
 	{
 		Point p = getLocationOfPlayer(plyr);
 
-		setPlayerAtLocation(p, null); 
+		setPlayerAtLocation(p, null);
 		pointOfPlayer.remove(plyr);
 	}
 	
@@ -386,6 +423,32 @@ public class Data
 		p.y = pnt.y;
 		
 		setPlayerAtLocation(p, plyr);
+		setLocationOfPlayer(plyr, p);
+	}
+	
+	private void updatePlayerLocationForJump(Player plyr, Point pnt)
+	{
+		Point p = getLocationOfPlayer(plyr);
+
+		Player playerHere = getPlayerAtLocation(p);
+		Player playerThere = getPlayerAtLocation(pnt);
+		
+		//only remove the player at this tile if it's the jumping player; otherwise assume the jumping player is "in the air"
+		if (plyr == playerHere)
+			setPlayerAtLocation(p, null);
+		
+		pointOfPlayer.remove(plyr);
+		
+		if (p == null)
+			p = new Point();
+		
+		p.x = pnt.x;
+		p.y = pnt.y;
+		
+		//only stick the player back on the map if the space is clear; otherwise assume the jumping player is "in the air"
+		if (playerThere == null)
+			setPlayerAtLocation(p, plyr);
+		
 		setLocationOfPlayer(plyr, p);
 	}
 	

@@ -52,7 +52,7 @@ public class Event implements Serializable
 	
 	public String toString()
 	{
-		String toRet = "";
+		String toRet = "UNDEFINED EVENT - TYPE " + type;
 		
 		if (type == 0)
 			toRet = "EVENT_TURN";
@@ -79,6 +79,7 @@ public class Event implements Serializable
 		else if (type == 11)
 			toRet = "EVENT_EJECT";
 		
+		
 		for (int i = 0; i < TOTAL_FLAGS; i++)
 		{
 			toRet = toRet + ", " + flags[i];
@@ -100,16 +101,20 @@ public class Event implements Serializable
 		return e;
 	}
 	
-	public static Event move(int player, int targetX, int targetY, boolean slide)
+	public static Event move(int player, int targetX, int targetY, boolean slide, boolean jump)
 	{
 		Event e = new Event(EVENT_MOVE);
 		e.flags[0] = player;
 		e.flags[2] = targetX;
 		e.flags[3] = targetY;
 		e.flags[4] = 0;
+		e.flags[5] = 0;
 		
 		if (slide)
 			e.flags[4] = 1;
+		
+		if (jump)
+			e.flags[5] = 1;
 		
 		return e;
 	}
@@ -178,12 +183,16 @@ public class Event implements Serializable
 		return e;
 	}
 	
-	public static Event check(int p1, int p2, int result)
+	public static Event check(int p1, int p2, int result, boolean reflex)
 	{
 		Event e = new Event(EVENT_CHECK);
 		e.flags[0] = p1;
 		e.flags[1] = p2;
 		e.flags[2] = result;
+		e.flags[3] = 0;
+		
+		if (reflex)
+			e.flags[3] = 1;
 		
 		return e;
 	}
@@ -214,6 +223,7 @@ public class Event implements Serializable
  * 2 - target x
  * 3 - target y
  * 4 - slide boolean
+ * 5 - jump boolean
  * 
  * EVENT_TELE
  * 0 - p1 index
@@ -253,6 +263,7 @@ public class Event implements Serializable
  * 0 - p1 index (-1 if the field, such as falling damage or getting shocked)
  * 1 - p2 index
  * 2 - result (-1 - attacker falls, 0 - dodged, 1 - nothing, 2 - both fall, 3 - defender pushed, 4 - defender falls, 5 - defender pushed and falls)
+ * 3 - reflex boolean (1 means the player doesn't need or use AP)
  * 
  * EVENT_EJECT
  * 0 - p1 index

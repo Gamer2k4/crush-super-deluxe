@@ -13,6 +13,7 @@ public class Field implements Serializable
 	public static final int TELE_TILE = 3;
 	public static final int PAD_TILE = 4;
 	public static final int BIN_TILE = 5;
+	public static final int SHOCK_TILE = 6;
 	
 	public static final int STATE_UNTRIED = 0;
 	public static final int STATE_FAILED = 1;
@@ -199,7 +200,7 @@ public class Field implements Serializable
 		
 		int tile = tiles[x][y];
 		
-		if (tile == FLOOR_TILE || tile == GOAL_TILE || tile == PAD_TILE)
+		if (tile == FLOOR_TILE || tile == GOAL_TILE || tile == PAD_TILE || tile == SHOCK_TILE || tile == TELE_TILE)
 			return false;
 		
 		return true;
