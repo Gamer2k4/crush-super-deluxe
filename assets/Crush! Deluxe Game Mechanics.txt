@@ -1,0 +1,118 @@
+Basic stats:
+AP - Action Points. Determines how many actions the player can make in a turn. Costs for actions:
+	Walking 1 tile - 10 AP
+	Jumping - 30 AP
+	Checking - 20 AP
+	Handoff - 10 AP
+	Picking up ball from ground (automatic when you move onto the tile with the ball) - 10 AP
+	Failing to pick up ball - all remaining AP
+	Hurling ball - 20 AP
+	Getting up from the ground (automatic at the start of each turn) - half total AP, rounded down
+	Using a teleporter after that player has entered the game - all remaining AP
+
+CH - Check. Determines the outcome of a check.
+	Formula is (Attacker's CH + 1d100) - (Defender's CH + 1d100) = result, then look up result in table.
+	< -20: critical failure. Attacker knocked down.
+	-20 <= result < -6: no effect.
+	-6 <= result <= 5: both players knocked down.
+	5 < result <= 20: Defender is pushed back 1 tile without being knocked down.
+	20 < result <= 40: Defender knocked down.
+	> 40: Defender pushed back 1 tile and knocked down.
+	
+	Assists are possible. For every teammate on the attacker's team adjacent to the defender, the attacker gets +10 CH. For every teammate on the defender's team adjacent to the attacker, the defender gets +10 CH. The third team, if present, does not provide assists. Hence:
+	X X
+	 O
+	XA
+	 O
+	If the bottom-most X attacks the topmost O, X gets +20 CH and O gets +10 CH. If any of the 2 Xs at the top attack the topmost O, X gets +20 CH and O gets nothing. A does not provide bonuses to X or O.
+	
+ST and TG - Strength and Toughness. Used to roll for damage after someone is knocked down.
+	Formula is (Attacker's ST + 1d100) - (Defender's TG + 1d100) = result, then look up result in table.
+	< 20: Player is simply knocked down.
+	20 <= result < 50: Player is stunned (circling stars) and will take 2 turns to get up.
+	50 <= result < 80: Player is injured. Severity of injury is not covered by this formula.
+	>= 80: Player is killed. Probability of resuscitation is not covered by this formula.
+	
+RF - Reflex. When an opposing player enters a tile adjacent to your player, your player may automatically check at no AP cost and with no probability of being knocked down. The probability of your player doing this depends on this stat. Percentile.
+
+JP - Jump. Probability of making a jump without being knocked down. Percentile.
+
+HD - Hand. Probability of picking up the ball successfully. Percentile.
+
+DA - Dodge. Probability of dodging a check and avoiding all associated rolls. Percentile.
+
+Species abilities:
+Human - Uncommon Valor
+	30% chance of remaining in the game after an injury. If this happens, the human will be treated as knocked down, and get up on the next turn with half AP as usual. Recovery time and crippling effects will still take effect after the game.
+	
+Gronk - Regenerate
+	25% chance of ignoring injuries or fatalities and being returned to deck to teleport into the field on the next turn.
+	
+Curmian - High Jump
+	Jumps cost 20 AP. Can jump over standing players.
+	
+Dragoran - Pop Up
+	Getting up from the ground costs 10 AP instead of half total AP.
+	
+Kurgan - Blood Lust
+	If a fatality is achieved while attacking or defending and Kurgan is still standing, AP is reset to 60 and they will automatically attempt to check the nearest player, whether friend or foe. Once a player is knocked down, the Kurgan will move on to the next nearest player. This continues until the Kurgan runs out of AP or is knocked down. If another fatality is achieved during Blood Lust, another Blood Lust will be triggered.
+	
+	Given equal distances, foes will be attacked over friends, and ball carriers over regular players.
+	
+Nynax - Hive Mind
+	If there are 2 Nynax in the same team on the field, each Nynax receives a 2 point bonus to all stats except AP, which receives none, and DA, which receives 1 point. This continues for every Nynax of the same team present on the field, i.e. a team with 6 Nynax in the field would give each Nynax a bonus of 10 points to all stats and 5 points to DA.
+	
+Slith - Death Reek
+	When a Slith is injured, all adjacent players are knocked down. A fatality will knock down all players within 2 squares.
+	
+XJS9000 - Gyroscopic Stabilizer
+	Retain AP after using a teleporter.
+	
+Docbot upgrades:
+A Docbot with everything set to Standard is free.
+	Emergency - Chance of resuscitating players after fatalities. Standard gives a 33% chance, Enhanced 66%.
+	Surgery - Reduces severity of injury. The in-game help says that Enhanced reduces injury severity by 50%, but I'm at a loss as to what this means.
+	Recovery - Reduces time out due to injury. Same 50% claim as Surgery.
+	Therapy - Prevents development of quirks. I am not sure whether this covers both good and bad quirks. Same 50% claim as Surgery and Recovery.
+	
+Quirks:
+These accumulate the longer you keep playing with the same team.
+	Moron - 10% more skill points required for skills. Claimed to get 25% less salary, though I have not carefully observed this.
+	Intelligent - 10% less skill points required for skills.
+	Egomaniac - refuses to play unless they are first to teleport into field.
+	Slacker - 25% chance of entering field 1 to 10 turns late.
+	Technophobia - refuses to use equipment.
+	Electrophobia - refuses to step on ball bins or traps.
+	Blobbophobia - refuses to step on teleporters.
+	Displacer - 50% chance of teleporting randomly when checked.
+	Bouncer - 25% chance of teleporting an opponent randomly when checking. (Needs confirmation.)
+	Immunity - Cannot contract or be affected by Space Rot.
+	Space Rot - 5% chance of the opponent being removed each time the player is involved in a check, whether attacking or defending. Players thus removed acquire Immunity or Space Rot 75%/25%.
+	Grit - chance for a permanent bonus to TG each time the player is injured.
+	
+Experience:
+	Participation in the game - 2 skill points
+	Being on the winning team - 2 skill points
+	Activating a ball bin - 6 skill points
+	Causing injury - 10 skill points
+	Causing fatality - 12 skill points
+	Scoring goal - 20 skill points
+	Rushing - 0.5 skill points per tile
+	Getting sacked - -1 skill point
+	
+Salary changes:
+	Rookie - 0 total skill points. Base salary.
+	Regular - 60 total skill points. Base salary.
+	Veteran - 200 total skill points. +20K.
+	Champion - 400 total skill points. +40K.
+	Captain - 600 total skill points. +60K.
+	Hero - 900 total skill points. +90K.
+	Legend - 1200 total skill points. +120K.
+	Avatar - 1600 total skill points. +160K.
+	
+Misc:
+Using a teleporter rolls 1d8. Each number corresponds to an exit teleporter. If you roll to exit from the one you entered, your player is mutated and removed from the game.
+
+Using a ball bin initially rolls 1d8. 1 will give you the ball. The rest will result in electrocution. As ball bins are used up, the roll becomes 1d7, 1d6, and so on.
+
+Handoffs have a fixed 5% chance of failure.
