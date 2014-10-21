@@ -12,7 +12,7 @@ import main.data.save.SaveHandler;
 
 public class TeamLoader
 {
-	private TeamLoader(){};
+	private TeamLoader(){}
 	
 	public static Team loadTeamFromFile(File path)
 	{

@@ -42,8 +42,8 @@ public class EventTest {
 	@Test
 	public void testMoveEvent_TrueArgs()
 	{
-		event = Event.move(3, 22, 16, true, true);
-		toStringVal = "EVENT_MOVE, 3, 0, 22, 16, 1, 1, 0";
+		event = Event.move(3, 22, 16, true, true, true);
+		toStringVal = "EVENT_MOVE, 3, 0, 22, 16, 1, 1, 1";
 		type = Event.EVENT_MOVE;
 		
 		assertEquals(3, event.flags[0]);
@@ -52,7 +52,7 @@ public class EventTest {
 		assertEquals(16, event.flags[3]);
 		assertEquals(1, event.flags[4]);
 		assertEquals(1, event.flags[5]);
-		assertEquals(0, event.flags[6]);
+		assertEquals(1, event.flags[6]);
 		
 		assertEquals(toStringVal, event.toString());
 		assertEquals(type, event.getType());
@@ -61,7 +61,7 @@ public class EventTest {
 	@Test
 	public void testMoveEvent_FalseArgs()
 	{
-		event = Event.move(2, 11, 4, false, false);
+		event = Event.move(2, 11, 4, false, false, false);
 		toStringVal = "EVENT_MOVE, 2, 0, 11, 4, 0, 0, 0";
 		type = Event.EVENT_MOVE;
 		
