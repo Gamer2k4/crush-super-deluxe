@@ -27,6 +27,7 @@ public abstract class SaveableEntity
 		return toRet;
 	}
 	
+	@Override
 	public String toString()
 	{
 		return saveAsText();

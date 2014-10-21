@@ -10,14 +10,14 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JOptionPane;
-
-import net.slashie.libjcsi.CSIColor;
-import net.slashie.libjcsi.wswing.WSwingConsoleInterface;
+import javax.swing.WindowConstants;
 
 import main.data.Event;
-import main.data.entities.Field;
+import main.data.entities.Arena;
 import main.data.entities.Player;
 import main.logic.Client;
+import net.slashie.libjcsi.CSIColor;
+import net.slashie.libjcsi.wswing.WSwingConsoleInterface;
 
 public class ClientCursesGUI extends GUI implements KeyListener
 {
@@ -49,13 +49,15 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		highlights = new ArrayList<HighlightIcon>();
 		jumpPossibilities = new HashMap<Integer, Point>();
 				
-		csi = new WSwingConsoleInterface("Crush! Deluxe", new Font("Crush Font", Font.BOLD, 8));
+		csi = new WSwingConsoleInterface("Crush! Super Deluxe", new Font("Crush Font", Font.BOLD, 8));
 		csi.setAutoRefresh(false);
 		csi.addKeyListener(this);
+		csi.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		refreshInterface();
 	}
 
 
+	@Override
 	public void keyPressed(KeyEvent arg0)
 	{
 		Player plyr = myClient.getData().getPlayer(curPlayerIndex);
@@ -206,7 +208,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 			{
 				System.out.println("\tValid key pressed.");
 				
-				Event moveEvent = Event.move(curPlayerIndex, curLocation.x + target.x, curLocation.y + target.y, false, true);
+				Event moveEvent = Event.move(curPlayerIndex, curLocation.x + target.x, curLocation.y + target.y, false, true, false);
 				sendCommand(moveEvent);
 				
 				highlights.clear();
@@ -368,8 +370,6 @@ public class ClientCursesGUI extends GUI implements KeyListener
 						
 						int dif = (getAssistBonus(plyr, target) + plyr.getAttributeWithModifiers(Player.ATT_CH)) - (getAssistBonus(target, plyr) + target.getAttributeWithModifiers(Player.ATT_CH));
 						
-						// TODO take assists into account when coloring the overlays
-						
 						if (dif >= 20)
 							checkOdds = HI_CHECK_GOOD;
 						
@@ -383,7 +383,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		}
 		
 		//no targets are valid if the player doesn't have enough AP
-		if (plyr.currentAP < 10 || (plyr.currentAP < 20 && !plyr.hasSkill[Player.SKILL_CHARGE]))
+		if (plyr.currentAP < 10 || (plyr.currentAP < 20 && !plyr.hasSkill(Player.SKILL_CHARGE)))
 			highlights.clear();
 		
 		//switch back to moving if there are no valid targets
@@ -392,6 +392,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 	}
 
 
+	@Override
 	public void receiveEvent(Event e)
 	{
 		if (e.getType() == Event.EVENT_VICTORY)
@@ -471,11 +472,17 @@ public class ClientCursesGUI extends GUI implements KeyListener
 			}
 			else if (type == Event.EJECT_REF)
 			{
+				List<String> ejectItems = plyr.getEquipListForDisplay();
+				
 				title = "Ejection!";
-				message = name + " on Team " + team + " has been ejected for the following items:\n" +
-						"item1\n" +
-						"item2";
+				message = name + " on Team " + team + " has been ejected for the following items:";
 				messageType = JOptionPane.INFORMATION_MESSAGE;
+				
+				for (String item : ejectItems)
+				{
+					if (!item.equals("(none)"))
+						message = message + "\n" + item;
+				}
 			}
 			else if (type == Event.EJECT_TRIVIAL)
 			{
@@ -508,6 +515,18 @@ public class ClientCursesGUI extends GUI implements KeyListener
 			
 			//refresh the interface to show dead statuses and such
 			curPlayerIndex = getFirstEligiblePlayer();	// TODO does this not work?
+			
+			//if there is no eligible player, skip to the next turn and return
+			if (curPlayerIndex == -1)
+			{
+				int nextTeamIndex = curTeamIndex + 1;
+				if (nextTeamIndex == 3)
+					nextTeamIndex = 0;
+				
+				sendCommand(Event.updateTurnPlayer(nextTeamIndex));
+				return;
+			}
+			
 			plyr = myClient.getData().getPlayer(curPlayerIndex);
 			Point pnt = myClient.getData().getLocationOfPlayer(plyr);
 			setActivePlayer(curPlayerIndex);
@@ -567,6 +586,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		updateMap();
 	}
 	
+	@Override
 	protected void refreshInterface()
 	{
 		//server frame
@@ -660,6 +680,11 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		
 		int totAp = 0;
 		int curAp = 0;
+		List<String> equipNames = new ArrayList<String>();
+			equipNames.add("(none)");
+			equipNames.add("(none)");
+			equipNames.add("(none)");
+			equipNames.add("(none)");
 		
 		if (curPlayerIndex > -1 && curPlayerIndex >= curTeamIndex * 9)	//don't update this stuff if the current player isn't on the current team
 		{
@@ -670,6 +695,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 			name = p.name;
 			curAp = p.currentAP;
 			totAp = p.getAttributeWithModifiers(Player.ATT_AP);
+			equipNames = p.getEquipListForDisplay();
 			
 			for (int i = 1; i < 8; i++)
 			{
@@ -744,7 +770,33 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		
 		csi.print(46, 22 + curTeamIndex, ">", CSIColor.WHITE);
 		
+		//individual player info
+		csi.print(65, 1, "              ", CSIColor.WHITE);
+		csi.print(51, 1, padName(name), CSIColor.WHITE);
+		csi.print(51, 3, "EQUIPMENT:", CSIColor.LIGHT_GRAY);
+		
+		for (int i = 0; i < 4; i++)
+		{
+			csi.print(52, 4 + i, "                           ", CSIColor.LIGHT_GRAY);
+			csi.print(52, 4 + i, equipNames.get(i), CSIColor.LIGHT_GRAY);
+		}
+		
 		csi.refresh();
+	}
+	
+	private String padName(String name)
+	{
+		String paddedName = name;
+		
+		int padding = 28 - name.length();
+		int halfPadding = padding / 2;
+		
+		for (int i = 1; i <= halfPadding; i++)
+		{
+			paddedName = " " + paddedName;
+		}
+		
+		return paddedName;
 	}
 	
 	private void updateMap()
@@ -816,7 +868,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 	
 	private void updateTile(Point coords)
 	{
-		Field localMap = myClient.getData().getArena();
+		Arena localMap = myClient.getData().getArena();
 		
 		int rowAdjust = 0;
 		int colAdjust = 20;
@@ -885,9 +937,9 @@ public class ClientCursesGUI extends GUI implements KeyListener
 				int binIndex = myClient.getData().getArena().getBinIndex(coords.x, coords.y);
 				int binStatus = myClient.getData().getArena().getBinStatus(binIndex);
 				
-				if (binStatus == Field.STATE_FAILED)
+				if (binStatus == Arena.STATE_FAILED)
 					fg = CSIColor.DARK_RED;
-				if (binStatus == Field.STATE_SUCCESS)
+				if (binStatus == Arena.STATE_SUCCESS)
 					fg = CSIColor.GREEN;
 			}
 			else if (tile == 6)
@@ -969,7 +1021,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		
 		if (activeCommand == 0)	//move
 		{
-			Event moveEvent = Event.move(curPlayerIndex, curLocation.x + rowChange, curLocation.y + colChange, false, false);
+			Event moveEvent = Event.move(curPlayerIndex, curLocation.x + rowChange, curLocation.y + colChange, false, false, false);
 			sendCommand(moveEvent);
 		}
 		
@@ -1048,7 +1100,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 	
 	private void setActivePlayer(int index)
 	{
-		System.out.println("Setting Active Player...");
+		System.out.println("Setting Active Player to " + index);
 		
 		highlights.clear();
 		activeCommand = 0;
@@ -1065,7 +1117,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 			return;
 		}
 		
-		if (p.status == Player.STS_DEAD || p.status == Player.STS_LATE || p.status == Player.STS_DECK || p.status == Player.STS_BLOB || p.status == Player.STS_HURT)
+		if (p.status == Player.STS_DEAD || p.status == Player.STS_LATE || p.status == Player.STS_DECK || p.status == Player.STS_BLOB || p.status == Player.STS_HURT || p.status == Player.STS_OUT)
 		{
 			System.out.println("Active 3b");
 			curPlayerIndex = tempIndex;
@@ -1078,6 +1130,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 		currentPlayer = p;
 		
 		System.out.println("Active 5");
+		System.out.println("\t" + curPlayerIndex);
 		
 		refreshInterface();
 		zoomToLocation(pnt.x);
@@ -1120,7 +1173,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 	private boolean canCurrentPlayerCheck()
 	{
 		if (!canCurrentPlayerAct()) return false;
-		if (currentPlayer.currentAP >= 20 || (currentPlayer.currentAP >= 10 && currentPlayer.hasSkill[Player.SKILL_CHARGE]))
+		if (currentPlayer.currentAP >= 20 || (currentPlayer.currentAP >= 10 && currentPlayer.hasSkill(Player.SKILL_CHARGE)))
 			return true;
 		return false;
 	}
@@ -1138,14 +1191,12 @@ public class ClientCursesGUI extends GUI implements KeyListener
 
 	@Override
 	public void keyReleased(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-		
+		return;
 	}
 
 	@Override
 	public void keyTyped(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-		
+		return;
 	}
 	
 	//checks how many teammates surround a player, and returns 10 times that number
@@ -1153,7 +1204,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 	private int getAssistBonus(Player ally, Player target)
 	{
 		//tactics negates assist bonuses
-		if (target.hasSkill[Player.SKILL_TACTICS])
+		if (target.hasSkill(Player.SKILL_TACTICS))
 			return 0;
 		
 		int team = myClient.getData().getTeamOfPlayer(ally);
@@ -1179,7 +1230,7 @@ public class ClientCursesGUI extends GUI implements KeyListener
 					toRet += 10;
 					
 					//teammates with guard help even more
-					if (p.hasSkill[Player.SKILL_GUARD])
+					if (p.hasSkill(Player.SKILL_GUARD))
 						toRet += 5;
 					
 					System.out.println("ENGINE - GET ASSIST: Teammate found; assist bonus is now " + toRet + ".");

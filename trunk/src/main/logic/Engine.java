@@ -9,7 +9,8 @@ import java.util.Random;
 
 import main.data.Data;
 import main.data.Event;
-import main.data.entities.Field;
+import main.data.entities.Equipment;
+import main.data.entities.Arena;
 import main.data.entities.Player;
 /**
  * class Engine
@@ -44,7 +45,7 @@ public class Engine
 	{
 		Queue<Event> toRet = new LinkedList<Event>();
 		
-		Field curArena = gameData.getArena();
+		Arena curArena = gameData.getArena();
 		
 		//if an empty event is sent in, return an empty list
 		if (theCommand == null) return toRet;
@@ -137,20 +138,30 @@ public class Engine
 
 			for (Point pnt : path)
 			{
-				if (curAP < 10)
+				boolean slideBool = false;
+				boolean jumpBool = false;
+				boolean knockdownBool = false;
+				
+				if (theCommand.flags[4] == 1)
+					slideBool = true;
+				
+				if (theCommand.flags[5] == 1)
+					jumpBool = true;
+				
+				if (theCommand.flags[6] == 1)
+					knockdownBool = true;
+				
+				if (curAP < 10 && !slideBool)
 					break;
 				
-				Event e = new Event(Event.EVENT_MOVE);
-				e.flags[0] = theCommand.flags[0];
-				e.flags[2] = pnt.x;
-				e.flags[3] = pnt.y;
-				e.flags[4] = theCommand.flags[4];
-				e.flags[5] = theCommand.flags[5];
+				Event e = Event.move(theCommand.flags[0], pnt.x, pnt.y, slideBool, jumpBool, knockdownBool);
 				
 				Point ballLoc = gameData.getBallLocation();
 				
 				//decrease the copy of the AP; don't actually touch the player
-				curAP -= 10;
+				//if the player is sliding, they can go forever
+				if (!slideBool)
+					curAP -= 10;
 				System.out.println("ENGINE - PATH MOVEMENT: curAP is " + curAP + " and p.currentAP is " + p.currentAP);
 				
 				toRet.offer(e);
@@ -179,22 +190,28 @@ public class Engine
 				}
 				
 				//CHECK IF THIS IS AN ELECTRICAL TILE AND ACT ACCORDINGLY
-				if (curArena.getTile(pnt.x, pnt.y) == Field.SHOCK_TILE  /* TODO and the player isn't wearing insulated boots*/)
+				if (curArena.getTile(pnt.x, pnt.y) == Arena.TILE_SHOCK  && !playerResistsShock(p) && !knockdownBool)
 				{
 					toRet.offer(calculateInjury(null, p, 60 + Randint(1, 100), curTG + Randint(1, 100)));		//shock tiles attack with 60 strength
+					
+					if (gameData.getBallCarrier() == p)
+					{
+						toRet.offer(dropBall());
+						toRet.offer(moveBall());
+					}
 				}
 				
 				//CHECK IF THE BALL IS HERE AND ACT ACCORDINGLY
 				if (ballLoc.x == pnt.x && ballLoc.y == pnt.y)
 				{
 					int hands = p.getAttributeWithModifiers(Player.ATT_HD);
-					if (!p.hasSkill[Player.SKILL_SCOOP])
+					if (!p.hasSkill(Player.SKILL_SCOOP))
 					{
 						curAP -= 10;
 						if (curAP >= 0) toRet.offer(e);	//treat it as moving again if the player has the AP for it (autofail otherwise)
 					}
 					
-					if (curAP < 0)	//we should only get here if the player was pulled onto the ball without Scoop
+					if (curAP < 0 ||  knockdownBool)	//we should only get here if a standing player was pulled onto the ball without Scoop
 					{
 						curAP = 0;
 						hands = 0;	//if a player has Scoop, the AP when getting here should be 0 or higher, so the hands remain normal
@@ -212,6 +229,7 @@ public class Engine
 				}
 				
 				//CHECK IF THIS IS A PORTAL AND ACT ACCORDINGLY
+				//even if a player was knocked down from a check, they will still teleport
 				int potentialPortal = -1;
 				
 				//assumes exactly 8 portals
@@ -228,17 +246,9 @@ public class Engine
 				
 				if (potentialPortal > -1)
 				{
-					Event teleEvent = new Event(Event.EVENT_TELE);
-					teleEvent.flags[0] = e.flags[0];
-					teleEvent.flags[2] = potentialPortal;
-					teleEvent.flags[3] = Randint(0, 7);
+					Event teleEvent = Event.teleport(e.flags[0], potentialPortal, Randint(0, 7));
+					toRet = addEventChainToQueue(toRet, teleEvent);
 					
-					Queue<Event> teleResults = generateEventsAndPersistData(teleEvent);
-					
-					for (Event e2 : teleResults)
-					{
-						toRet.offer(e2);
-					}
 					break;	//stop going through move events
 				}
 				//REFLEX CHECKS HAPPEN BEFORE BALL BIN CHECKS BUT AFTER EVERYTHING ELSE
@@ -251,18 +261,22 @@ public class Engine
 				//		possibly use localData here instead
 				int binIndex = curArena.getPadIndex(pnt.x, pnt.y);
 				
-				if (curArena.getBinStatus(binIndex) == Field.STATE_UNTRIED)	//untried ball bin
+				if (curArena.getBinStatus(binIndex) == Arena.STATE_UNTRIED && !knockdownBool)	//untried ball bin, player is standing
 				{
 					int isCorrect = Randint(1, curArena.getUntriedBinCount());
 					
-					if (isCorrect == 1 || (isCorrect == 2 && p.hasSkill[Player.SKILL_INTUITION]))
+					if (isCorrect == 1 || (isCorrect == 2 && p.hasSkill(Player.SKILL_INTUITION)))
 					{
 						toRet.offer(Event.tryBallBin(theCommand.flags[0], binIndex, 1));
 					}
 					else
 					{
 						toRet.offer(Event.tryBallBin(theCommand.flags[0], binIndex, 0));
-						toRet.offer(calculateInjury(null, p, 20 + Randint(1, 100), curTG + Randint(1, 100)));		//ball bins attack with 20 strength
+						
+						if (!playerResistsShock(p))					//no effect if player has insulated boots
+							toRet.offer(calculateInjury(null, p, 20 + Randint(1, 100), curTG + Randint(1, 100)));		//ball bins attack with 20 strength
+						
+						//don't need to worry about dropping the ball, since there's no way you can have the ball and be shocked by a bin
 					}
 				}
 			}
@@ -295,22 +309,26 @@ public class Engine
 				if (toTele != null)
 				{					
 					// 2) If so, generate a teleport event for him.
-					Event teleEvent = new Event(Event.EVENT_TELE);
-					teleEvent.flags[0] = localData.getIndexOfPlayer(toTele);
-					teleEvent.flags[2] = theCommand.flags[3];
-					teleEvent.flags[3] = Randint(0, 7);
+					Event teleEvent = Event.teleport(localData.getIndexOfPlayer(toTele), theCommand.flags[3], Randint(0, 7));
 					
 					System.out.println("DISPLACEMENT! Player " + theCommand.flags[0] + " is displacing Player " + teleEvent.flags[0]);
 					
 					// 3) Push the new teleport event after the current one.
-					Queue<Event> teleResults = generateEventsAndPersistData(teleEvent);
-					
-					for (Event e2 : teleResults)
-					{
-						toRet.offer(e2);
-					}
+					toRet = addEventChainToQueue(toRet, teleEvent);
 				}
 			}
+			
+			//check for illegal equipment
+			if (tele1 == -1)
+			{
+				int detectChance = p.getDetectionChance();
+				
+				System.out.println("ENGINE - WARPING IN: New player's detection chance is " + detectChance + ".");
+				
+				if (Randint(1, 100) < detectChance)	//player was detected
+					toRet.offer(Event.eject(theCommand.flags[0], 0, Event.EJECT_REF, 0, 0, 0, 0));
+			}
+			
 		}
 		else if (theCommand.getType() == Event.EVENT_HANDOFF)
 		{
@@ -487,7 +505,7 @@ public class Engine
 			
 			int tile = gameData.getArena().getTile(origin.x, origin.y);
 			
-			if (tile == Field.WALL_TILE || tile == Field.BIN_TILE)
+			if (tile == Arena.TILE_WALL || tile == Arena.TILE_BIN)
 				return toRet;
 			
 			if (gameData.getPlayerAtLocation(origin) != null && !isJumping)	//block routes that go through other players, until the player is jumping
@@ -522,17 +540,9 @@ public class Engine
 		
 		if (pIndex == -1) return null;	//if there simply aren't any more players on deck, ignore this
 		
-		//REF LOGIC
-		
 		nextPlayer.status = Player.STS_OKAY;
 		
-		Event toRet = new Event(Event.EVENT_TELE);
-		
-		toRet.flags[0] = pIndex;
-		toRet.flags[2] = -1;
-		toRet.flags[3] = Randint(0, 7);
-		
-		return toRet;
+		return Event.teleport(pIndex, -1, Randint(0, 7));
 	}
 	
 	//checks how many teammates surround a player, and returns 10 times that number
@@ -540,7 +550,7 @@ public class Engine
 	private int getAssistBonus(Player ally, Player target)
 	{
 		//tactics negates assist bonuses
-		if (target.hasSkill[Player.SKILL_TACTICS])
+		if (target.hasSkill(Player.SKILL_TACTICS))
 			return 0;
 		
 		int team = gameData.getTeamOfPlayer(ally);
@@ -566,7 +576,7 @@ public class Engine
 					toRet += 10;
 					
 					//teammates with guard help even more
-					if (p.hasSkill[Player.SKILL_GUARD])
+					if (p.hasSkill(Player.SKILL_GUARD))
 						toRet += 5;
 					
 					System.out.println("ENGINE - GET ASSIST: Teammate found; assist bonus is now " + toRet + ".");
@@ -614,36 +624,36 @@ public class Engine
 				
 		if (isCheck)
 		{
-			//auto-injure 25% of the time with Doomstrike
-			if (attacker.hasSkill[Player.SKILL_DOOMSTRIKE] && Randint(1, 4) == 1 && injLevel < Player.INJURY_TRIVIAL)
+			//auto-injure 16% of the time with Doomstrike (manual says 25%)
+			if (attacker.hasSkill(Player.SKILL_DOOMSTRIKE) && Randint(1, 6) == 1 && injLevel < Player.INJURY_TRIVIAL)
 			{
 				System.out.println("ENGINE - INJURY CALC: Doomstrike activated.");
 				injLevel = Player.INJURY_TRIVIAL;
 			}
 			
-			//auto-stun 25% of the time with Fist of Iron
-			if (attacker.hasSkill[Player.SKILL_FIST_OF_IRON] && Randint(1, 4) == 1 && injLevel < Player.INJURY_STUN)
+			//auto-stun 16% of the time with Fist of Iron (manual says 25%)
+			if (attacker.hasSkill(Player.SKILL_FIST_OF_IRON) && Randint(1, 6) == 1 && injLevel < Player.INJURY_STUN)
 			{
 				System.out.println("ENGINE - INJURY CALC: Fist of Iron activated.");
 				injLevel = Player.INJURY_STUN;
 			}
 			
 			//Vicious adds to the injury type
-			if (attacker.hasSkill[Player.SKILL_VICIOUS])
+			if (attacker.hasSkill(Player.SKILL_VICIOUS))
 			{
 				System.out.println("ENGINE - INJURY CALC: Vicious activated.");
 				injLevel++;
 			}
 			
 			//Resilient subtracts from the injury type
-			if (defender.hasSkill[Player.SKILL_RESILIENT])
+			if (defender.hasSkill(Player.SKILL_RESILIENT))
 			{
 				System.out.println("ENGINE - INJURY CALC: Resilient activated.");
 				injLevel--;
 			}
 		}
 		
-		if (injLevel <= Player.INJURY_KNOCKDOWN && defender.hasSkill[Player.SKILL_JUGGERNAUT])	//juggernaut prevents basic knockdown
+		if (injLevel <= Player.INJURY_KNOCKDOWN && defender.hasSkill(Player.SKILL_JUGGERNAUT))	//juggernaut prevents basic knockdown
 			toRet = Event.setStatus(pIndex, Player.STS_OKAY);
 		else if (injLevel <= Player.INJURY_KNOCKDOWN)
 			toRet = Event.setStatus(pIndex, Player.STS_DOWN);
@@ -682,10 +692,11 @@ public class Engine
 			type = Event.EJECT_TRIVIAL;
 			weeksOut = 0;
 		}
+		if (injLevel == Player.INJURY_MINOR); //do nothing; weeks out are already calculated, and no stat damage is applied
 		if (injLevel == Player.INJURY_CRIPPLE_10)
 		{
 			penalty[0] = 5;
-			penalty[1] = 10;
+			penalty[1] = 5;
 		}
 		if (injLevel == Player.INJURY_CRIPPLE_15)
 		{
@@ -764,6 +775,13 @@ public class Engine
 		else if (result >= -20 && result < -6)
 		{
 			toRet.offer(Event.check(theCommand.flags[0], theCommand.flags[1], Event.CHECK_FAIL, reflex));
+			
+			//if nothing would happen but the player has repulsor gloves, push the target anyway
+			if (playerHasRepulsorGauntlets(attacker) && !playerHasMagneticBoots(defender))
+			{
+				System.out.println("  Repulsor gauntlets have activated!");
+				toRet = addEventChainToQueue(toRet, generatePushEvent(theCommand.flags[0], theCommand.flags[1], false));
+			}
 		}
 		else if (result >= -6 && result <= 5)
 		{
@@ -777,9 +795,14 @@ public class Engine
 				toRet.offer(moveBall());
 			}
 		}
-		else if (result > 5 && result <= 20)
+		else if (result > 5 && result <= 20 && playerHasMagneticBoots(defender))
+		{
+			toRet.offer(Event.check(theCommand.flags[0], theCommand.flags[1], Event.CHECK_FAIL, reflex));
+		}
+		else if (result > 5 && result <= 20 && !playerHasMagneticBoots(defender))
 		{
 			toRet.offer(Event.check(theCommand.flags[0], theCommand.flags[1], Event.CHECK_PUSH, reflex));
+			toRet = addEventChainToQueue(toRet, generatePushEvent(theCommand.flags[0], theCommand.flags[1], false));
 		}
 		else if (result > 20 && result <= 40)
 		{
@@ -795,6 +818,10 @@ public class Engine
 		else if (result > 40)
 		{
 			toRet.offer(Event.check(theCommand.flags[0], theCommand.flags[1], Event.CHECK_PUSHFALL, reflex));
+			
+			if (!playerHasMagneticBoots(defender))
+				toRet = addEventChainToQueue(toRet, generatePushEvent(theCommand.flags[0], theCommand.flags[1], true));
+			
 			toRet.offer(calculateInjury(attacker, defender, atk_ST, def_TG));
 			
 			if (gameData.getBallCarrier() == defender)
@@ -807,6 +834,37 @@ public class Engine
 		return toRet;
 	}
 	
+	private Event generatePushEvent(int pushingPlayerIndex, int pushedPlayerIndex, boolean isKnockdown)
+	{
+		Player attacker = gameData.getPlayer(pushingPlayerIndex);
+		Player defender = gameData.getPlayer(pushedPlayerIndex);
+
+		Point attackerCoords = gameData.getLocationOfPlayer(attacker);
+		Point defenderCoords = gameData.getLocationOfPlayer(defender);
+		
+		int xChange = 0;
+		int yChange = 0;
+		
+		if (attackerCoords.x < defenderCoords.x) xChange = 1;
+		if (attackerCoords.x > defenderCoords.x) xChange = -1;
+		if (attackerCoords.y < defenderCoords.y) yChange = 1;
+		if (attackerCoords.y > defenderCoords.y) yChange = -1;
+		
+		return Event.move(pushedPlayerIndex, defenderCoords.x + xChange, defenderCoords.y + yChange, true, false, isKnockdown);
+	}
+	
+	private Queue<Event> addEventChainToQueue(Queue<Event> returnQueue, Event event)
+	{
+		Queue<Event> eventResults = generateEventsAndPersistData(event);
+		
+		for (Event e2 : eventResults)
+		{
+			returnQueue.offer(e2);
+		}
+		
+		return returnQueue;
+	}
+
 	private Queue<Event> generateReflexChecks(Player plyr, Point coords, int team)
 	{
 		Queue<Event> toRet = new LinkedList<Event>();
@@ -821,7 +879,7 @@ public class Engine
 				if (toCheck != null && toCheck.status == Player.STS_OKAY && gameData.getTeamOfPlayer(toCheck) != team)
 				{
 					//don't reaction check if moving player has Awe
-					if (plyr.hasSkill[Player.SKILL_AWE] && !toCheck.hasSkill[Player.SKILL_STOIC] && Randint(1, 20) < 20)
+					if (plyr.hasSkill(Player.SKILL_AWE) && !toCheck.hasSkill(Player.SKILL_STOIC) && Randint(1, 20) < 20)
 						continue;
 					
 					//reflex check passed
@@ -836,7 +894,7 @@ public class Engine
 						//throw another reflex check if player has Combo skill
 						// TODO Don't throw this second check if either player was knocked down by the first one
 						//		possibly use localData here
-						if (toCheck.hasSkill[Player.SKILL_COMBO])
+						if (toCheck.hasSkill(Player.SKILL_COMBO))
 						{
 							checkResult = resolveCombat(Event.check(p2, p1, -2, true));
 							toRet.addAll(checkResult);
@@ -868,6 +926,21 @@ public class Engine
 		return true;
 	}
 	
+	private boolean playerResistsShock(Player player)
+	{
+		return (player.getEquipment(Equipment.EQUIP_BOOTS) == Equipment.EQUIP_INSULATED_BOOTS);
+	}
+	
+	private boolean playerHasRepulsorGauntlets(Player player)
+	{
+		return (player.getEquipment(Equipment.EQUIP_GLOVES) == Equipment.EQUIP_REPULSOR_GLOVES);
+	}
+	
+	private boolean playerHasMagneticBoots(Player player)
+	{
+		return (player.getEquipment(Equipment.EQUIP_BOOTS) == Equipment.EQUIP_MAGNETIC_BOOTS);
+	}
+	
 	//called after ball pickups, handoffs, moves, and (eventually) strips
 	private boolean checkForVictory()
 	{
@@ -884,7 +957,7 @@ public class Engine
 		System.out.println("ENGINE VICTORY CHECK: tile is " + playerTile + " at point (" + coords.x + ", " + coords.y + ").");
 		
 		//check if the carrier's tile is a goal tile
-		if (playerTile == Field.GOAL_TILE)
+		if (playerTile == Arena.TILE_GOAL)
 			return true;
 			//return false;
 		

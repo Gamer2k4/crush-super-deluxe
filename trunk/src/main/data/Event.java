@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 public class Event implements Serializable
 {
+	private static final long serialVersionUID = 7877259683110444754L;
+	
 	public static final int EVENT_TURN = 0;
 	public static final int EVENT_MOVE = 1;
 	public static final int EVENT_TELE = 2;
@@ -40,7 +42,7 @@ public class Event implements Serializable
 	
 	public int[] flags = new int[TOTAL_FLAGS];
 	
-	public Event(int evt_type)
+	private Event(int evt_type)
 	{
 		type = evt_type;
 		
@@ -50,6 +52,7 @@ public class Event implements Serializable
 		}
 	}
 	
+	@Override
 	public String toString()
 	{
 		String toRet = "UNDEFINED EVENT - TYPE " + type;
@@ -101,7 +104,7 @@ public class Event implements Serializable
 		return e;
 	}
 	
-	public static Event move(int player, int targetX, int targetY, boolean slide, boolean jump)
+	public static Event move(int player, int targetX, int targetY, boolean slide, boolean jump, boolean knockdown)
 	{
 		Event e = new Event(EVENT_MOVE);
 		e.flags[0] = player;
@@ -109,12 +112,16 @@ public class Event implements Serializable
 		e.flags[3] = targetY;
 		e.flags[4] = 0;
 		e.flags[5] = 0;
+		e.flags[6] = 0;
 		
 		if (slide)
 			e.flags[4] = 1;
 		
 		if (jump)
 			e.flags[5] = 1;
+		
+		if (knockdown)
+			e.flags[6] = 1;
 		
 		return e;
 	}
@@ -210,6 +217,16 @@ public class Event implements Serializable
 		
 		return e;
 	}
+	
+	public static Event teleport(int player, int from, int to)
+	{
+		Event e = new Event(EVENT_TELE);
+		e.flags[0] = player;
+		e.flags[2] = from;
+		e.flags[3] = to;
+		
+		return e;
+	}
 }
 
 /**
@@ -222,12 +239,13 @@ public class Event implements Serializable
  * 0 - p1 index
  * 2 - target x
  * 3 - target y
- * 4 - slide boolean
+ * 4 - slide boolean (if true, it means the player is moving against his will, such as with repulsor gauntlets)
  * 5 - jump boolean
+ * 6 - knockdown boolean (if true, ignore the effects of tiles other than portals)
  * 
  * EVENT_TELE
  * 0 - p1 index
- * 2 - initial portal
+ * 2 - initial portal (-1 means a new player is warping in)
  * 3 - final portal
  * 
  * EVENT_STS

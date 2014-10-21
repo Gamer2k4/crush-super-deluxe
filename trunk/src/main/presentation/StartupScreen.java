@@ -38,7 +38,7 @@ public class StartupScreen extends JFrame implements ActionListener
 
 	private List<String> teamNames;
 	private Map<String, Integer> teamMappings;
-	
+
 	private ActionListener parentActionListener;
 
 	public StartupScreen(ActionListener actionListener)
@@ -46,7 +46,7 @@ public class StartupScreen extends JFrame implements ActionListener
 		super("Crush! Super Deluxe");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);
-		
+
 		parentActionListener = actionListener;
 
 		teamMappings = createTeamMappings();
@@ -62,6 +62,7 @@ public class StartupScreen extends JFrame implements ActionListener
 		contentPane.add(controlPane);
 
 		pack();
+		setLocationRelativeTo(null);
 		setVisible(true);
 	}
 
@@ -84,7 +85,7 @@ public class StartupScreen extends JFrame implements ActionListener
 		teamName[0] = createTeamNameField(team0);
 		teamName[1] = createTeamNameField(team1);
 		teamName[2] = createTeamNameField(team2);
-		
+
 		teamLoader = new JButton[3];
 		teamLoader[0] = createButton(team0 + "Load", "Load Team...");
 		teamLoader[1] = createButton(team1 + "Load", "Load Team...");
@@ -97,7 +98,7 @@ public class StartupScreen extends JFrame implements ActionListener
 		return panel;
 	}
 
-	private JPanel createTeamSelectPane(String teamColor, JTextField teamName, JButton teamLoader)
+	private JPanel createTeamSelectPane(String teamColor, JTextField teamNameField, JButton teamLoaderButton)
 	{
 		JPanel panel = new JPanel();
 
@@ -107,8 +108,8 @@ public class StartupScreen extends JFrame implements ActionListener
 
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		panel.add(createEnableCheckBox(teamColor));
-		panel.add(teamName);
-		panel.add(teamLoader);
+		panel.add(teamNameField);
+		panel.add(teamLoaderButton);
 
 		return panel;
 	}
@@ -187,12 +188,12 @@ public class StartupScreen extends JFrame implements ActionListener
 			teamLoader[teamIndex].setEnabled(true);
 		}
 	}
-	
+
 	private void handleLoadTeam(String team)
 	{
-		//TODO: bring up a JFileChooser
-		//team files will be *.csdt (Crush! Super Deluxe Team)
-		//ultimately try to make it backwards compatible with *.tme files
+		// TODO: bring up a JFileChooser
+		// team files will be *.csdt (Crush! Super Deluxe Team)
+		// ultimately try to make it backwards compatible with *.tme files
 		return;
 	}
 
@@ -208,25 +209,25 @@ public class StartupScreen extends JFrame implements ActionListener
 		if (name.isEmpty())
 			return "";
 
-		name = "_" + name;
+		String normalizedName = "_" + name;
 
-		while (name.contains("_"))
+		while (normalizedName.contains("_"))
 		{
-			int index = name.indexOf("_");
-			if (index == name.length() - 1)
+			int index = normalizedName.indexOf("_");
+			if (index == normalizedName.length() - 1)
 			{
-				name = name.substring(0, index);
+				normalizedName = normalizedName.substring(0, index);
 				break;
 			}
 
-			String half1 = name.substring(0, index);
-			String half2 = name.substring(index + 2);
-			String nextChar = name.substring(index + 1, index + 2);
+			String half1 = normalizedName.substring(0, index);
+			String half2 = normalizedName.substring(index + 2);
+			String nextChar = normalizedName.substring(index + 1, index + 2);
 
-			name = half1 + " " + nextChar.toUpperCase() + half2;
+			normalizedName = half1 + " " + nextChar.toUpperCase() + half2;
 		}
 
-		return name.substring(1);
+		return normalizedName.substring(1);
 	}
 
 	private List<String> generateRandomTeamNames()

@@ -16,6 +16,7 @@ public enum SaveTokenTag
 	P_UID,	//player unique identifier
 	P_STS,	//player status
 	P_NAM,	//player name
+	P_SKO,	//player skill order
 	P_RCE,	//player race
 	P_ATT,	//player attributes
 	P_INJ,	//player injury attribute modifiers
@@ -23,6 +24,7 @@ public enum SaveTokenTag
 	P_WKS,	//player weeks out
 	P_ITP,	//player injury type
 	P_EQP,	//player equipment
-	P_XP_	//player xp
+	P_XP_,	//player xp
+	P_SP_	//player skill points
 	//current action points aren't saved because they're never relevant outside of the game
 }
