@@ -2,17 +2,11 @@ package main.presentation.teameditor.utils;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
-import javax.imageio.ImageIO;
+import main.presentation.teameditor.TeamEditorGUI;
 
 public class TeamImages
 {
-	private Color bgColor = new Color(238, 238, 238);
-
 	private BufferedImage[] raceTemplates;
 	private BufferedImage[] raceImages;
 
@@ -27,23 +21,12 @@ public class TeamImages
 	{
 		raceTemplates = new BufferedImage[8];
 
-		Path path = Paths.get(System.getProperty("user.dir"));
-		String pathString = path.getParent().toString() + "\\resources\\player_profiles\\";
-		String curPathString = "";
+		ImageType raceTypes[] = { ImageType.PROFILE_CURMIAN, ImageType.PROFILE_DRAGORAN, ImageType.PROFILE_GRONK, ImageType.PROFILE_HUMAN,
+				ImageType.PROFILE_KURGAN, ImageType.PROFILE_NYNAX, ImageType.PROFILE_SLITH, ImageType.PROFILE_XJS9000 };
 
-		String raceFiles[] = { "curmian_160x160.png", "dragoran_160x160.png", "gronk_160x160.png", "human1_160x160.png",
-				"kurgan_160x160.png", "nynax_160x160.png", "slith_160x160.png", "xjs9000_160x160.png" };
-
-		try
+		for (int i = 0; i < 8; i++)
 		{
-			for (int i = 0; i < 8; i++)
-			{
-				curPathString = pathString + raceFiles[i];
-				raceTemplates[i] = ImageIO.read(new File(curPathString));
-			}
-		} catch (IOException e)
-		{
-			System.out.println("TeamImages.java - Could not load player graphic! Path was " + curPathString);
+			raceTemplates[i] = ImageFactory.getImage(raceTypes[i]);
 		}
 	}
 
@@ -51,7 +34,7 @@ public class TeamImages
 	{
 		for (int i = 0; i < 8; i++)
 		{
-			raceImages[i] = ColorReplacer.setColors(raceTemplates[i], mainColor, trimColor, bgColor);
+			raceImages[i] = ColorReplacer.setColors(raceTemplates[i], mainColor, trimColor, TeamEditorGUI.BG_COLOR);
 		}
 	}
 

@@ -12,6 +12,7 @@ import javax.swing.JFrame;
 import main.data.entities.Equipment;
 import main.data.entities.Player;
 import main.data.entities.Team;
+import main.data.factory.PlayerFactory;
 import main.logic.Client;
 import main.logic.Server;
 import main.presentation.StartupScreen;
@@ -69,7 +70,7 @@ public class CrushRunner
 		Team team2 = new Team();
 		Team team3 = new Team();
 
-		team1.addPlayer(new Player(Player.RACE_HUMAN));
+		team1.addPlayer(PlayerFactory.createPlayerWithRandomName(Player.RACE_HUMAN));
 		/*
 		team1.addPlayer(new Player(Player.RACE_HUMAN));
 

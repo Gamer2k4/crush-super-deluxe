@@ -3,6 +3,7 @@ package test.data.entities;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import main.data.entities.Player;
+import main.data.factory.PlayerFactory;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -15,8 +16,8 @@ public class PlayerTest {
 	@Before
 	public void setUp()
 	{
-		blankPlayer = Player.createEmptyPlayer();
-		humanPlayer = new Player(Player.RACE_HUMAN);
+		blankPlayer = PlayerFactory.createEmptyPlayer();
+		humanPlayer = PlayerFactory.createPlayerWithRandomName(Player.RACE_HUMAN);
 	}
 	
 	@Test
@@ -38,7 +39,7 @@ public class PlayerTest {
 	@Test
 	public void newBlankPlayersEqualAndHash()
 	{
-		Player blankPlayer2 = Player.createEmptyPlayer();
+		Player blankPlayer2 = PlayerFactory.createEmptyPlayer();
 		
 		assertEquals(blankPlayer.hashCode(), blankPlayer2.hashCode());
 		assertTrue(blankPlayer.equals(blankPlayer2));
@@ -48,7 +49,7 @@ public class PlayerTest {
 	@Test
 	public void newPlayerEqualsSelf()
 	{
-		Player player = new Player(Player.RACE_GRONK);
+		Player player = PlayerFactory.createPlayerWithRandomName(Player.RACE_GRONK);
 		
 		assertTrue(player.equals(player));
 	}
@@ -56,7 +57,7 @@ public class PlayerTest {
 	@Test
 	public void clonedPlayerEqualsSelf()
 	{
-		Player player = new Player(Player.RACE_SLITH);
+		Player player = PlayerFactory.createPlayerWithRandomName(Player.RACE_SLITH);
 		Player player2 = player.clone();
 		
 		assertEquals(player.hashCode(), player2.hashCode());

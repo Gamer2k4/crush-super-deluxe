@@ -12,6 +12,7 @@ import main.data.Event;
 import main.data.entities.Arena;
 import main.data.entities.Player;
 import main.data.entities.Team;
+import main.data.factory.PlayerFactory;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -73,7 +74,7 @@ public class DataTest {
 	
 	private List<Team> createOnePlayerTeam()
 	{
-		Player player = new Player(Player.RACE_DRAGORAN);
+		Player player = PlayerFactory.createPlayerWithRandomName(Player.RACE_DRAGORAN);
 		Team team = new Team();
 		team.addPlayer(player);
 		List<Team> singleTeam = new ArrayList<Team>();

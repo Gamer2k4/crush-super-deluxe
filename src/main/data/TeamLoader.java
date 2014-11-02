@@ -7,6 +7,7 @@ import java.util.List;
 
 import main.data.entities.Player;
 import main.data.entities.Team;
+import main.data.factory.PlayerFactory;
 import main.data.save.EntityMap;
 import main.data.save.SaveHandler;
 
@@ -104,7 +105,7 @@ public class TeamLoader
 		
 		try
 		{
-			player = Player.createEmptyPlayer();
+			player = PlayerFactory.createEmptyPlayer();
 			String key = player.loadFromText(saveString);
 			
 			EntityMap.put(key, player);

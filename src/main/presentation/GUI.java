@@ -1,7 +1,5 @@
 package main.presentation;
 
-import java.util.Queue;
-
 import main.data.Event;
 import main.logic.Client;
 import main.logic.Server;

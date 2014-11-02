@@ -65,7 +65,7 @@ public class ServerJFrameGUI extends GUI
 		int curTeam = myData.getCurrentTeam();
 		currentTeam.setText("Current Team: " + curTeam);
 		
-		mainWindow.show();
+		mainWindow.setVisible(true);
 	}
 	
 	private void generateMessages(Event theEvent)

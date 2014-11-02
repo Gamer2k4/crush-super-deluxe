@@ -6,44 +6,30 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import javax.imageio.ImageIO;
 
 import main.presentation.teameditor.utils.ColorReplacer;
+import main.presentation.teameditor.utils.ImageFactory;
+import main.presentation.teameditor.utils.ImageType;
 
 public class TeamHelmetColorPanel extends TeamColorPanel
 {
 	private static final long serialVersionUID = 2993187078524011974L;
-	
-	private Color bgColor = new Color(238, 238, 238);
 	
 	private BufferedImage helmetImage;
 	private BufferedImage originalImage;
 
 	public TeamHelmetColorPanel(Color mainColor, Color trimColor)
 	{
-		Path path = Paths.get(System.getProperty("user.dir"));
-		
-		String pathString = path.getParent().toString() + "\\resources\\mask_72x72.bmp";
-		
-		try
-		{
-			originalImage = ImageIO.read(new File(pathString));
-		} catch (IOException e)
-		{
-			System.out.println("TeamHelmetPanel.java - Could not load helmet graphic! Path was " + pathString);
-		}
+		originalImage = ImageFactory.getImage(ImageType.HELMET);
 		
 		this.mainColor = mainColor;
 		setTrimColor(trimColor);
+		
+		Dimension helmetDimension = ImageFactory.getImageSize(ImageType.HELMET);
 
-		this.setMinimumSize(new Dimension(72, 72));
-		this.setMaximumSize(new Dimension(72, 72));
-		this.setPreferredSize(new Dimension(72, 72));
+		this.setMinimumSize(helmetDimension);
+		this.setMaximumSize(helmetDimension);
+		this.setPreferredSize(helmetDimension);
 	}
 
 	@Override
@@ -62,7 +48,7 @@ public class TeamHelmetColorPanel extends TeamColorPanel
 
 	void updateGraphic()
 	{
-		helmetImage = ColorReplacer.setColors(originalImage, mainColor, trimColor, bgColor);
+		helmetImage = ColorReplacer.setColors(originalImage, mainColor, trimColor, TeamEditorGUI.BG_COLOR);
 		repaint();
 	}
 

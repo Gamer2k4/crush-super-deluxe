@@ -6,11 +6,12 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.LayoutManager;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 
 import javax.swing.BorderFactory;
@@ -19,6 +20,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -39,11 +41,19 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.plaf.metal.MetalToggleButtonUI;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import main.data.entities.Equipment;
 import main.data.entities.Player;
 import main.data.entities.Team;
+import main.data.factory.PlayerFactory;
+import main.presentation.teameditor.tablemodels.InjuredPlayersTableModel;
+import main.presentation.teameditor.tablemodels.RosterTableModel;
+import main.presentation.teameditor.utils.ColorReplacer;
 import main.presentation.teameditor.utils.GUIPlayerAttributes;
+import main.presentation.teameditor.utils.ImageFactory;
+import main.presentation.teameditor.utils.ImageType;
 import main.presentation.teameditor.utils.SkillButtonValidator;
 import main.presentation.teameditor.utils.TeamFileFilter;
 import main.presentation.teameditor.utils.TeamUpdater;
@@ -51,6 +61,8 @@ import main.presentation.teameditor.utils.TeamUpdater;
 public class TeamEditorGUI extends JFrame implements ActionListener, MouseListener, ListSelectionListener, TableModelListener
 {
 	private static final long serialVersionUID = -4815838996578005455L;
+	
+	public static final Color BG_COLOR = new Color(238, 238, 238);
 
 	private TeamUpdater teamUpdater;
 	private SkillButtonValidator skillButtonValidator;
@@ -74,6 +86,9 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 
 	private JLabel coachLabel;
 	private JLabel nameLabel;
+	
+	private JTable injuredPlayersTable;
+	private JLabel docbotCostLabel;
 
 	private JTextField teamCost;
 	private JTextField teamTreasury;
@@ -83,14 +98,8 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 	private JFileChooser fileChooser;
 	private JToggleButton swapButton;
 
-	private JLabel playerNameLabel;
-	private JLabel playerRankLabel;
-	private JLabel playerSeasonsLabel;
-	private JLabel playerRatingLabel;
-	private JLabel playerStatusLabel;
-	private JLabel playerSkillPointsLabel;
-	private PlayerImagePanel rosterPlayerImagePanel;
-	private JTable playerAbilityTable;
+	private RosterPlayerInfoPanel rosterPlayerInfoPanel;
+	private DraftPlayerInfoPanel draftPlayerInfoPanel;
 
 	private JToggleButton[] skillButtons = new JToggleButton[Player.TOTAL_SKILLS + 1];
 
@@ -100,10 +109,10 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 	private ColorChooserPanel mainColorChooser;
 	private ColorChooserPanel trimColorChooser;
 
-	private PlayerImagePanel draftPlayerImagePanel;
-
-	private static final int COLOR_PANEL_SIZE = 72;
-	private static final int PLAYER_IMAGE_SIZE = 160;
+	private static final int COLOR_PANEL_SIZE = (int)(ImageFactory.getImageSize(ImageType.HELMET).getHeight());
+	private static final int PLAYER_IMAGE_SIZE = (int)(ImageFactory.getImageSize(ImageType.PROFILE_CURMIAN).getHeight());
+	private static final int DOCBOT_IMAGE_HEIGHT = (int)(ImageFactory.getImageSize(ImageType.DOCBOT).getHeight());
+	private static final int DOCBOT_IMAGE_WIDTH = (int)(ImageFactory.getImageSize(ImageType.DOCBOT).getWidth());
 
 	private static final int MAIN_PANE_X = 0;
 	private static final int MAIN_PANE_Y = 0;
@@ -135,7 +144,7 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 
 	private static final int SKILL_BUTTON_WIDTH = 115;
 	private static final int SKILL_BUTTON_HEIGHT = 20;
-	
+
 	private static final int PLAYER_LABEL_WIDTH = 125;
 	private static final int PLAYER_LABEL_HEIGHT = 15;
 
@@ -158,6 +167,9 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 	private static final String EVENT_PLAYER_VIEW = "playerView";
 	private static final String EVENT_SKILL_GAIN = "skill";
 	private static final String EVENT_DRAFT = "draft";
+	private static final String EVENT_HIRE = "hire";
+	private static final String EVENT_FIRE = "fire";
+	private static final String EVENT_DOCBOT = "docbot";
 
 	private static final int MAX_VALUE = 900;
 	private static final int MAX_TEAM_NAME_LENGTH = 13;
@@ -252,7 +264,27 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 
 	private JScrollPane createRosterTablePane()
 	{
-		rosterTable = new JTable(new RosterTableModel());
+		rosterTable = new JTable(new RosterTableModel())
+		{
+			private static final long serialVersionUID = -4344474350657252202L;
+
+			@Override
+			public Component prepareRenderer(TableCellRenderer renderer, int row, int column)
+			{
+				Component c = super.prepareRenderer(renderer, row, column);
+				JComponent jc = (JComponent)c;
+
+				// add custom rendering here
+				Player p = teamUpdater.getPlayer(row);
+				
+				if (p != null && p.getWeeksOut() > 0)
+					jc.setForeground(Color.RED);
+				else
+					jc.setForeground(Color.BLACK);
+
+				return c;
+			}
+		};
 		formatRosterTableColumns(rosterTable);
 		rosterTable.getTableHeader().setReorderingAllowed(false);
 		rosterTable.getTableHeader().setResizingAllowed(false);
@@ -265,103 +297,14 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 		return new JScrollPane(rosterTable);
 	}
 
-	private JPanel createRosterPlayerPane()
-	{
-		// TODO: keep formatting this
-
-		JPanel panel = new JPanel();
-
-		panel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-		panel.setLayout(null);
-
-		playerNameLabel = setLabelFontSize(new JLabel(), 18);
-
-		playerNameLabel.setLocation(20, 5);
-		playerNameLabel.setSize(PLAYER_IMAGE_SIZE, 20);
-		panel.add(playerNameLabel);
-		
-		JLabel rankTextLabel = createPlayerPaneTextLabel("Rank", playerNameLabel);
-		rankTextLabel.setLocation(PLAYER_IMAGE_SIZE + 10, 5);
-		panel.add(rankTextLabel);
-		
-		playerRankLabel = createPlayerPaneValueLabel(rankTextLabel);
-		panel.add(playerRankLabel);
-		
-		JLabel seasonsTextLabel = createPlayerPaneTextLabel("Seasons", playerRankLabel);
-		panel.add(seasonsTextLabel);
-		
-		playerSeasonsLabel = createPlayerPaneValueLabel(seasonsTextLabel);
-		panel.add(playerSeasonsLabel);
-		
-		JLabel ratingTextLabel = createPlayerPaneTextLabel("Rating", playerSeasonsLabel);
-		panel.add(ratingTextLabel);
-		
-		playerRatingLabel = createPlayerPaneValueLabel(ratingTextLabel);
-		panel.add(playerRatingLabel);
-		
-		JLabel statusTextLabel = createPlayerPaneTextLabel("Status", playerRatingLabel);
-		panel.add(statusTextLabel);
-		
-		playerStatusLabel = createPlayerPaneValueLabel(statusTextLabel);
-		panel.add(playerStatusLabel);
-		
-		JLabel skillPointsTextLabel = createPlayerPaneTextLabel("Skill Points", playerStatusLabel);
-		panel.add(skillPointsTextLabel);
-		
-		playerSkillPointsLabel = createPlayerPaneValueLabel(skillPointsTextLabel);
-		panel.add(playerSkillPointsLabel);
-
-		rosterPlayerImagePanel = createPlayerImagePanel();
-		rosterPlayerImagePanel.setLocation(5, 25);
-		panel.add(rosterPlayerImagePanel);
-
-		JScrollPane playerAbilityPane = createPlayerAbilityTablePane();
-
-		playerAbilityPane.setLocation(20, 185);
-		playerAbilityPane.setSize(255, 39);
-
-		panel.add(playerAbilityPane);
-
-		return panel;
-	}
-	
-	private JLabel createPlayerPaneTextLabel(String text, JLabel precedingLabel)
-	{
-		JLabel label = new JLabel(text, SwingConstants.CENTER);
-		
-		label.setLocation(PLAYER_IMAGE_SIZE + 10, precedingLabel.getY() + 20);
-		label.setSize(PLAYER_LABEL_WIDTH, PLAYER_LABEL_HEIGHT);
-		
-		return label;
-	}
-	
-	private JLabel createPlayerPaneValueLabel(JLabel precedingLabel)
-	{
-		JLabel label = setLabelFontSize(new JLabel(), 12, false);
-		label.setHorizontalAlignment(SwingConstants.CENTER);
-		label.setLocation(PLAYER_IMAGE_SIZE + 10, precedingLabel.getY() + PLAYER_LABEL_HEIGHT);
-		label.setSize(PLAYER_LABEL_WIDTH, PLAYER_LABEL_HEIGHT);
-		return label;
-	}
-
-	private JScrollPane createPlayerAbilityTablePane()
-	{
-		playerAbilityTable = new JTable(new PlayerAbilityTableModel());
-		formatPlayerAbilityTableColumns(playerAbilityTable);
-		playerAbilityTable.setEnabled(false);
-		playerAbilityTable.getTableHeader().setReorderingAllowed(false);
-		playerAbilityTable.getTableHeader().setResizingAllowed(false);
-
-		return new JScrollPane(playerAbilityTable);
-	}
-
 	private JPanel createRosterPane()
 	{
 		JPanel panel = new JPanel();
+		rosterPlayerInfoPanel = new RosterPlayerInfoPanel(PLAYER_IMAGE_SIZE, PLAYER_LABEL_WIDTH, PLAYER_LABEL_HEIGHT);
 
 		panel.setBounds(ROSTER_PANE_X, ROSTER_PANE_Y, ROSTER_PANE_WIDTH, ROSTER_PANE_HEIGHT);
 		panel.setLayout(new CardLayout());
-		panel.add(createRosterPlayerPane(), PLAYER_VIEW);
+		panel.add(rosterPlayerInfoPanel, PLAYER_VIEW);
 		panel.add(createRosterTablePane(), TEAM_VIEW);
 
 		return panel;
@@ -602,12 +545,15 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 		JPanel panel = new JPanel();
 		panel.setLayout(null);
 
-		draftPlayerImagePanel = createPlayerImagePanel();
-		draftPlayerImagePanel.setLocation(100, 100);
-		panel.add(draftPlayerImagePanel);
-
 		JPanel draftRacePane = createDraftRacePane();
 		panel.add(draftRacePane);
+
+		draftPlayerInfoPanel = new DraftPlayerInfoPanel(PLAYER_IMAGE_SIZE, PLAYER_LABEL_WIDTH, PLAYER_LABEL_HEIGHT);
+		draftPlayerInfoPanel.setLocation(110, 50);
+		panel.add(draftPlayerInfoPanel);
+
+		JPanel hirePane = createDraftHirePane();
+		panel.add(hirePane);
 
 		// TODO Auto-generated method stub
 		// note that drafting inserts at the current location, bumping everyone else down (bump only happens if last slot is empty)
@@ -618,26 +564,40 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 
 	private JPanel createDraftRacePane()
 	{
-		String[] races = { "Curmian", "Dragoran", "Gronk", "Human", "Kurgan", "Nynax", "Slith", "XJS9000" };
 		ButtonGroup group = new ButtonGroup();
 
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 		panel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-		panel.setSize(85, 197);
-		panel.setLocation(10, 25);
+		panel.setSize(85, 200);
+		panel.setLocation(15, 100);
 
 		for (int i = 0; i < 8; i++)
-			panel.add(createPlayerRadioButton(group, i, races[i]));
+			panel.add(createPlayerRadioButton(group, i, Player.races[i]));
+
+		group.getElements().nextElement().setSelected(true);
 
 		return panel;
 	}
 
-	private PlayerImagePanel createPlayerImagePanel()
+	private JPanel createDraftHirePane()
 	{
-		PlayerImagePanel panel = new PlayerImagePanel();
+		JPanel panel = new JPanel();
+		panel.setLayout(null);
+		panel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+		panel.setSize(85, 200);
+		panel.setLocation(draftPlayerInfoPanel.getWidth() + 120, 100);
 
-		panel.setSize(PLAYER_IMAGE_SIZE, PLAYER_IMAGE_SIZE);
+		JButton hireButton = createNewButton("Hire", EVENT_HIRE);
+		hireButton.setSize(57, 30);
+		hireButton.setLocation(14, 50);
+
+		JButton fireButton = createNewButton("Fire", EVENT_FIRE);
+		fireButton.setSize(57, 30);
+		fireButton.setLocation(14, hireButton.getY() + 60);
+
+		panel.add(hireButton);
+		panel.add(fireButton);
 
 		return panel;
 	}
@@ -750,10 +710,123 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 	{
 		JPanel panel = new JPanel();
 		panel.setLayout(null);
+		
+		panel.add(createDocbotImagePanel());
+		panel.add(createDocbotOptionsPanel());
+		panel.add(createDocbotTablePane());
+		
+		JLabel costText = setLabelFontSize(new JLabel(), 20, true);
+		costText.setSize(100, 20);
+		costText.setLocation(340, DOCBOT_IMAGE_HEIGHT + 65);
+		costText.setHorizontalAlignment(SwingConstants.CENTER);
+		costText.setText("COST:");
+		
+		docbotCostLabel = setLabelFontSize(new JLabel(), 20, false);
+		docbotCostLabel.setSize(100, 20);
+		docbotCostLabel.setLocation(costText.getX(), costText.getY() + 25);
+		docbotCostLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		docbotCostLabel.setText("0K");
+		
+		panel.add(costText);
+		panel.add(docbotCostLabel);
 
 		// TODO Auto-generated method stub
 
 		return panel;
+	}
+	
+	private ImagePanel createDocbotImagePanel()
+	{
+		ImagePanel panel = new ImagePanel(ImageFactory.getImageSize(ImageType.DOCBOT));
+		BufferedImage docbotImage = ColorReplacer.setColors(ImageFactory.getImage(ImageType.DOCBOT), Color.WHITE, Color.WHITE, TeamEditorGUI.BG_COLOR);
+		
+		panel.updateImage(docbotImage);
+		panel.setLocation(50, 35);
+		
+		return panel;
+	}
+	
+	private JPanel createDocbotOptionsPanel()
+	{
+		JPanel panel = new JPanel();
+		
+		panel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+		panel.setSize(200, DOCBOT_IMAGE_HEIGHT + 1);
+		panel.setLocation(70 + DOCBOT_IMAGE_WIDTH, 35);
+		panel.setLayout(new GridLayout(8, 1));
+		
+		panel.add(setLabelFontSize(new JLabel("EMERGENCY", SwingConstants.CENTER), 18));
+		panel.add(createDocbotButtonGroup(0));
+		panel.add(setLabelFontSize(new JLabel("SURGERY", SwingConstants.CENTER), 18));
+		panel.add(createDocbotButtonGroup(1));
+		panel.add(setLabelFontSize(new JLabel("RECOVERY", SwingConstants.CENTER), 18));
+		panel.add(createDocbotButtonGroup(2));
+		panel.add(setLabelFontSize(new JLabel("THERAPY",SwingConstants.CENTER), 18));
+		panel.add(createDocbotButtonGroup(3));
+		
+		return panel;
+	}
+	
+	private JPanel createDocbotButtonGroup(int aidType)
+	{
+		JPanel panel = new JPanel();
+		
+		ButtonGroup group = new ButtonGroup();
+
+		JRadioButton standardButton = new JRadioButton("Standard");
+		standardButton.setActionCommand(EVENT_DOCBOT + aidType + "0");
+		standardButton.addActionListener(this);
+		standardButton.setSelected(true);
+		
+		JRadioButton enhancedButton = new JRadioButton("Enhanced");
+		standardButton.setActionCommand(EVENT_DOCBOT + aidType + "1");
+		standardButton.addActionListener(this);
+		
+		group.add(standardButton);
+		group.add(enhancedButton);
+		
+		panel.add(standardButton);
+		panel.add(enhancedButton);
+		
+		return panel;
+	}
+	
+	private JScrollPane createDocbotTablePane()
+	{
+		injuredPlayersTable = new JTable(new InjuredPlayersTableModel());
+		injuredPlayersTable.setEnabled(false);
+		injuredPlayersTable.getTableHeader().setReorderingAllowed(false);
+		injuredPlayersTable.getTableHeader().setResizingAllowed(false);
+		
+		formatDocbotTableColumns(injuredPlayersTable);
+
+		JScrollPane injuryPane = new JScrollPane(injuredPlayersTable);
+		injuryPane.setSize(260, 70);
+		injuryPane.setLocation(80, DOCBOT_IMAGE_HEIGHT + 50);
+		
+		return injuryPane;
+	}
+
+	private void formatDocbotTableColumns(JTable unformattedDocbotTable)
+	{
+		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+		centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+
+		TableColumn column = null;
+		for (int i = 0; i < 3; i++)
+		{
+			column = unformattedDocbotTable.getColumnModel().getColumn(i);
+			
+			if (i == 0)
+			{
+				column.setMaxWidth(5);
+				column.setCellRenderer(centerRenderer);
+			} else if (i == 1)
+			{
+				column.setMaxWidth(75);
+				column.setMinWidth(75);
+			}
+		}
 	}
 
 	private JPanel createStatsPane()
@@ -856,33 +929,6 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 		}
 	}
 
-	private void formatPlayerAbilityTableColumns(JTable unformattedPlayerAbilityTable)
-	{
-		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-		centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
-
-		// TODO: figure out how to make this truly centered
-		// ((DefaultTableCellRenderer) playerAbilityTable.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
-
-		TableColumn column = null;
-		for (int i = 0; i < 9; i++)
-		{
-			column = unformattedPlayerAbilityTable.getColumnModel().getColumn(i);
-
-			column.setCellRenderer(centerRenderer);
-
-			if (i == 8)
-			{
-				column.setMaxWidth(45);
-				column.setMinWidth(45);
-			} else
-			{
-				column.setMaxWidth(26);
-				column.setMinWidth(26);
-			}
-		}
-	}
-
 	@Override
 	public void mouseClicked(MouseEvent event)
 	{
@@ -965,7 +1011,7 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 		int col = event.getColumn();
 		RosterTableModel model = (RosterTableModel) event.getSource();
 
-		if (col == 1)	//TODO: only do this if there's a player here; probably disable/enable the row (elsewhere) based on if there's a player
+		if (col == 1) // TODO: only do this if there's a player here; probably disable/enable the row (elsewhere) based on if there's a player
 			setPlayerName(row, (String) model.getValueAt(row, col));
 
 		// System.out.println("Table event! Row is " + event.getFirstRow() + " and column is " + event.getColumn() + ".  " + event.getType() + "; " +
@@ -1011,19 +1057,68 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 		} else if (command.startsWith(EVENT_SKILL_GAIN))
 		{
 			int skillIndex = Integer.parseInt(command.substring(EVENT_SKILL_GAIN.length()));
-			// System.out.println("Skill clicked with value of " + skillIndex);
 			gainSkill(skillIndex);
 		} else if (command.startsWith(EVENT_DRAFT))
 		{
 			draftSelection = Integer.parseInt(command.substring(EVENT_DRAFT.length()));
 			setDraftImage();
+		} else if (command.equals(EVENT_HIRE))
+		{
+			hirePlayer();
+		} else if (command.equals(EVENT_FIRE))
+		{
+			firePlayer();
 		}
 	}
 
-	public void gainSkill(int skillIndex)
+	private void firePlayer()
+	{
+		Player player = teamUpdater.getPlayer(currentPlayerIndex);
+
+		// doesn't do anything if there's no one to fire
+		if (player == null)
+			return;
+
+		// give all the equipment back to the team
+		for (int i = 0; i < 4; i++)
+		{
+			if (player.getEquipment(i) != Equipment.EQUIP_NONE)
+			{
+				teamUpdater.addEquipment(player.unequipItem(i));
+			}
+		}
+
+		// clear the slot
+		teamUpdater.setPlayer(currentPlayerIndex, null);
+
+		refreshTeam();
+	}
+
+	private void hirePlayer()
+	{
+		int budget = MAX_VALUE - teamUpdater.getTeamValue();
+		int playerCost = new Player(draftSelection, "COST_CHECK").getSalary();
+
+		if (budget < playerCost)
+			return;
+
+		boolean canDraft = teamUpdater.pushPlayersForDraft(currentPlayerIndex);
+
+		if (canDraft)
+		{
+			teamUpdater.setPlayer(currentPlayerIndex, PlayerFactory.createPlayerWithRandomName(draftSelection));
+
+			selectPlayer(currentPlayerIndex + 1);
+
+			refreshTeam();
+		}
+	}
+
+	private void gainSkill(int skillIndex)
 	{
 		Player player = teamUpdater.getPlayer(currentPlayerIndex);
 		player.gainSkill(skillIndex);
+		teamUpdater.setPlayer(currentPlayerIndex, player);
 		updateSkillsPanel();
 		refreshPlayerPane();
 	}
@@ -1068,6 +1163,11 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 	{
 		CardLayout cl = (CardLayout) (rosterPane.getLayout());
 		cl.show(rosterPane, cardName);
+
+		if (cardName.equals(PLAYER_VIEW))
+			swapButton.setEnabled(false);
+		else
+			swapButton.setEnabled(true);
 	}
 
 	private String sanitizeString(String string, int maxLength)
@@ -1143,20 +1243,7 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 
 	private void setDraftImage()
 	{
-		draftPlayerImagePanel.updateImage(teamUpdater.getPlayerImage(draftSelection));
-	}
-
-	private void setRosterImage()
-	{
-		Player player = teamUpdater.getPlayer(currentPlayerIndex);
-
-		if (player == null)
-		{
-			rosterPlayerImagePanel.updateImage(null);
-			return;
-		}
-
-		rosterPlayerImagePanel.updateImage(teamUpdater.getPlayerImage(player.getRace()));
+		draftPlayerInfoPanel.updatePanel(draftSelection, teamUpdater.getPlayerImage(draftSelection));
 	}
 
 	private void refreshTeam()
@@ -1168,6 +1255,7 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 		refreshArena();
 		refreshRosterTable();
 		refreshPlayerPane();
+		refreshDocbotPane();
 		refreshTeamValue();
 	}
 
@@ -1215,40 +1303,22 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 	private void refreshPlayerPane()
 	{
 		Player player = teamUpdater.getPlayer(currentPlayerIndex);
+		BufferedImage playerImage = null;
 
-		String index = "";
+		if (player != null)
+			playerImage = teamUpdater.getPlayerImage(player.getRace());
 
-		if (currentPlayerIndex < 9)
-			index = String.valueOf(currentPlayerIndex + 1);
-		else
-			index = String.valueOf((char) (currentPlayerIndex + 56));
-
-		String name = GUIPlayerAttributes.getNameBlank(player);
-		String rank = GUIPlayerAttributes.getRank(player);
-		String seasons = GUIPlayerAttributes.getSeasons(player);
-		String rating = GUIPlayerAttributes.getRating(player);
-		String status = GUIPlayerAttributes.getStatus(player);
-		String skillPoints = GUIPlayerAttributes.getSkillPoints(player);
-		String value = GUIPlayerAttributes.getValue(player);
-
-		playerNameLabel.setText(index + ") " + name);
-		playerRankLabel.setText(rank);
-		playerSeasonsLabel.setText(seasons);
-		playerRatingLabel.setText(rating);
-		playerStatusLabel.setText(status);
-		playerSkillPointsLabel.setText(skillPoints);
-
-		setRosterImage();
-
-		for (int i = 0; i < 8; i++)
-		{
-			String attribute = GUIPlayerAttributes.getAttribute(player, i);
-			playerAbilityTable.getModel().setValueAt(attribute, 0, i);
-		}
-
-		playerAbilityTable.getModel().setValueAt(value, 0, 8);
-
-		// TODO: fill this out
+		rosterPlayerInfoPanel.updatePanel(player, currentPlayerIndex, playerImage);
+	}
+	
+	private void refreshDocbotPane()
+	{
+		Team team = teamUpdater.getTeam();
+		int docbotCost = teamUpdater.getDocbotCost();
+		
+		((InjuredPlayersTableModel)injuredPlayersTable.getModel()).refreshTable(team);
+		
+		docbotCostLabel.setText(docbotCost + "K");
 	}
 
 	private void refreshTeamValue()
@@ -1281,6 +1351,6 @@ public class TeamEditorGUI extends JFrame implements ActionListener, MouseListen
 	private void refreshPlayerImages()
 	{
 		setDraftImage();
-		setRosterImage();
+		refreshPlayerPane();
 	}
 }
