@@ -1,6 +1,11 @@
 package main.data.entities;
 
-public class Stats
+import java.text.ParseException;
+
+import main.data.save.SaveStringBuilder;
+import main.data.save.SaveTokenTag;
+
+public class Stats extends SaveableEntity
 {	
 	public int checksThrown = 0;
 	public int checksLanded = 0;
@@ -13,6 +18,7 @@ public class Stats
 	public boolean goalScored = false;
 	public boolean enteredGame = false;
 	public boolean winningTeam = false;
+	//TODO: update with career-based values, like highest rating, goals scored, and so on
 	
 	public void updateWithResults(Stats gameResults)
 	{
@@ -77,5 +83,33 @@ public class Stats
 		if (winningTeam) toRet += 2;
 		
 		return toRet;
+	}
+
+	@Override
+	public String saveAsText()
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String loadFromText(String text) throws ParseException
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getUniqueId()
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected void setMember(SaveStringBuilder saveStringBuilder, SaveTokenTag saveTokenTag)
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }

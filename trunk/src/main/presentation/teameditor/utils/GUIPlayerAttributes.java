@@ -1,5 +1,7 @@
 package main.presentation.teameditor.utils;
 
+import java.util.List;
+
 import main.data.entities.Player;
 
 public class GUIPlayerAttributes
@@ -57,6 +59,9 @@ public class GUIPlayerAttributes
 		case Player.INJURY_NONE:
 			value = "NORMAL";
 			break;
+		case Player.INJURY_TRIVIAL:
+			value = "TRIVIAL INJURY";
+			break;
 		case Player.INJURY_MINOR:
 			value = "MINOR INJURY";
 			break;
@@ -68,9 +73,46 @@ public class GUIPlayerAttributes
 		return value;
 	}
 	
+	public static String getWeeksOut(Player player)
+	{
+		if (player == null)
+			return "";
+		
+		int weeksOut = player.getWeeksOut();
+		
+		String weeks = weeksOut + " week";
+		
+		if (weeksOut != 1)
+			return weeks + "s";
+		
+		return weeks;
+	}
+	
 	public static String getSkillPoints(Player player)
 	{
 		return (player == null) ? "" : String.valueOf(player.getSkillPoints());
+	}
+	
+	public static String getSkills(Player player)
+	{
+		if (player == null)
+			return "";
+		
+		String skillString = "";
+		
+		List<String> skills = player.getSkillList();
+		
+		for (String skill : skills)
+		{
+			skillString = skillString + skill + ", ";
+		}
+		
+		return skillString.substring(0, skillString.length() - 2);
+	}
+	
+	public static String getQuirks(Player player)
+	{
+		return "";		//TODO: update this once quirks are implemented
 	}
 	
 	public static String getSeasons(Player player)
@@ -86,5 +128,13 @@ public class GUIPlayerAttributes
 	public static String getAttribute(Player player, int index)
 	{
 		return (player == null) ? "" : String.valueOf(player.getAttributeWithModifiers(index));
+	}
+	
+	public static String getIndexString(int index)
+	{
+		if (index < 9)
+			return String.valueOf(index + 1);
+		
+		return String.valueOf((char) (index + 56));
 	}
 }

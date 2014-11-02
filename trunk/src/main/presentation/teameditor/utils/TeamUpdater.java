@@ -18,22 +18,6 @@ public class TeamUpdater
 	{
 		team = new Team();
 		teamImages = new TeamImages(team.teamColors[0], team.teamColors[1]);
-
-		/*
-		 * 
-		 * Player awesomeGronk = new Player(Player.RACE_GRONK); awesomeGronk.XP = 500;
-		 * 
-		 * team.addPlayer(new Player(Player.RACE_DRAGORAN)); team.addPlayer(new Player(Player.RACE_GRONK)); team.addPlayer(awesomeGronk); team.addPlayer(new
-		 * Player(Player.RACE_HUMAN)); team.addPlayer(new Player(Player.RACE_KURGAN)); team.addPlayer(new Player(Player.RACE_KURGAN)); team.addPlayer(new
-		 * Player(Player.RACE_SLITH)); team.addPlayer(new Player(Player.RACE_SLITH)); team.addPlayer(new Player(Player.RACE_HUMAN)); team.addPlayer(new
-		 * Player(Player.RACE_HUMAN)); team.addPlayer(new Player(Player.RACE_XJS9000)); team.addPlayer(new Player(Player.RACE_XJS9000)); team.addPlayer(new
-		 * Player(Player.RACE_XJS9000)); team.addPlayer(new Player(Player.RACE_NYNAX)); team.addPlayer(new Player(Player.RACE_NYNAX)); team.addPlayer(new
-		 * Player(Player.RACE_GRONK)); team.addPlayer(new Player(Player.RACE_GRONK)); team.addPlayer(new Player(Player.RACE_GRONK));
-		 * 
-		 * team.teamColors[0] = Color.WHITE; team.teamColors[1] = Color.BLUE;
-		 * 
-		 * team.coachName = "JARED B"; team.teamName = "TEAM ICE";
-		 */
 	}
 
 	public TeamUpdater(File loadPath)
@@ -50,6 +34,11 @@ public class TeamUpdater
 	public void saveTeam(File savePath)
 	{
 		TeamLoader.saveTeamToFile(team, savePath);
+	}
+	
+	public Team getTeam()
+	{
+		return team;
 	}
 
 	public String getTeamName()
@@ -136,14 +125,7 @@ public class TeamUpdater
 			}
 		}
 
-		if (team.docbot[0])
-			teamValue += 50;
-		if (team.docbot[1])
-			teamValue += 40;
-		if (team.docbot[2])
-			teamValue += 30;
-		if (team.docbot[3])
-			teamValue += 30;
+		teamValue += getDocbotCost();
 
 		for (Integer equipmentIndex : team.unassignedGear)
 		{
@@ -151,6 +133,22 @@ public class TeamUpdater
 		}
 
 		return teamValue;
+	}
+	
+	public int getDocbotCost()
+	{
+		int value = 0;
+		
+		if (team.docbot[0])
+			value += 50;
+		if (team.docbot[1])
+			value += 40;
+		if (team.docbot[2])
+			value += 30;
+		if (team.docbot[3])
+			value += 30;
+		
+		return value;
 	}
 
 	public boolean hasSensei()
@@ -168,5 +166,29 @@ public class TeamUpdater
 	public BufferedImage getPlayerImage(int race)
 	{
 		return teamImages.getPlayerImage(race);
+	}
+	
+	public void addEquipment(int equipmentIndex)
+	{
+		team.unassignedGear.add(equipmentIndex);
+	}
+
+	public boolean pushPlayersForDraft(int startingIndex)
+	{
+		if (team.getPlayer(Team.MAX_TEAM_SIZE - 1) != null)
+			return false;
+		
+		if (team.getPlayer(startingIndex) == null)
+			return true;
+		
+		for (int i = Team.MAX_TEAM_SIZE - 1; i > startingIndex; i--)
+		{
+			Player playerToMove = team.getPlayer(i - 1);
+			team.setPlayer(i, playerToMove);
+		}
+		
+		team.setPlayer(startingIndex, null);
+		
+		return true;
 	}
 }
