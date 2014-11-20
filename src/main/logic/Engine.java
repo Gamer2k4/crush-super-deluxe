@@ -233,6 +233,7 @@ public class Engine
 				int potentialPortal = -1;
 				
 				//assumes exactly 8 portals
+				//TODO: Crissick only has 4 portals!!
 				for (int i = 0; i < 8; i++)
 				{
 					Point prtl = curArena.getPortal(i);
@@ -292,7 +293,7 @@ public class Engine
 			//blob logic
 			if (tele1 == tele2)
 			{
-				toRet.offer(Event.eject(theCommand.flags[0], 0, Event.EJECT_BLOB, 0, 0, 0, 0));
+				toRet.offer(Event.eject(theCommand.flags[0], -1, Event.EJECT_BLOB, 0, 0, 0, 0, 0));
 				
 				if (gameData.getBallCarrier() == p)
 					toRet.offer(teleportBall());
@@ -326,7 +327,7 @@ public class Engine
 				System.out.println("ENGINE - WARPING IN: New player's detection chance is " + detectChance + ".");
 				
 				if (Randint(1, 100) < detectChance)	//player was detected
-					toRet.offer(Event.eject(theCommand.flags[0], 0, Event.EJECT_REF, 0, 0, 0, 0));
+					toRet.offer(Event.eject(theCommand.flags[0], -1, Event.EJECT_REF, 0, 0, 0, 0, 0));
 			}
 			
 		}
@@ -660,7 +661,7 @@ public class Engine
 		else if (injLevel == Player.INJURY_STUN)
 			toRet = Event.setStatus(pIndex, Player.STS_STUN);
 		else
-			toRet = injurePlayer(defender, injLevel);
+			toRet = injurePlayer(defender, injLevel, attacker);
 		
 		System.out.println("ENGINE - INJURY CALC: Player " + defender.name + " is being attacked.  Attacker's ST is " + ST + ", Defender's TG is " + TG + ", and the injury level is " + injLevel + ".");
 		
@@ -669,9 +670,10 @@ public class Engine
 	
 	//always returns an ejection event; only called if there actually is an injury (not just a stun or knockdown)
 	// TODO Modify all of these with docbot stuff
-	private Event injurePlayer(Player plyr, int injLevel)
+	private Event injurePlayer(Player injuredPlayer, int injLevel, Player causingPlayer)
 	{
-		int pIndex = gameData.getIndexOfPlayer(plyr);
+		int pIndex = gameData.getIndexOfPlayer(injuredPlayer);
+		int causeIndex = gameData.getIndexOfPlayer(causingPlayer);
 		int weeksOut = Randint(1, 6);
 		int type = Event.EJECT_SERIOUS;
 		int stat1 = 4 + Randint(0, 3);
@@ -715,7 +717,7 @@ public class Engine
 			type = Event.EJECT_DEATH;
 		}
 		
-		return Event.eject(pIndex, weeksOut, type, stat1, penalty[0], stat2, penalty[1]);
+		return Event.eject(pIndex, causeIndex, type, stat1, penalty[0], stat2, penalty[1], weeksOut);
 	}
 	
 	private Queue<Event> resolveCombat(Event theCommand)

@@ -7,11 +7,15 @@ import java.util.List;
 import java.util.Map;
 
 import main.data.entities.Arena;
+import main.data.entities.Equipment;
 import main.data.entities.Player;
+import main.data.entities.Stats;
 import main.data.entities.Team;
 
 public class Data
 {
+	protected List<Team> teams;
+	
 	protected List<Player> allPlayers;
 	protected Player[][] playerLocs = new Player[30][30];
 
@@ -20,6 +24,11 @@ public class Data
 	protected Arena arena;
 
 	protected int currentTeam;
+	private int gameWinner;		//keeps track if the teams have been saved once the game has concluded
+	
+	public static final int TIE_GAME = -1;
+	public static final int GAME_IN_PROGRESS = -2;
+	public static final int TEAM_SIZE = 9;	//TODO: replace all instances of 9 with this
 
 	@Override
 	public Data clone()
@@ -29,6 +38,7 @@ public class Data
 		toRet.ball = new Point(ball.x, ball.y);
 		toRet.arena = arena.clone();
 		toRet.currentTeam = currentTeam;
+		toRet.gameWinner = gameWinner;
 
 		// go through each player, clone it, and record its location
 		for (int i = 0; i < 27; i++)
@@ -59,8 +69,26 @@ public class Data
 			if (p == ballCarrier)
 				toRet.ballCarrier = newPlayer;
 
+			// copy over the player's stats
+			Stats newStats = statsOfPlayer.get(p).clone();
+			toRet.statsOfPlayer.put(newPlayer, newStats);
+
 			// finally, add it to the list
 			toRet.allPlayers.add(newPlayer);
+		}
+		
+		//clone the team, but copy in the players we're currently working with
+		for (int i = 0; i < 3; i++)
+		{
+			Team newTeam = teams.get(i).clone();
+			
+			int startingIndex = i * 9;
+			for (int j = startingIndex; j < startingIndex + 9; j++)
+			{
+				newTeam.setPlayer(j - startingIndex, toRet.allPlayers.get(j));
+			}
+			
+			toRet.teams.add(newTeam);
 		}
 
 		return toRet;
@@ -68,10 +96,12 @@ public class Data
 
 	public Data()
 	{
+		teams = new ArrayList<Team>();
 		allPlayers = new ArrayList<Player>();
 
 		pointOfPlayer = new HashMap<Player, Point>();
 		teamOfPlayer = new HashMap<Player, Integer>();
+		statsOfPlayer = new HashMap<Player, Stats>();
 
 		for (int i = 0; i < 30; i++)
 		{
@@ -86,15 +116,22 @@ public class Data
 		arena = null;
 		currentTeam = 0;
 	}
-
-	public void newGame(List<Team> allThreeTeams, int fieldNum)
+	
+	public void newGame(List<Team> allThreeTeams)
+	{
+		newGame(allThreeTeams, null);
+	}
+	
+	public void newGame(List<Team> allThreeTeams, Integer fieldNum)
 	{
 		for (int i = 0; i < 3; i++)
 		{
 			Team curTeam = allThreeTeams.get(i);
 
 			if (curTeam == null)
-				continue;
+				throw new IllegalArgumentException("There must be three teams in a game!");
+			
+			teams.add(curTeam);
 
 			for (int j = 0; j < 9; j++) // no matter how many players are in the team, only take the first 9
 			{
@@ -105,6 +142,7 @@ public class Data
 					Player pClone = p.clone();
 
 					teamOfPlayer.put(pClone, i);
+					statsOfPlayer.put(pClone, new Stats());
 					allPlayers.add(pClone);
 				} else
 				{
@@ -114,16 +152,57 @@ public class Data
 		}
 
 		currentTeam = 0;
-
-		try
+		
+		int fieldIndex = allThreeTeams.get(0).homeField;	// home field advantage
+		
+		if (fieldNum != null)								// but there is no such thing in the playoffs 
+			fieldIndex = fieldNum;
+		
+		createMap(fieldIndex);
+		
+		gameWinner = GAME_IN_PROGRESS;
+	}
+	
+	private void endGame(int winningTeam)
+	{
+		//save the stats for everyone
+		for (Player p : allPlayers)
 		{
-			createMap(allThreeTeams.get(0).homeField); // home field advantage
-		} catch (Exception e)
-		{
-			e.printStackTrace();
+			if (p != null)
+				p.addXP(statsOfPlayer.get(p));
 		}
-
-		// note that none of this is random, so the same parameters should create the same game
+		
+		//save the players to their teams (stats, injuries, and all)
+		for (int i = 0; i < 3; i++)
+		{
+			Team team = teams.get(i);
+			
+			int startingIndex = i * 9;
+			for (int j = startingIndex; j < startingIndex + 9; j++)
+			{
+				Player p = allPlayers.get(j);
+				
+				if (p.status == Player.STS_DEAD)	//remove the player from the team if he's dead
+				{
+					//put the dead player's gear back in the team inventory
+					for (int k = 0; k < 4; k++)
+					{
+						int itemIndex = p.unequipItem(k);
+						if (itemIndex != Equipment.EQUIP_NONE)
+							team.unassignedGear.add(Integer.valueOf(itemIndex));
+					}
+					
+					p = null;						//TODO: if halls of fame exist, keep track of the player still
+				}
+				
+				if (p != null)
+					p.recoverInjuries(1);
+				
+				team.setPlayer(j - startingIndex, p);
+			}
+		}
+		
+		gameWinner = winningTeam;
 	}
 
 	public void processEvent(Event theEvent)
@@ -135,6 +214,11 @@ public class Data
 		{
 			// TODO: Set the AP of all players on the current team to 0.
 			currentTeam = theEvent.flags[0];
+		} else if (theEvent.getType() == Event.EVENT_VICTORY)
+		{
+			int winningTeam = theEvent.flags[0];
+			setWinningStats(winningTeam);
+			endGame(winningTeam);
 		} else if (theEvent.getType() == Event.EVENT_RECVR)
 		{
 			Player p = getPlayer(theEvent.flags[0]);
@@ -151,7 +235,7 @@ public class Data
 				{
 					p.status = Player.STS_OKAY;
 
-					if (p.race == Player.RACE_DRAGORAN)	// TODO: racial abilities are actually skills
+					if (p.race == Player.RACE_DRAGORAN) // TODO: racial abilities are actually skills
 						p.currentAP = p.getAttributeWithModifiers(Player.ATT_AP) - 10;
 					else
 						p.currentAP = p.getAttributeWithModifiers(Player.ATT_AP) / 2;
@@ -195,8 +279,11 @@ public class Data
 			// because a jump is treated as two move events, it automatically reduces the AP by 20. For non-Curmians,
 			// it should cumulatively be reduced an additional 10AP (5AP per move event).
 
-			if (isJumping && p.getRace() != Player.RACE_CURMIAN)	// TODO: racial abilities are actually skills 
+			if (isJumping && p.getRace() != Player.RACE_CURMIAN) // TODO: racial abilities are actually skills
 				p.currentAP -= 5;
+			
+			if (p == ballCarrier)
+				statsOfPlayer.get(p).rush(1);
 		} else if (theEvent.getType() == Event.EVENT_TELE)
 		{
 			Player p = getPlayer(theEvent.flags[0]);
@@ -227,6 +314,7 @@ public class Data
 			} else
 			{
 				p.status = Player.STS_OKAY;
+				p.currentAP = p.getAttributeWithModifiers(Player.ATT_AP);
 			}
 
 			if (tele1 != tele2)
@@ -253,7 +341,10 @@ public class Data
 			{
 				arena.ballFound(binIndex);
 				ballCarrier = p;
+				statsOfPlayer.get(p).getBall();
 			}
+
+			statsOfPlayer.get(p).tryPad();
 		} else if (theEvent.getType() == Event.EVENT_BALLMOVE)
 		{
 			System.out.println("DATA MOVING BALL");
@@ -274,6 +365,7 @@ public class Data
 				ball.y = -1;
 
 				ballCarrier = p;
+				statsOfPlayer.get(p).getBall();
 			}
 		} else if (theEvent.getType() == Event.EVENT_HANDOFF)
 		{
@@ -286,11 +378,16 @@ public class Data
 				p.currentAP -= 10;
 
 			ballCarrier = getPlayer(theEvent.flags[1]); // we're going to get a BALLMOVE event after this if it was a hurl, so this doesn't hurt
+			statsOfPlayer.get(ballCarrier).getBall();
 		} else if (theEvent.getType() == Event.EVENT_CHECK)
 		{
 			Player attacker = getPlayer(theEvent.flags[0]);
 			Player defender = getPlayer(theEvent.flags[1]);
 			int result = theEvent.flags[2];
+
+			// stats variables
+			boolean success = false;
+			boolean sack = false;
 
 			// deduct the proper amount of AP
 			if (theEvent.flags[3] == 1) // if this is a reflex check
@@ -313,18 +410,31 @@ public class Data
 				attacker.status = Player.STS_DOWN;
 				defender.currentAP = 0;
 				defender.status = Player.STS_DOWN;
+				//TODO: determine if this can count as a sack
 			} else if (result == Event.CHECK_PUSH)
 			{
 				// do nothing (the push will be a move action generated by the engine)
+				success = true;
 			} else if (result == Event.CHECK_FALL || result == Event.CHECK_PUSHFALL)
 			{
+				success = true;
 				defender.currentAP = 0;
 				defender.status = Player.STS_DOWN;
+				
+				if (defender == ballCarrier)
+					sack = true;
 			}
+			
+			statsOfPlayer.get(attacker).check(success, sack);
 		} else if (theEvent.getType() == Event.EVENT_EJECT)
 		{
 			Player p = getPlayer(theEvent.flags[0]);
+			Player attacker = getPlayer(theEvent.flags[1]);
 
+			//stat variables
+			boolean injury = false;
+			boolean kill = false;
+			
 			// get the player off the field
 			clearPlayerLocation(p);
 
@@ -338,25 +448,55 @@ public class Data
 			} else if (theEvent.flags[2] == Event.EJECT_TRIVIAL)
 			{
 				p.status = Player.STS_HURT;
+				p.setInjuryType(Player.INJURY_TRIVIAL);
+				injury = true;
 			} else if (theEvent.flags[2] == Event.EJECT_SERIOUS)
 			{
 				p.status = Player.STS_HURT;
 				p.setInjuryType(Player.INJURY_CRIPPLING);
-				
+				injury = true;
+
 				if (theEvent.flags[4] == 0 && theEvent.flags[6] == 0)
 					p.setInjuryType(Player.INJURY_MINOR);
 			} else if (theEvent.flags[2] == Event.EJECT_DEATH)
 			{
 				p.status = Player.STS_DEAD;
+				kill = true;
 			}
+			
+			System.out.println("Data - eject event: " + theEvent);
 
 			// damage the player's attributes if there was an injury
 			p.applyInjury(theEvent.flags[3], theEvent.flags[4]);
 			p.applyInjury(theEvent.flags[5], theEvent.flags[6]);
-			p.setWeeksOut(theEvent.flags[1]);
+			p.setWeeksOut(theEvent.flags[7] + 1);		//add 1 because we're subtracting one for a week passed once the game is done
+			
+			if (attacker != null)
+			{
+				if (injury)
+					statsOfPlayer.get(attacker).injure();
+				if (kill)
+					statsOfPlayer.get(attacker).kill();
+			}
 
 			// TODO kill the player if he dies (might be as simple as a boolean on the Player object, so hall of fames and such can still exist
 			// this might actually just be done by setting p.status equal to STS_DEAD (which is already done)
+		}
+	}
+	
+	//note that (as in the original game), this gives everyone the points, whether they made it in or not
+	private void setWinningStats(int winningTeam)
+	{
+		int startingIndex = winningTeam * 9;
+		
+		for (int i = startingIndex; i < startingIndex + 9; i++)
+		{
+			Player p = allPlayers.get(i);
+			
+			if (p == ballCarrier)
+				statsOfPlayer.get(p).score();
+			else if (p != null)
+				statsOfPlayer.get(p).teamWon();
 		}
 	}
 
@@ -365,13 +505,14 @@ public class Data
 		return "";
 	}
 
-	private void createMap(int mapNum) throws Exception
+	private void createMap(int mapNum)
 	{
 		arena = Arena.generateArena(mapNum);
 	}
 
 	protected Map<Player, Point> pointOfPlayer;
 	protected Map<Player, Integer> teamOfPlayer;
+	protected Map<Player, Stats> statsOfPlayer;
 
 	private void clearPlayerLocation(Player plyr)
 	{
@@ -421,6 +562,11 @@ public class Data
 			setPlayerAtLocation(p, plyr);
 
 		setLocationOfPlayer(plyr, p);
+	}
+	
+	public Stats getStatsOfPlayer(Player p)
+	{
+		return statsOfPlayer.get(p);
 	}
 
 	public Point getLocationOfPlayer(Player p)
@@ -517,31 +663,41 @@ public class Data
 	{
 		return ball;
 	}
-	
+
 	public boolean isStateBallNotFound()
 	{
 		return arena.isBallFound();
 	}
-	
+
 	public boolean isStateBallLoose()
 	{
 		return !isStateBallNotFound() && (ballCarrier == null);
 	}
-	
+
 	public boolean isStateOwnTeamHasBall()
 	{
 		if (ballCarrier == null)
 			return false;
-		
+
 		return (currentTeam == getTeamOfPlayer(ballCarrier));
 	}
-	
+
 	public boolean isStateOpponentHasBall()
 	{
 		if (ballCarrier == null)
 			return false;
-		
+
 		return (currentTeam != getTeamOfPlayer(ballCarrier));
+	}
+	
+	public boolean isGameDone()
+	{
+		return gameWinner != GAME_IN_PROGRESS;
+	}
+	
+	public List<Team> getTeams()
+	{
+		return teams;
 	}
 
 	// DEBUG

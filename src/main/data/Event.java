@@ -38,7 +38,7 @@ public class Event implements Serializable
 	public static final int EJECT_DEATH = 4;
 	
 	private int type;
-	private final int TOTAL_FLAGS = 7;
+	private final int TOTAL_FLAGS = 8;
 	
 	public int[] flags = new int[TOTAL_FLAGS];
 	
@@ -204,16 +204,17 @@ public class Event implements Serializable
 		return e;
 	}
 	
-	public static Event eject(int player, int weeksOut, int type, int stat1, int penalty1, int stat2, int penalty2)
+	public static Event eject(int player, int causingPlayer, int type, int stat1, int penalty1, int stat2, int penalty2, int weeksOut)
 	{
 		Event e = new Event(EVENT_EJECT);
 		e.flags[0] = player;
-		e.flags[1] = weeksOut;
+		e.flags[1] = causingPlayer;
 		e.flags[2] = type;
 		e.flags[3] = stat1;
 		e.flags[4] = penalty1;
 		e.flags[5] = stat2;
 		e.flags[6] = penalty2;
+		e.flags[7] = weeksOut;
 		
 		return e;
 	}
@@ -241,7 +242,7 @@ public class Event implements Serializable
  * 3 - target y
  * 4 - slide boolean (if true, it means the player is moving against his will, such as with repulsor gauntlets)
  * 5 - jump boolean
- * 6 - knockdown boolean (if true, ignore the effects of tiles other than portals)
+ * 6 - knockdown boolean (if true, ignore the effects of tiles other than portals - but note that portals shouldn't be valid jump targets)
  * 
  * EVENT_TELE
  * 0 - p1 index
@@ -281,7 +282,7 @@ public class Event implements Serializable
  * 0 - p1 index (-1 if the field, such as falling damage or getting shocked)
  * 1 - p2 index
  * 2 - result (-1 - attacker falls, 0 - dodged, 1 - nothing, 2 - both fall, 3 - defender pushed, 4 - defender falls, 5 - defender pushed and falls)
- * 3 - reflex boolean (1 means the player doesn't need or use AP)
+ * 3 - reflex boolean (1 means the player doesn't need to use AP)
  * 
  * EVENT_EJECT
  * 0 - p1 index

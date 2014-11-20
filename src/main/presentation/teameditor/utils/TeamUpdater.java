@@ -5,7 +5,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 
 import main.data.TeamLoader;
-import main.data.entities.Equipment;
 import main.data.entities.Player;
 import main.data.entities.Team;
 
@@ -16,7 +15,12 @@ public class TeamUpdater
 
 	public TeamUpdater()
 	{
-		team = new Team();
+		this(new Team());
+	}
+	
+	public TeamUpdater(Team existingTeam)
+	{
+		team = existingTeam;
 		teamImages = new TeamImages(team.teamColors[0], team.teamColors[1]);
 	}
 
@@ -105,50 +109,12 @@ public class TeamUpdater
 
 	public int getTeamValue()
 	{
-		int teamValue = 0;
-
-		for (int i = 0; i < 35; i++)
-		{
-			Player p = team.getPlayer(i);
-			if (p != null)
-			{
-				teamValue += p.getSalary();
-
-				for (int j = 0; j < 4; j++)
-				{
-					if (p.getEquipment(j) != Equipment.EQUIP_NONE)
-					{
-						Equipment eq = Equipment.getEquipment(p.getEquipment(j));
-						teamValue += eq.cost;
-					}
-				}
-			}
-		}
-
-		teamValue += getDocbotCost();
-
-		for (Integer equipmentIndex : team.unassignedGear)
-		{
-			teamValue += Equipment.getEquipment(equipmentIndex.intValue()).cost;
-		}
-
-		return teamValue;
+		return team.getValue();
 	}
 	
 	public int getDocbotCost()
 	{
-		int value = 0;
-		
-		if (team.docbot[0])
-			value += 50;
-		if (team.docbot[1])
-			value += 40;
-		if (team.docbot[2])
-			value += 30;
-		if (team.docbot[3])
-			value += 30;
-		
-		return value;
+		return team.getDocbotCost();
 	}
 
 	public boolean hasSensei()
@@ -167,10 +133,36 @@ public class TeamUpdater
 	{
 		return teamImages.getPlayerImage(race);
 	}
+
+	public BufferedImage getEquipmentImage(int equipment)
+	{
+		return teamImages.getEquipmentImage(equipment);
+	}
 	
 	public void addEquipment(int equipmentIndex)
 	{
 		team.unassignedGear.add(equipmentIndex);
+	}
+	
+	public Integer getEquipment(int equipmentIndex)
+	{
+		if (equipmentIndex < 0 || equipmentIndex > team.unassignedGear.size() - 1)
+			return -1;
+		
+		return team.unassignedGear.get(equipmentIndex);
+	}
+	
+	public Integer removeEquipment(int equipmentIndex)
+	{
+		if (equipmentIndex < 0 || equipmentIndex > team.unassignedGear.size() - 1)
+			return -1;
+		
+		return team.unassignedGear.remove(equipmentIndex);
+	}
+	
+	public void setDocbotTreatment(int index, boolean value)
+	{
+		team.docbot[index] = value;
 	}
 
 	public boolean pushPlayersForDraft(int startingIndex)

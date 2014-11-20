@@ -7,6 +7,7 @@ public class Equipment
 {
 	public int type;
 	public String name;
+	public String description;
 	public int index;
 	public int detection;
 	public int cost;
@@ -16,7 +17,8 @@ public class Equipment
 	
 	private static List<Equipment> allEquipment = null;
 	
-	public static final int EQUIP_NONE = -1;
+	public static final int EQUIP_NONE = -2;
+	public static final int EQUIP_BLANK = -1;
 	
 	public static final int EQUIP_REINFORCED_ARMOR = 0;
 	public static final int EQUIP_HEAVY_ARMOR = 1;
@@ -45,10 +47,13 @@ public class Equipment
 	public static final int EQUIP_HOLOGRAM_BELT = 21;
 	public static final int EQUIP_SCRAMBLER_BELT = 22;
 	
+	public static final int EQUIP_NO_TYPE = -1;
 	public static final int EQUIP_ARMOR = 0;
 	public static final int EQUIP_GLOVES = 1;
 	public static final int EQUIP_BELT = 2;
 	public static final int EQUIP_BOOTS = 3;
+	
+	public static final int EQUIP_TYPE_COUNT = 23;
 	
 	
 	private Equipment(int index)
@@ -63,10 +68,22 @@ public class Equipment
 			attFix[i] = 0;
 		}
 		
+		detection = 0;
+		cost = 0;
+		name = "(none)";
+		description = "";
+		type = EQUIP_BLANK;
+		
 		//create the equipment types
+		if (index == EQUIP_NONE)
+		{
+			description = "Your team has no loose equipment.";
+			type = -2;
+		}
 		if (index == EQUIP_HEAVY_ARMOR)
 		{
 			name = "Heavy Armor";
+			description = "+10 Toughness";
 			type = EQUIP_ARMOR;
 			detection = 10;
 			attMod[Player.ATT_TG] = 10;
@@ -75,6 +92,7 @@ public class Equipment
 		else if (index == EQUIP_REINFORCED_ARMOR)
 		{
 			name = "Reinforced Armor";
+			description = "+5 Toughness";
 			type = EQUIP_ARMOR;
 			detection = 5;
 			attMod[Player.ATT_TG] = 5;
@@ -83,6 +101,7 @@ public class Equipment
 		else if (index == EQUIP_SPIKED_ARMOR)
 		{
 			name = "Spiked Armor";
+			description = "+5 Strength";
 			type = EQUIP_ARMOR;
 			detection = 10;
 			attMod[Player.ATT_ST] = 5;
@@ -91,14 +110,16 @@ public class Equipment
 		else if (index == EQUIP_SURGE_ARMOR)
 		{
 			name = "Surge Armor";
+			description = "50% chance of zapping opponents when they block you";
 			type = EQUIP_ARMOR;
-			detection = 20;
+			detection = 10;
 			// TODO Shock Effect
 			cost = 30;
 		}
 		else if (index == EQUIP_VORTEX_ARMOR)
 		{
 			name = "Vortex Armor";
+			description = "Pulls in opposing players";
 			type = EQUIP_ARMOR;
 			detection = 15;
 			// TODO Vortex Effect
@@ -107,6 +128,7 @@ public class Equipment
 		else if (index == EQUIP_REPULSOR_ARMOR)
 		{
 			name = "Repulsor Armor";
+			description = "Pushes away opposing players";
 			type = EQUIP_ARMOR;
 			detection = 10;
 			// TODO Vortex Effect
@@ -115,6 +137,7 @@ public class Equipment
 		else if (index == EQUIP_SAAI_GLOVES)
 		{
 			name = "SAAI Gauntlets";
+			description = "Gives player 60 CH";
 			type = EQUIP_GLOVES;
 			detection = 15;
 			attFix[Player.ATT_CH] = 60;
@@ -123,6 +146,7 @@ public class Equipment
 		else if (index == EQUIP_REPULSOR_GLOVES)
 		{
 			name = "Repulsor Gauntlets";
+			description = "Pushes opponents when player checks them";
 			type = EQUIP_GLOVES;
 			detection = 10;
 			// TODO Vortex Effect
@@ -131,6 +155,7 @@ public class Equipment
 		else if (index == EQUIP_MAGNETIC_GLOVES)
 		{
 			name = "Magnetic Gauntlets";
+			description = "Player always picks up the ball";
 			type = EQUIP_GLOVES;
 			detection = 5;
 			attFix[Player.ATT_HD] = 99;
@@ -139,6 +164,7 @@ public class Equipment
 		else if (index == EQUIP_SURGE_GLOVES)
 		{
 			name = "Surge Gauntlets";
+			description = "50% chance of zapping opponents when checking them";
 			type = EQUIP_GLOVES;
 			detection = 15;
 			// TODO Shock Effect
@@ -147,6 +173,7 @@ public class Equipment
 		else if (index == EQUIP_SPIKED_GLOVES)
 		{
 			name = "Spiked Gauntlets";
+			description = "+5 Strength";
 			type = EQUIP_GLOVES;
 			detection = 10;
 			attMod[Player.ATT_ST] = 5;
@@ -155,6 +182,7 @@ public class Equipment
 		else if (index == EQUIP_SAAI_BOOTS)
 		{
 			name = "SAAI Boots";
+			description = "Gives player 40 RF and 40 DA";
 			type = EQUIP_BOOTS;
 			detection = 10;
 			attFix[Player.ATT_RF] = 40;
@@ -164,6 +192,7 @@ public class Equipment
 		else if (index == EQUIP_BOUNDER_BOOTS)
 		{
 			name = "Bounder Boots";
+			description = "Player cannot fail a jump";
 			type = EQUIP_BOOTS;
 			detection = 5;
 			attFix[Player.ATT_JP] = 99;
@@ -172,6 +201,7 @@ public class Equipment
 		else if (index == EQUIP_MAGNETIC_BOOTS)
 		{
 			name = "Magnetic Boots";
+			description = "+5 CH, player can't be pushed or pulled";
 			type = EQUIP_BOOTS;
 			detection = 10;
 			attMod[Player.ATT_CH] = 5;
@@ -183,6 +213,7 @@ public class Equipment
 		else if (index == EQUIP_SPIKED_BOOTS)
 		{
 			name = "Spiked Boots";
+			description = "+5 Strength";
 			type = EQUIP_BOOTS;
 			detection = 10;
 			attMod[Player.ATT_ST] = 5;
@@ -191,6 +222,7 @@ public class Equipment
 		else if (index == EQUIP_INSULATED_BOOTS)
 		{
 			name = "Insulated Boots";
+			description = "Player is immune to all electrical effects";
 			type = EQUIP_BOOTS;
 			detection = 15;
 			cost = 30;
@@ -198,6 +230,7 @@ public class Equipment
 		else if (index == EQUIP_MEDICAL_BELT)
 		{
 			name = "Medical Belt";
+			description = "Prevents injuries and death 33% of the time";
 			type = EQUIP_BELT;
 			detection = 15;
 			// TODO Injury Effect
@@ -206,6 +239,7 @@ public class Equipment
 		else if (index == EQUIP_FIELD_INTEGRITY_BELT)
 		{
 			name = "Field Integrity Belt";
+			description = "Keeps player from being blobbed";
 			type = EQUIP_BELT;
 			detection = 10;
 			// TODO Blob Effect
@@ -214,15 +248,17 @@ public class Equipment
 		else if (index == EQUIP_BOOSTER_BELT)
 		{
 			name = "Booster Belt";
+			description = "+10 AP, 6% chance of injury every turn";
 			type = EQUIP_BELT;
 			detection = 15;
-			attMod[Player.ATT_AP] = 20;
+			attMod[Player.ATT_AP] = 10;
 			// TODO Injury Effect
 			cost = 20;
 		}
 		else if (index == EQUIP_BACKFIRE_BELT)
 		{
 			name = "Backfire Belt";
+			description = "Explodes when the player gets checked";
 			type = EQUIP_BELT;
 			detection = 10;
 			// TODO Injury Effect
@@ -231,6 +267,7 @@ public class Equipment
 		else if (index == EQUIP_CLOAKING_BELT)
 		{
 			name = "Cloaking Belt";
+			description = "Player is invisible except when carrying the ball";
 			type = EQUIP_BELT;
 			detection = 15;
 			// TODO Appearance Effect
@@ -239,6 +276,7 @@ public class Equipment
 		else if (index == EQUIP_HOLOGRAM_BELT)
 		{
 			name = "Hologram Belt";
+			description = "Disguises the true species of the player";
 			type = EQUIP_BELT;
 			detection = 10;
 			// TODO Appearance Effect
@@ -247,6 +285,7 @@ public class Equipment
 		else if (index == EQUIP_SCRAMBLER_BELT)
 		{
 			name = "Scrambler Belt";
+			description = "Causes teleporter accidents 25% of the time";
 			type = EQUIP_BELT;
 			detection = 15;
 			// TODO Blob Effect
@@ -281,6 +320,11 @@ public class Equipment
 	
 	public static Equipment getEquipment(int index)
 	{
+		if (index < -2 || index >= EQUIP_TYPE_COUNT)
+			return new Equipment(EQUIP_NONE);
+		else if (index < 0)
+			return new Equipment(index);
+		
 		if (allEquipment == null)
 			defineEquipment();
 		

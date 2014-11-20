@@ -6,7 +6,6 @@ public enum SaveTokenTag
 	T_NAM,	//team name
 	T_CNM,	//team coach name 
 	T_FLD,	//team home field
-	T_MNY,	//team money
 	T_DOC,	//team docbot settings
 	T_UEQ,	//team unassigned equipment
 	T_FGC,	//team foreground color
@@ -25,6 +24,10 @@ public enum SaveTokenTag
 	P_ITP,	//player injury type
 	P_EQP,	//player equipment
 	P_XP_,	//player xp
-	P_SP_	//player skill points
+	P_SP_,	//player skill points
+	P_CST,	//player career stats
 	//current action points aren't saved because they're never relevant outside of the game
+
+	S_UID,	//stats unique identifier
+	S_STS	//stats array
 }

@@ -1,5 +1,6 @@
 package main.logic;
 
+import java.awt.event.ActionListener;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
@@ -19,8 +20,11 @@ public class Client
 	private Server host;
 	
 	boolean[] teamControl = new boolean[3];	//if controlsTeam[dataLayer.currentTeam], send commands to the server
+
+	public static final String ACTION_GAME_START = "gameStart";
+	public static String ACTION_GAME_END = "gameEnd";
 	
-	public Client(Server toConnectTo)
+	public Client(Server toConnectTo, ActionListener gameEndListener)
 	{
 		dataLayer = new Data();
 		
@@ -51,10 +55,10 @@ public class Client
 		for (int i = 0; i < 3; i++)
 			teamControl[i] = true;		//for now, in single player mode, this client controls all three teams
 		
-		presentationLayer = new ClientCursesGUI(this);
+		presentationLayer = new ClientCursesGUI(this, gameEndListener);
 	}
 	
-	public void newGame(List<Team> teams, int fieldnum)
+	public void newGame(List<Team> teams, Integer fieldnum)
 	{
 		dataLayer.newGame(teams, fieldnum);
 	}

@@ -16,64 +16,58 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import main.data.entities.Player;
+import main.data.entities.Stats;
 import main.data.entities.Team;
 
 public class SaveHandler
 {
-	private int saveType;
+	private String saveExtension;
 	private String savePath;
 	private String entityPath;
 	private String entityName;
-	
-	public static int TYPE_LEGACY_TEAM = 0;
-	public static int TYPE_LEGACY_LEAGUE = 1;
-	public static int TYPE_DEFAULT_TEAM = 2;
-	public static int TYPE_DEFAULT_LEAGUE = 3;
-	
-	private String[] extensions = {".tme", ".lge", ".csdt", ".csdl"};
-	
-	public SaveHandler(String entityName, int saveType)
+
+	public SaveHandler(String entityName, String saveExtension)
 	{
-		this(System.getProperty("user.dir") + "\\save\\", entityName, saveType);
+		this(System.getProperty("user.dir") + "\\save\\", entityName, saveExtension);
 	}
-	
-	public SaveHandler(String savePath, String entityName, int saveType)
+
+	public SaveHandler(String savePath, String entityName, String saveExtension)
 	{
-		this.saveType = saveType;
+		this.saveExtension = saveExtension.toLowerCase();
 		this.savePath = savePath;
 		this.entityPath = savePath + entityName + "\\";
 		this.entityName = entityName;
 	}
-	
+
 	public void createCacheDir()
 	{
 		createDirectory("cache");
 	}
-	
+
 	public void createSaveDir()
 	{
 		createDirectory(entityName);
 	}
-	
+
 	public void deleteCacheDir()
 	{
 		deleteDirectory("cache");
 	}
-	
+
 	public void deleteSaveDir()
 	{
 		deleteDirectory(entityName);
 	}
-	
+
 	private void createDirectory(String directory)
 	{
 		File saveFolder = new File(savePath + directory);
 		boolean success = saveFolder.mkdirs();
-		
+
 		if (!success)
 			System.out.println("Could not create data directory for " + directory + "!");
 	}
-		
+
 	private void deleteDirectory(String directory)
 	{
 		File saveFolder = new File(savePath + directory);
@@ -81,17 +75,17 @@ public class SaveHandler
 		{
 			file.delete();
 		}
-		
+
 		saveFolder.delete();
 	}
-	
+
 	public void zipSaveDir() throws IOException
 	{
 		byte[] buffer = new byte[1024];
-		 
-		FileOutputStream fos = new FileOutputStream(savePath + entityName + extensions[saveType]);
-	    ZipOutputStream zos = new ZipOutputStream(fos);
-		
+
+		FileOutputStream fos = new FileOutputStream(savePath + entityName + "." + saveExtension);
+		ZipOutputStream zos = new ZipOutputStream(fos);
+
 		File folder = new File(entityPath);
 
 		for (File file : folder.listFiles())
@@ -113,10 +107,10 @@ public class SaveHandler
 
 			in.close();
 		}
-		
+
 		zos.closeEntry();
-    	//remember close it
-    	zos.close();
+		// remember close it
+		zos.close();
 	}
 
 	public void unzipSaveDir() throws IOException
@@ -131,7 +125,7 @@ public class SaveHandler
 		}
 
 		// get the zip file content
-		ZipInputStream zis = new ZipInputStream(new FileInputStream(savePath + entityName + extensions[saveType]));
+		ZipInputStream zis = new ZipInputStream(new FileInputStream(savePath + entityName + "." + saveExtension));
 		// get the zipped file list entry
 		ZipEntry ze = zis.getNextEntry();
 
@@ -160,15 +154,20 @@ public class SaveHandler
 		zis.closeEntry();
 		zis.close();
 	}
-	
+
 	public List<String> loadTeam()
 	{
 		return loadFile(entityPath + "team.dat");
 	}
-	
+
 	public List<String> loadPlayer()
 	{
 		return loadFile(entityPath + "player.dat");
+	}
+
+	public List<String> loadStats()
+	{
+		return loadFile(entityPath + "stats.dat");
 	}
 
 	public boolean saveTeam(Team team)
@@ -184,49 +183,54 @@ public class SaveHandler
 			EntityMap.put(player.getUniqueId(), player);
 		return saveLine(entityPath + "player.dat", player.saveAsText());
 	}
-	
+
+	public boolean saveStats(Stats stats)
+	{
+		if (EntityMap.getStats(stats.getUniqueId()) == null)
+			EntityMap.put(stats.getUniqueId(), stats);
+		return saveLine(entityPath + "stats.dat", stats.saveAsText());
+	}
+
 	private boolean saveLine(String path, String line)
 	{
 		PrintWriter out;
-		
+
 		try
 		{
 			out = new PrintWriter(new FileWriter(path, true));
 			out.println(line);
 			out.close();
-		}
-		catch (IOException e)
+		} catch (IOException e)
 		{
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	private List<String> loadFile(String path)
 	{
 		List<String> returnLines = new ArrayList<String>();
 		BufferedReader in;
 		Scanner s;
-		
+
 		try
 		{
 			in = new BufferedReader(new FileReader(path));
 			s = new Scanner(in);
-			
+
 			while (s.hasNextLine())
 			{
 				returnLines.add(s.nextLine());
 			}
-			
+
 			in.close();
-		}
-		catch (IOException e)
+		} catch (IOException e)
 		{
 			System.out.println("SaveHandler - Could not read file " + path);
 			return new ArrayList<String>();
 		}
-		
+
 		return returnLines;
 	}
 }

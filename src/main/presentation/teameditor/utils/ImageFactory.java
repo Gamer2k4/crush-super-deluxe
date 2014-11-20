@@ -39,7 +39,7 @@ public class ImageFactory
 		{
 			System.out.println("ImageFactory.java - Could not load graphic! Path was " + path);
 		}
-		
+
 		return image;
 	}
 
@@ -91,52 +91,52 @@ public class ImageFactory
 			return "slith_160x160.png";
 		case PROFILE_XJS9000:
 			return "xjs9000_160x160.png";
-			// case GEAR_BACKFIRE_BELT:
-			// return "";
-			// case GEAR_BOOSTER_BELT:
-			// return "";
-			// case GEAR_CLOAKING_BELT:
-			// return "";
-			// case GEAR_INTEGRITY_BELT:
-			// return "";
-			// case GEAR_HOLOGRAM_BELT:
-			// return "";
-			// case GEAR_MEDICAL_BELT:
-			// return "";
-			// case GEAR_SCRAMBLER_BELT:
-			// return "";
-			// case GEAR_BOUNDER_BOOTS:
-			// return "";
-			// case GEAR_INSULATED_BOOTS:
-			// return "";
-			// case GEAR_MAGNETIC_BOOTS:
-			// return "";
-			// case GEAR_SAAI_BOOTS:
-			// return "";
-			// case GEAR_SPIKED_BOOTS:
-			// return "";
-			// case GEAR_MAGNETIC_GLOVES:
-			// return "";
-			// case GEAR_REPULSOR_GLOVES:
-			// return "";
-			// case GEAR_SAAI_GLOVES:
-			// return "";
-			// case GEAR_SPIKED_GLOVES:
-			// return "";
-			// case GEAR_SURGE_GLOVES:
-			// return "";
-			// case GEAR_HEAVY_PADS:
-			// return "";
-			// case GEAR_REINFORCED_PADS:
-			// return "";
-			// case GEAR_REPULSOR_PADS:
-			// return "";
-			// case GEAR_SPIKED_PADS:
-			// return "";
-			// case GEAR_SURGE_PADS:
-			// return "";
-			// case GEAR_VORTEX_PADS:
-			// return "";
+		case GEAR_BACKFIRE_BELT:
+			return "belt_backfire_212x112.png";
+		case GEAR_BOOSTER_BELT:
+			return "belt_booster_212x112.png";
+		case GEAR_CLOAKING_BELT:
+			return "belt_cloaking_212x112.png";
+		case GEAR_INTEGRITY_BELT:
+			return "belt_field_integrity_212x112.png";
+		case GEAR_HOLOGRAM_BELT:
+			return "belt_hologram_212x112.png";
+		case GEAR_MEDICAL_BELT:
+			return "belt_medical_212x112.png";
+		case GEAR_SCRAMBLER_BELT:
+			return "belt_scrambler_212x112.png";
+		case GEAR_BOUNDER_BOOTS:
+			return "boots_bounder_212x112.png";
+		case GEAR_INSULATED_BOOTS:
+			return "boots_insulated_212x112.png";
+		case GEAR_MAGNETIC_BOOTS:
+			return "boots_magnetic_212x112.png";
+		case GEAR_SAAI_BOOTS:
+			return "boots_saai_212x112.png";
+		case GEAR_SPIKED_BOOTS:
+			return "boots_spiked_212x112.png";
+		case GEAR_MAGNETIC_GLOVES:
+			return "gloves_magnetic_212x112.png";
+		case GEAR_REPULSOR_GLOVES:
+			return "gloves_repulsor_212x112.png";
+		case GEAR_SAAI_GLOVES:
+			return "gloves_saai_212x112.png";
+		case GEAR_SPIKED_GLOVES:
+			return "gloves_spiked_212x112.png";
+		case GEAR_SURGE_GLOVES:
+			return "gloves_surge_212x112.png";
+		case GEAR_HEAVY_PADS:
+			return "pads_heavy_212x112.png";
+		case GEAR_REINFORCED_PADS:
+			return "pads_reinforced_212x112.png";
+		case GEAR_REPULSOR_PADS:
+			return "pads_repulsor_212x112.png";
+		case GEAR_SPIKED_PADS:
+			return "pads_spiked_212x112.png";
+		case GEAR_SURGE_PADS:
+			return "pads_surge_212x112.png";
+		case GEAR_VORTEX_PADS:
+			return "pads_vortex_212x112.png";
 		}
 
 		throw new UnsupportedOperationException("File name for image of type " + type.toString() + " is unknown.");
