@@ -21,5 +21,6 @@ public abstract class GUI
 	}
 	
 	public abstract void receiveEvent(Event theEvent);
+	public abstract void closeGUI();
 	protected abstract void refreshInterface();
 }

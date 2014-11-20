@@ -175,7 +175,7 @@ public class PlayerFactory
 		NAMES_HUMAN.add("Barry G.");
 		NAMES_HUMAN.add("Milton");
 		NAMES_HUMAN.add("Rocky");
-		NAMES_HUMAN.add("Dr. Death");
+		NAMES_HUMAN.add("Dr.Death");
 		NAMES_HUMAN.add("Freddy");
 		NAMES_HUMAN.add("Billy");
 		NAMES_HUMAN.add("Bob");

@@ -40,7 +40,8 @@ public class Player extends SaveableEntity
 	public static final int STS_OUT = 8;
 
 	// TODO: add racial abilities as skills
-	public static final int TOTAL_SKILLS = 28;
+	public static final int TOTAL_SKILLS = 29;
+	public static final int SKILL_NINJA_MASTER = 29;
 	public static final int SKILL_TERROR = 28;
 	public static final int SKILL_JUGGERNAUT = 27;
 	public static final int SKILL_CHARGE = 26;
@@ -72,13 +73,13 @@ public class Player extends SaveableEntity
 
 	public static final String[] skillNames = { "None", "Intuition", "Stoic", "Sly", "Leader", "Karma", "Awe", "Healer", "Sensei",
 			"Juggling", "Gymnastics", "Boxing", "Scoop", "Judo", "Combo", "Strip", "Quickening", "Fist of Iron", "Doomstrike", "Guard",
-			"Tactics", "Brutal", "Stalwart", "Checkmaster", "Vicious", "Resilient", "Charge", "Juggernaut", "Terror" };
+			"Tactics", "Brutal", "Stalwart", "Checkmaster", "Vicious", "Resilient", "Charge", "Juggernaut", "Terror", "Ninja Master" };
 
 	public static final String[] races = { "Curmian", "Dragoran", "Gronk", "Human", "Kurgan", "Nynax", "Slith", "XJS9000" };
 
 	// TODO: IMPORTANT! Update this if the skill order ever changes
 	public static final int[] skillCosts = { 0, 20, 40, 40, 60, 60, 80, 80, 100, 20, 20, 20, 40, 40, 40, 60, 60, 80, 100, 20, 40, 40, 40,
-			60, 60, 60, 80, 80, 100 };
+			60, 60, 60, 80, 80, 100, 0 };
 
 	public static final int[][] baseAttributes = { { 80, 30, 20, 30, 30, 90, 50, 30 }, { 70, 50, 40, 40, 40, 70, 70, 30 },
 			{ 50, 60, 70, 60, 20, 30, 20, 10 }, { 50, 50, 50, 50, 30, 60, 70, 30 }, { 60, 60, 60, 55, 40, 50, 40, 10 },
@@ -107,7 +108,21 @@ public class Player extends SaveableEntity
 	public static final int RANK_HERO = 5;
 	public static final int RANK_LEGEND = 6;
 	public static final int RANK_AVATAR = 7;
-
+	
+	//confirmed to match up with legacy format
+	public static final int QUIRK_MORON = 1;
+	public static final int QUIRK_INTELLIGENT = 2;
+	public static final int QUIRK_EGOMANIAC = 3;
+	public static final int QUIRK_SLACKER = 4;
+	public static final int QUIRK_TECHNOPHOBIA = 5;
+	public static final int QUIRK_ELECTROPHOBIA = 6;
+	public static final int QUIRK_BLOBBOPHOBIA = 7;
+	public static final int QUIRK_DISPLACER = 8;
+	public static final int QUIRK_BOUNCER = 9;
+	public static final int QUIRK_IMMUNITY = 10;
+	public static final int QUIRK_SPACE_ROT = 11;
+	public static final int QUIRK_GRIT = 12;
+	
 	@Override
 	public String toString()
 	{
@@ -127,13 +142,13 @@ public class Player extends SaveableEntity
 		name = myName;
 		orderOfGainedSkills = "";
 		status = STS_DECK;
-		
+
 		int raceIndex = race;
 		if (raceIndex < 0 || raceIndex > 8)
 		{
 			raceIndex = 8;
 		}
-		
+
 		for (int i = 0; i < 8; i++)
 		{
 			attributes[i] = baseAttributes[raceIndex][i];
@@ -157,6 +172,8 @@ public class Player extends SaveableEntity
 		injuryType = Player.INJURY_NONE;
 		XP = 0;
 		skillPoints = 0;
+
+		careerStats = new Stats();
 	}
 
 	public boolean isEmptyPlayer()
@@ -182,7 +199,7 @@ public class Player extends SaveableEntity
 	private int XP;
 	private int skillPoints;
 
-	// public Stats careerStats; //TODO
+	public Stats careerStats; // TODO
 
 	@Override
 	public Player clone()
@@ -196,6 +213,7 @@ public class Player extends SaveableEntity
 		toRet.XP = XP;
 		toRet.skillPoints = skillPoints;
 		toRet.orderOfGainedSkills = orderOfGainedSkills;
+		toRet.careerStats = careerStats.clone();
 
 		for (int i = 0; i < 8; i++)
 		{
@@ -247,7 +265,7 @@ public class Player extends SaveableEntity
 
 		gainedSkills[index] = true;
 		orderOfGainedSkills = orderOfGainedSkills + (char) (65 + index);
-
+		
 		skillPoints -= skillCosts[index];
 	}
 
@@ -307,6 +325,12 @@ public class Player extends SaveableEntity
 		skillPoints += gameStats.getXP();
 		// careerStats.updateWithResults(gameStats); //TODO
 	}
+	
+	public void setXpAndSkillPoints(int xpAmount, int skillPointAmount)
+	{
+		XP = xpAmount;
+		skillPoints = skillPointAmount;
+	}
 
 	public void applyInjury(int attribute, int value)
 	{
@@ -318,6 +342,17 @@ public class Player extends SaveableEntity
 		for (int i = 0; i < 8; i++)
 		{
 			injuries[i] = 0;
+		}
+	}
+
+	public void recoverInjuries(int weeks)
+	{
+		weeksOut -= weeks;
+
+		if (weeksOut < 0)
+		{
+			weeksOut = 0;
+			injuryType = INJURY_NONE; // a trivial injury will be set to 0, based on how the weeks off are store in Data
 		}
 	}
 
@@ -339,21 +374,16 @@ public class Player extends SaveableEntity
 
 	public int equipItem(int eIndex)
 	{
-		System.out.println("EQUIPMENT: " + eIndex);
 		return equipItem(Equipment.getEquipment(eIndex));
 	}
 
+	// always successful; returns the index of the equipment that was previously equipped
 	public int equipItem(Equipment e)
 	{
-		System.out.println("EQUIPMENT 2: " + e.index);
-
-		int toRet = -1;
-
-		if (equipment[e.type] != -1)
-		{
-			toRet = equipment[e.type];
-		}
-
+		if (e.type == Equipment.EQUIP_NONE)
+			return e.type;
+		
+		int toRet = unequipItem(e.type);
 		equipment[e.type] = e.index;
 
 		return toRet;
@@ -361,6 +391,9 @@ public class Player extends SaveableEntity
 
 	public int unequipItem(int slot)
 	{
+		if (slot == Equipment.EQUIP_NONE)
+			return slot;
+		
 		int gear = equipment[slot];
 		equipment[slot] = Equipment.EQUIP_NONE;
 		return gear;
@@ -430,6 +463,11 @@ public class Player extends SaveableEntity
 		return toRet;
 	}
 
+	public void setAttribute(int attribute, int value)
+	{
+		attributes[attribute] = value;
+	}
+	
 	public int getAttributeWithoutModifiers(int attribute)
 	{
 		return attributes[attribute];
@@ -500,19 +538,31 @@ public class Player extends SaveableEntity
 		return toReturn;
 	}
 
+	private String convertStatsToString()
+	{
+		String statsUid = careerStats.getUniqueId();
+
+		if (EntityMap.getStats(statsUid) == null)
+			statsUid = EntityMap.put(statsUid, careerStats);
+		else
+			statsUid = EntityMap.getSimpleKey(statsUid);
+
+		return statsUid.substring(1);
+	}
+
 	@Override
 	public String saveAsText()
 	{
 		SaveStringBuilder ssb = new SaveStringBuilder(EntityType.PLAYER);
 
-		String teamUid = getUniqueId();
+		String playerUid = getUniqueId();
 
-		if (EntityMap.getPlayer(teamUid) == null)
-			teamUid = EntityMap.put(teamUid, this);
+		if (EntityMap.getPlayer(playerUid) == null)
+			playerUid = EntityMap.put(playerUid, this);
 		else
-			teamUid = EntityMap.getSimpleKey(teamUid);
+			playerUid = EntityMap.getSimpleKey(playerUid);
 
-		ssb.addToken(new SaveToken(SaveTokenTag.P_UID, teamUid));
+		ssb.addToken(new SaveToken(SaveTokenTag.P_UID, playerUid));
 		ssb.addToken(new SaveToken(SaveTokenTag.P_STS, String.valueOf(status)));
 		ssb.addToken(new SaveToken(SaveTokenTag.P_NAM, name));
 		ssb.addToken(new SaveToken(SaveTokenTag.P_SKO, orderOfGainedSkills));
@@ -526,6 +576,8 @@ public class Player extends SaveableEntity
 		ssb.addToken(new SaveToken(SaveTokenTag.P_INJ, convertInjuriesToList()));
 		ssb.addToken(new SaveToken(SaveTokenTag.P_SKL, convertSkillsToList()));
 		ssb.addToken(new SaveToken(SaveTokenTag.P_EQP, convertEquipmentToList()));
+
+		ssb.addToken(new SaveToken(SaveTokenTag.P_CST, convertStatsToString()));
 
 		return ssb.getSaveString();
 	}
@@ -565,6 +617,7 @@ public class Player extends SaveableEntity
 		String contents = getContentsForTag(ssb, saveTokenTag);
 		SaveToken saveToken = null;
 		List<String> strVals = null;
+		String referenceKey = "";
 
 		if (contents.equals(""))
 			return;
@@ -647,6 +700,12 @@ public class Player extends SaveableEntity
 			}
 			break;
 
+		case P_CST:
+			saveToken = ssb.getToken(saveTokenTag);
+			referenceKey = "S" + saveToken.getContents();
+			careerStats = EntityMap.getStats(referenceKey).clone();
+			break;
+
 		default:
 			throw new IllegalArgumentException("Player - Unhandled token: " + saveTokenTag.toString());
 		}
@@ -669,7 +728,7 @@ public class Player extends SaveableEntity
 
 		if (status != player.status || !name.equals(player.name) || !orderOfGainedSkills.equals(player.orderOfGainedSkills)
 				|| race != player.race || weeksOut != player.weeksOut || injuryType != player.injuryType || XP != player.XP
-				|| skillPoints != player.skillPoints)
+				|| skillPoints != player.skillPoints || !careerStats.equals(player.careerStats))
 			return false;
 
 		for (int i = 0; i < 8; i++)
@@ -708,6 +767,7 @@ public class Player extends SaveableEntity
 		hash = 31 * hash + injuryType;
 		hash = 31 * hash + XP;
 		hash = 31 * hash + skillPoints;
+		hash = 31 * hash + careerStats.hashCode(); // TODO: check if this should be saveHash()
 
 		for (int i = 0; i < 8; i++)
 		{

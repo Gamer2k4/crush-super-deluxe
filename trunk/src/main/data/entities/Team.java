@@ -27,7 +27,6 @@ public class Team extends SaveableEntity
 		teamName = "Anonymous";
 		coachName = "Anonymous";
 		homeField = Arena.ARENA_BRIDGES;
-		money = 900;
 
 		for (int i = 0; i < 4; i++)
 		{
@@ -44,15 +43,91 @@ public class Team extends SaveableEntity
 	public String teamName;
 	public String coachName;
 	public int homeField;
-	public int money;
 	public boolean[] docbot = new boolean[4];
 	public List<Integer> unassignedGear;
 	public Color[] teamColors = new Color[2];
-
+	//TODO: team stats are a thing, too - remember to update equals(), hashCode(), and clone()
+	
+	@Override
+	public Team clone()
+	{
+		Team team = new Team();
+		
+		for (Player p : players)
+		{
+			Player clonedPlayer = null;
+			
+			if (p != null)
+				clonedPlayer = p.clone();
+				
+			team.addPlayer(clonedPlayer);
+		}
+		
+		team.teamName = teamName;
+		team.coachName = coachName;
+		team.homeField = homeField;
+		
+		for (int i = 0; i < 4; i++)
+			team.docbot[i] = docbot[i];
+		
+		for (Integer i : unassignedGear)
+		{
+			team.unassignedGear.add(new Integer(i.intValue()));
+		}
+		
+		for (int i = 0; i < 2; i++)
+			team.teamColors[i] = teamColors[i];
+		
+		return team;
+	}
+	
 	// return sum of money and player value
 	public int getValue()
 	{
-		return 0;
+		int teamValue = 0;
+
+		for (int i = 0; i < 35; i++)
+		{
+			Player p = getPlayer(i);
+			if (p != null)
+			{
+				teamValue += p.getSalary();
+
+				for (int j = 0; j < 4; j++)
+				{
+					if (p.getEquipment(j) != Equipment.EQUIP_NONE)
+					{
+						Equipment eq = Equipment.getEquipment(p.getEquipment(j));
+						teamValue += eq.cost;
+					}
+				}
+			}
+		}
+
+		teamValue += getDocbotCost();
+
+		for (Integer equipmentIndex : unassignedGear)
+		{
+			teamValue += Equipment.getEquipment(equipmentIndex.intValue()).cost;
+		}
+
+		return teamValue;
+	}
+	
+	public int getDocbotCost()
+	{
+		int value = 0;
+		
+		if (docbot[0])
+			value += 50;
+		if (docbot[1])
+			value += 40;
+		if (docbot[2])
+			value += 30;
+		if (docbot[3])
+			value += 30;
+		
+		return value;
 	}
 
 	public void addPlayer(Player p)
@@ -72,7 +147,7 @@ public class Team extends SaveableEntity
 			if (index >= MAX_TEAM_SIZE)
 				throw new IllegalArgumentException("Invalid index for getting player: " + index, e);
 
-			// if the index is out of bounds, we'll just return null (unless it's REALLY out of bounds
+			// if the index is out of bounds, we'll just return null (unless it's REALLY out of bounds)
 		}
 
 		return p;
@@ -172,7 +247,6 @@ public class Team extends SaveableEntity
 		ssb.addToken(new SaveToken(SaveTokenTag.T_NAM, teamName));
 		ssb.addToken(new SaveToken(SaveTokenTag.T_CNM, coachName));
 		ssb.addToken(new SaveToken(SaveTokenTag.T_FLD, String.valueOf(homeField)));
-		ssb.addToken(new SaveToken(SaveTokenTag.T_MNY, String.valueOf(money)));
 
 		ssb.addToken(new SaveToken(SaveTokenTag.T_DOC, convertDocbotSettingsToList()));
 		ssb.addToken(new SaveToken(SaveTokenTag.T_UEQ, convertUnassignedEquipmentToList()));
@@ -193,7 +267,6 @@ public class Team extends SaveableEntity
 		setMember(ssb, SaveTokenTag.T_NAM);
 		setMember(ssb, SaveTokenTag.T_CNM);
 		setMember(ssb, SaveTokenTag.T_FLD);
-		setMember(ssb, SaveTokenTag.T_MNY);
 		setMember(ssb, SaveTokenTag.T_DOC);
 		setMember(ssb, SaveTokenTag.T_UEQ);
 		setMember(ssb, SaveTokenTag.T_FGC);
@@ -235,11 +308,6 @@ public class Team extends SaveableEntity
 		case T_FLD:
 			saveToken = ssb.getToken(saveTokenTag);
 			homeField = Integer.parseInt(saveToken.getContents());
-			break;
-
-		case T_MNY:
-			saveToken = ssb.getToken(saveTokenTag);
-			money = Integer.parseInt(saveToken.getContents());
 			break;
 
 		case T_DOC:
@@ -312,7 +380,7 @@ public class Team extends SaveableEntity
 		else
 			return false;
 
-		if (!teamName.equals(team.teamName) || !coachName.equals(team.coachName) || homeField != team.homeField || money != team.money)
+		if (!teamName.equals(team.teamName) || !coachName.equals(team.coachName) || homeField != team.homeField)
 			return false;
 
 		if (!teamColors[0].equals(team.teamColors[0]) || !teamColors[1].equals(team.teamColors[1]))
@@ -353,7 +421,6 @@ public class Team extends SaveableEntity
 		hash = 31 * hash + teamName.hashCode();
 		hash = 31 * hash + coachName.hashCode();
 		hash = 31 * hash + homeField;
-		hash = 31 * hash + money;
 		hash = 31 * hash + teamColors[0].hashCode();
 		hash = 31 * hash + teamColors[1].hashCode();
 
@@ -368,7 +435,7 @@ public class Team extends SaveableEntity
 			int toAdd = 1;
 			
 			if (getPlayer(i) != null)
-				toAdd = getPlayer(i).hashCode();
+				toAdd = getPlayer(i).hashCode();		//TODO: check if this should be saveHash()
 			
 			hash = 31 * hash + toAdd;
 		}

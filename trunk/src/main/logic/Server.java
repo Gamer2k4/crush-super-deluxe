@@ -26,14 +26,20 @@ public class Server
 	{
 		dataLayer = new Data();
 		logicLayer = new Engine(dataLayer);
-		presentationLayer = new ServerJFrameGUI(this);
 		
 		connectedClients = new ArrayList<Client>();
 		IPs = new HashMap<Client, String>();
 	}
 	
-	public void newGame(List<Team> teams, int fieldnum)
+	public void newGame(List<Team> teams)
 	{
+		newGame(teams, null);
+	}
+	
+	public void newGame(List<Team> teams, Integer fieldnum)
+	{
+		presentationLayer = new ServerJFrameGUI(this);		//TODO: put this someplace else
+		
 		dataLayer.newGame(teams, fieldnum);
 		
 		for (Client c : connectedClients)
@@ -44,7 +50,12 @@ public class Server
 		receiveCommand(Event.updateTurnPlayer(0));
 	}
 	
-	//MAJORLY flesh this out once I get to network stuff
+	public void endGame()
+	{
+		presentationLayer.closeGUI();
+	}
+	
+	//TODO: MAJORLY flesh this out once I get to network stuff
 	public void addClient(Client newClient, String IP)
 	{
 		connectedClients.add(newClient);
