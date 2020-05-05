@@ -1,0 +1,11 @@
+import static org.easymock.EasyMock.capture;
+
+import org.easymock.Capture;
+
+Capture<Player> capturePlayer = new Capture<Player>();
+expect(mockData.getLocationOfPlayer(capture(capturePlayer))).andReturn(new Point(0, 0));
+mockControl.replay();
+
+engine.makeCall();
+
+Player player = capturePlayer.getValue();

@@ -1,0 +1,40 @@
+Note that team value is not changing as player value is.
+
+
+XJS9000
+		I	J	K	L
+10K		16	39	0	0
+75K		16	39	1	0	(+65)
+141K	16	39	2	0	(+66)
+206K	16	39	3	0	(+65)
+272K	16	39	3	0	(+66)
+10K		16	40	0	0	(+0)
+18K		16	71	0	0	(+8)
+
+Curmian
+		I	J	K	L
+20K		32	78	0	0
+85K		32	78	1	0	(+65)
+151K	32	78	1	0	(+66)
+
+Gronk
+		I	J	K	L
+80K		80	38	1	0
+145K	80	38	2	0	(+65)
+211K	80	38	3	0	(+66)
+
+
+So far, it's (.25 * J) + (65.5 * K).
+
+I is some multiple of 16.  A crippling injury took a dragoran (avatar) from 80 to 64 (0x50 to 0x40) with -20 RF, -20 DA.  This looks like it initially corresponds to value (10K is 16 or 0x10, 20K is 32 or 0x20, and so on), but changes as the players get more advanced.  Perhaps this tracks what it should be, or what's displayed? In the player's profile, the value is tinted negatively when I represents a value below JK (and shows it as 1K less), and positively when I represents a value higher than JK (even though the displayed number doesn't change).
+
+For completely new players, J is multiples of 39 (0x27).
+
+
+Dragoran
+
+			I	J	K	L
+Rookie		80	195	0	0
+Regular		80	195	0	0
+Veteran		112	17	1	0		(112 is 0x70, which is the current value)
+Vet w/ Inj	96	234	0	0		(96 is 0x60, which is the current value; also, this is a -10ST -10TG injury which subtracted 10 from the value)

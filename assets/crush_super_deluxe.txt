@@ -1,0 +1,363 @@
+Crush! Super Deluxe
+===================
+save annotations
+	http://www.mkyong.com/java/java-custom-annotations-example/
+
+ai progression
+
+--
+
+Reference the sprite example to see how to use sleep() for sprite animation.  This is actually crucial, because otherwise sprites just won't work.
+
+--
+
+When adding the legacy team editor screen, have a shared service between them.  This should keep track of everything that's selected, and the respective UIs should just poll it for each of their fields (and send action commands to it).
+
+To get the proper colors when saving a modern team to a legacy format, compare the team color to each of the legacy ones.  Calculate the absolute difference for each color (|R1 - R2|, |G1 - G2|, |B1 - B2|), and take the color with the least difference.
+
+--
+
+To test player value columns, make a team of a single Dragoran (or something) on Nexus, set up an exhibition series againt two single player XJS teams (loaded up with equipment to eject if possible).  Rack up his experience and see how it changes, then start running him on electrical tiles and see how injuries change the value.
+
+--
+
+Stats Screen:
+ Determine which stats actually need to be kept (by analyzing league records and so on), and which can be ignored.  For the ones that can be ignored, just pull them directly from Data.
+ Note that the legacy team files do actually store game stats with each player.
+ 
+
+Builder pattern:
+
+public static class PlayerBuilder
+{
+	private static String name;
+	
+	public static PlayerBuilder setName(String name)
+	{
+		this.name = name;
+		return this;
+	}
+	
+	public static Player build()
+	{
+		Player player = new Player();
+		player.setName(name);
+		return player;
+	}
+}
+
+
+Sprites:
+http://www.developer.com/java/other/article.php/893471/Fun-with-Java-Sprite-Animation-Part-1.htm
+
+Sprite animation can be done by keeping track of the count of update frames in a long, allowing rollover, and printing the sprite associated with that count via a modulus operator.  All animated sprites should move at the same time - all skulls should be at the same brightness, all cameras should float up and down at the same time, all portals should look the same, all stun stars should be in the same location at the same time, and so on.  This means that we only need to keep track of one animation point per overlay sprite.
+
+Drawing layers:
+ Background - lava or stars; always the base image to start with
+ Base - Map (no changes)
+ Features - goals, ball bins, traps, portals, rats, and anything else that would be above the map but below the players/ball
+ Ball - players appear on top of the ball, but the ball appears on top of features; see how the ball appears if a player doesn't pick it up
+ Players - self-explanatory
+ Decorators - stun stars, teleporting bursts, shock effects, terror and the like, vortex effects, backfire, death reek, etc.
+ Cameras - those floating guys, as well as hurled balls
+ 
+ We need to keep track of the data of all these layers, then draw them one by one each frame.  The canvas will be the size of the background (lava or whatever), plus 36 pixels on each side.  Everything in the current viewport will be printed onto the canvas, then the subimage starting at (36, 36) will be displayed on the actual frame.  Try to determine how to get a consistent frame rate, and display it on the screen while I'm testing.
+ 
+
+Perhaps decorate Player with AnimatedPlayer, adding the field currentSprite?
+
+
+//TODO: possibly break this down into StaticSprite and AnimatedSprite with a parent class of AbstractSprite (which only defines getImage() instead of getNextFrame()).
+//Maybe getImage() auto-increments the frame? But that doesn't really work for players if I want the sprite progression to be in the same "set" as standing still.
+//A better idea would be to have an internal timer in each sprite that updates the current frame every time it fires; the delay could be different for each sprite (if
+//necessary), and it would be independent of any other delays
+public class AnimatedSprite
+{
+	private List<BufferedImage> spriteFrames;
+	private int totalFrames;
+	private int currentFrame;
+	
+	public AnimatedSprite()
+	{
+		spriteFrames = new ArrayList<BufferedImage>();
+		totalFrames = 0;
+		currentFrame = -1;
+	}
+	
+	public AnimatedSprite(BufferedImage firstFrame)
+	{
+		this();
+		addFrame(firstFrame);
+	}
+	
+	//TODO: this would be risky if two of the same sprite ever animated independently of each other, but I think that only happens with ball bins.
+	public AnimatedSprite reset()
+	{
+		currentFrame = 0;
+		return this;
+	}
+	
+	public void addFrame(BufferedImage frame)
+	{
+		spriteFrames.add(frame);
+		totalFrames = spriteFrames.size();
+	}
+	
+	public BufferedImage getNextFrame()
+	{
+		if (totalFrames == 0)
+			throw new Exception();	//elaborate
+		else if (totalFrames == 1)
+			return spriteFrames.get(0);
+			
+		currentFrame++;
+		
+		if (currentFrame >= totalFrames)
+			currentFrame = 0;
+			
+		return spriteFrames.get(currentFrame);
+	}
+	
+	public BufferedImage getFrame(int index)	//used to get the ball bin frames without advancing them
+	{
+		return spriteFrames.get(index);
+	}
+}
+
+public class TeamSprites
+{
+	private ColorReplacer colorReplacer;
+	private ImageFactory imageFactory;
+	
+	private BufferedImage[] raceSpriteSheets;
+	private RaceSprites[] raceSprites;
+	
+	public TeamSprites(Color fgColor, Color bgColor)
+	{
+		colorReplacer = new LegacyColorReplacer(fgColor, bgColor);
+		imageFactory = new LegacyImageFactory();
+		
+		raceSpriteSheets = new BufferedImage[Player.TOTAL_RACES];
+		raceSprites = new RaceSprites[Player.TOTAL_RACES];
+		
+		loadSpriteSheets(fgColor, bgColor);
+		loadSprites();
+	}
+	
+	private void loadSpriteSheets(Color fgColor, Color bgColor)
+	{
+		raceSpriteSheets[Player.RACE_CURMIAN] = colorReplacer.replace(imageFactory.getImage(ImageType.SPRITES_CURMIAN), fgColor, bgColor);
+		//etc.
+	}
+	
+	private void loadSprites()
+	{
+		RaceSprites curmianSprites = new RaceSprites();
+		
+		for (int currentRace = 0; currentRace < Player.TOTAL_RACES; currentRace++)
+		{
+			RaceSprites currentSprites = new RaceSprites();
+			
+			for (int (facing = 0; facing < 8; facing++)
+			{
+				currentSprites.add(RaceSprites.STATE_WALKING, facing, getSprite(currentRace, y));	//TODO: update y
+			}
+			
+			raceSprites[currentRace] = currentSprites;
+		}
+	}
+	
+	private BufferedImage getSprite(int race, int yStart)
+	{
+		return ImageUtils.deepCopy(raceSpriteSheets[race].getSubImage(0, yStart, 35, 30));	//TODO: confirm these arguments
+	}
+}
+
+public class RaceSprites
+{
+	public static final int FACING_NW = 0;
+	public static final int FACING_N = 1;
+	public static final int FACING_NE = 2;
+	public static final int FACING_E = 3;
+	public static final int FACING_SE = 4;
+	public static final int FACING_S = 5;
+	public static final int FACING_SW = 6;
+	public static final int FACING_W = 7;
+	
+	private static final int TOTAL_STATES = n;	//TODO
+	public static final int STATE_STAND = 0;
+	public static final int STATE_WALK = 1;
+	//etc.
+	
+	private AnimatedSprite[][] sprites;
+	
+	public RaceSprites()
+	{
+		sprites = new AnimatedSprite[TOTAL_STATES][8];
+	}
+	
+	public void addSprite(int state, int facing, AnimatedSprite sprite)
+	{
+		sprites[state][facing] = sprite;
+	}
+	
+	public AnimatedSprite getSprite(int state, int facing)
+	{
+		return sprites[state][facing].reset();
+	}
+}
+
+Cursor:
+http://www.java2s.com/Tutorial/Java/0240__Swing/ChangeCursorinathreadforanimation.htm
+
+--
+
+Scrolling game window:
+http://gamedev.stackexchange.com/questions/46228/implementing-a-camera-viewport-to-a-2d-game
+http://www.yaldex.com/games-programming/0672323699_ch08lev1sec12.html
+http://gamedev.stackexchange.com/questions/44256/how-to-add-a-scrolling-camera-to-a-2d-java-game
+http://gamedevelopment.tutsplus.com/tutorials/parallax-scrolling-a-simple-effective-way-to-add-depth-to-a-2d-game--cms-21510
+
+initiateScrolling()
+ create base image of entire map
+ print all sprites onto map base image
+ update viewport with appropriate section of that map as scrolling occurs
+ 
+stopScrolling()
+ take a snapshot of map base image at the current viewport coordinates (note that there might be a tile of overlap, and some sprites will be printed off-screen)
+ print visible sprites on it as normal, trimming them as necessary
+ 
+Remember that goals, bins, and even field overlays are considered sprites for these purposes.
+
+Point getMapCoordsFromCursorLocation(int mouseX, int mouseY);
+{
+	//returns indices from 0 to 29 for both X and Y of the actual game grid, taking into account the viewport offset
+}
+
+--
+
+Crush Enhancements:
+ Code-wise, wrap legacy gameplay files with new ones that inherit from them.  That way it's possible to change the game logic without touching the original data.
+ 
+ Perhaps shift the salary cap from the team to the fielded players (that is, the first nine players, plus their equipment, plus docbot, cannot exceed the amount).  This lets you have more flexibility with team design, and will open up games with different salary limits.  In this case, the team will still have a budget (and winning games can increase that budget over time), but different games/leagues can have different budget restrictions.
+ 
+ The game preview should show the field that will be played on, not just the opposing teams.
+ 
+ Implement a draft style of team building, both from scratch (pickup game) and as a way of getting players long-term (like NFL Street 2's "Own the City").  In this case, players should come with their own skills and equipment.
+	Draft from current league
+	Draft from random pool
+ 
+ Unique and regional equipment should exist.
+ 
+UI click mapping:
+ For an image with buttons, have a similar image with button silhouettes, each a different color.  That way, whenever the user clicks on the screen, just get the color at that X, Y on the click mapping image, and trigger the appropriate event.
+
+UI updates:
+ Trim trailing spaces for names when displaying loaded teams (likely legacy ones).
+ Center the budget/team value panel, and have buttons on either side (one to change the view, one to exit/cancel).
+ Check the width/height of the original in-game image assets, and try to get the dimensions to match (ideally 2x the original for both dimensions).
+	-note that the original game had a compressed look, probably intentionally to fit in the netplay chat thing.  Try to correct this.
+ 
+
+Fix the interface so that it loads properly, and everything (events, etc.) are all in the proper places.
+-Team selection screen
+	-One slot ("helmet") for each opening; each has a choice of control - Open, or AI
+	-The game can be started at any time; slots that remain open at the start of the game are given a random team and AI control
+	-Any computer (host or client) can control any number of teams
+	-Host and clients always watch the game in progress, regardless of who's playing (this may change in tournaments to do simultaneous games)
+	-Leagues (for now) cannot be played remotely.
+
+AI
+==
+Eventually, I'd want better AI, one that can block off paths, can work simultaneously, etc.  For now, though, I'll just use Crush's simple AI.
+
+This AI will work by starting with a blank field, assigning every "interesting" tile (ball bins, enemies, etc.) a value, and flood-filling the map with decreasing values as the distance to those tiles grows.  A player simply moves to the highest tile adjacent to him, and so on.  If the target is a friend, he hands the ball off.  If the target is an enemy, he checks the player.  I'll need to figure out how to do jumping or not.
+
+Four game states:
+* Ball not found
+* Ball loose
+* Ball controlled by other team
+* Ball controlled by own team
+
+Implement the states one by one, in the order listed above.
+
+
+Ball Not Found
+--------------
+Act in team order, with no exceptions.
+
+Destination values:
+ Active ball bins - high
+ Opponents - medium
+ Active goal - none
+ Ball - none
+ 
+ Exclude friendly player tiles, 
+ 
+Ball Loose
+----------
+Act in team order, with a single implicit ball carrier going first.  If he is injured, reset the state.
+
+Destination values:
+ Active ball bins - none
+ Opponents - medium
+ Active goal - medium
+ Ball - high
+ 
+Ball Controlled by Other Team
+-----------------------------
+Act in team order, with no exceptions.
+
+Destination values:
+ Active ball bins - none
+ Opponents - medium
+ Active goal - high
+ Ball - high
+ 
+Ball Controlled by Own Team
+---------------------------
+Act in team order, with the actual ball carrier going last.
+
+Destination values:
+ Active ball bins - none
+ Opponents - medium
+ Active goal - high
+ Ball - medium
+
+--
+
+Pathfinding
+-----------
+The game state should never change without warning, so run pathfinding at the start of each player's turn, and then only if the state changes again.
+
+Possible changes:
+* Teleportation
+* Successful pickup
+* Check that moved/injured opponent
+
+No need to reset for self injury or missed pickup, since those each end the player's turn.
+
+The pathfinding should be for all actions, not just moving.  If the target square is an opponent, throw a check.  If it's an electrical tile, jump over it.  Anything else is activated by moving.
+
+Pathfinding should just be for the sectors involved and any in between.  For example, if you're in Sector (1, 1) and have a target in Sector (3, 1), then pathfinding takes place through (1, 1), (2, 1), and (3, 1).  If a path cannot be found, either expand the zone or just set the destination to the nearest teleporter.
+
+
+Before pathfinding can be done, a target must be chosen.  Every interesting coordinate is assigned a value, and the highest value becomes the destination.
+
+Interesting coordinates:
+* Active goal corner
+* Opponents
+* Ball
+* Active ball bin
+
+Values are modified based on the following conditions:
+* Distance (in tiles; will require an initial full pathfind)
+* Risk (in the case of an opponent)
+* Urgency (turns until a loss or a tie)
+
+Portals should have the value of the portal nearest the ball, minus a certain amount to cause the player to evaluate other options first.
+
+In general, an enemy ball carrier will have the highest value.
+
+Distance calculation is straightforward for the most part, with every tile costing 10AP.  Impassible tiles (fallen opponents, electrical tiles, teleporters) are given a value of (110 - JP); electrical tiles are given a normal value of 10 if the player has insulated boots.  If the player has High Jump, the value is (100 - JP) instead.  This makes it much more desireable to go around dangerous tiles if possible.
+	-Remember that players with High Jump (for now, Curmians) WILL jump to avoid reflex checks
