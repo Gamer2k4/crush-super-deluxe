@@ -5,6 +5,7 @@ import java.awt.Point;
 import main.data.Data;
 import main.data.Event;
 import main.data.entities.Player;
+import main.data.entities.Skill;
 import main.logic.Client;
 import main.logic.Server;
 
@@ -28,7 +29,7 @@ public abstract class GameGUI
 	protected int getAssistBonus(Player ally, Player target)
 	{
 		// tactics negates assist bonuses
-		if (target.hasSkill(Player.SKILL_TACTICS))
+		if (target.hasSkill(Skill.TACTICS))
 			return 0;
 
 		int team = getData().getTeamIndexOfPlayer(ally);
@@ -55,7 +56,7 @@ public abstract class GameGUI
 					toRet += 10;
 
 					// teammates with guard help even more
-					if (p.hasSkill(Player.SKILL_GUARD))
+					if (p.hasSkill(Skill.GUARD))
 						toRet += 5;
 				}
 			}

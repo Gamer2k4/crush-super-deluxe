@@ -4,7 +4,7 @@ import javax.swing.table.AbstractTableModel;
 
 import main.data.entities.Player;
 import main.data.entities.Team;
-import main.presentation.teameditor.utils.GUIPlayerAttributes;
+import main.presentation.teameditor.common.GUIPlayerAttributes;
 
 public class InjuredPlayersTableModel extends AbstractTableModel
 {

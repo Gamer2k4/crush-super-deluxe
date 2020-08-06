@@ -15,8 +15,8 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 
 import main.data.entities.Player;
+import main.presentation.teameditor.common.GUIPlayerAttributes;
 import main.presentation.teameditor.tablemodels.PlayerAbilityTableModel;
-import main.presentation.teameditor.utils.GUIPlayerAttributes;
 
 public class RosterPlayerInfoPanel extends AbstractPlayerInfoPanel
 {
@@ -174,8 +174,8 @@ public class RosterPlayerInfoPanel extends AbstractPlayerInfoPanel
 		String rating = GUIPlayerAttributes.getRating(player);
 		String status = GUIPlayerAttributes.getStatus(player);
 		String skillPoints = GUIPlayerAttributes.getSkillPoints(player);
-		String value = GUIPlayerAttributes.getValue(player);
-		String skills = GUIPlayerAttributes.getSkills(player);
+		String value = GUIPlayerAttributes.getValueWithK(player);
+		String skills = GUIPlayerAttributes.getSkillsString(player);
 		String quirks = GUIPlayerAttributes.getQuirks(player);
 
 		playerNameLabel.setText(index + ") " + name);

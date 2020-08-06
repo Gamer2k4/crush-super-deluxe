@@ -34,12 +34,7 @@ public abstract class AbstractFontFactory extends ImageUtils
 
 	public BufferedImage generateString(LegacyTextElement textElement)
 	{
-		return generateString(textElement.getText(), textElement.getColor(), FontType.FONT_SMALL2);
-	}
-
-	public BufferedImage generateString(LegacyTextElement textElement, FontType fontType)
-	{
-		return generateString(textElement.getText(), textElement.getColor(), fontType);
+		return generateString(textElement.getText(), textElement.getColor(), textElement.getFont());
 	}
 
 	public BufferedImage generateString(String text)

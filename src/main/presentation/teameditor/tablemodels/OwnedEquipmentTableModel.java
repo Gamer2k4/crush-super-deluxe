@@ -31,7 +31,7 @@ public class OwnedEquipmentTableModel extends AbstractTableModel
 		if (team == null)
 			return;
 
-		List<Integer> gearToDisplay = team.unassignedGear;
+		List<Integer> gearToDisplay = team.getEquipment();
 
 		for (Integer equipmentIndex : gearToDisplay)
 		{

@@ -7,16 +7,17 @@ import java.util.Map;
 import java.util.Queue;
 
 import main.data.Data;
+import main.data.DataImpl;
 import main.data.Event;
 import main.data.entities.Team;
-import main.presentation.GUI;
-import main.presentation.ServerJFrameGUI;
+import main.presentation.game.GameGUI;
+import main.presentation.game.ServerJFrameGUI;
 
 public class Server
 {
 	private Data dataLayer;
 	private Engine logicLayer;
-	private GUI presentationLayer;
+	private GameGUI presentationLayer;
 	
 	private List<Client> connectedClients;
 	
@@ -24,8 +25,8 @@ public class Server
 	
 	public Server()
 	{
-		dataLayer = new Data();
-		logicLayer = new Engine(dataLayer);
+		dataLayer = new DataImpl("server");
+		logicLayer = new LegacyEngineImpl(dataLayer);
 		
 		connectedClients = new ArrayList<Client>();
 		IPs = new HashMap<Client, String>();
@@ -99,6 +100,11 @@ public class Server
 	public Data getData()
 	{
 		return dataLayer;
+	}
+	
+	public Engine getEngine()
+	{
+		return logicLayer;
 	}
 	
 	

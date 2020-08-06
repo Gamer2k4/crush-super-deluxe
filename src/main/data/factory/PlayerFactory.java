@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import main.data.entities.Player;
-import main.logic.Engine;
+import main.data.entities.Race;
+import main.logic.Randomizer;
 
 public class PlayerFactory
 {
@@ -32,64 +33,58 @@ public class PlayerFactory
 	
 	public static Player createEmptyPlayer()
 	{
-		return new Player(-1, "EMPTY");
+		return new Player(null, "EMPTY");
 	}
 	
-	public static Player createPlayerWithRandomName(int race)
+	public static Player createPlayerWithRandomName(Race race)
 	{
 		return new Player(race, randomName(race));
 	}
 	
-	public static Player createPlayerWithDefinedName(int race, String name)
+	public static Player createPlayerWithDefinedName(Race race, String name)
 	{
 		return new Player(race, name);
 	}
 	
 	// ensures that the same names don't get picked twice
-	private static String randomName(int race)
+	private static String randomName(Race race)
 	{
 		if (!namesDefined)
 			defineNames();
 
 		String toRet = "NO NAME";
-
-		if (race == Player.RACE_CURMIAN)
+		
+		switch(race)
 		{
-			toRet = safeGetRandomName(NAMES_CURMIAN, assignableCurmianNames);
-		} else if (race == Player.RACE_DRAGORAN)
-		{
-			toRet = safeGetRandomName(NAMES_DRAGORAN, assignableDragoranNames);
-		} else if (race == Player.RACE_GRONK)
-		{
-			toRet = safeGetRandomName(NAMES_GRONK, assignableGronkNames);
-		} else if (race == Player.RACE_HUMAN)
-		{
-			toRet = safeGetRandomName(NAMES_HUMAN, assignableHumanNames);
-		} else if (race == Player.RACE_KURGAN)
-		{
-			toRet = safeGetRandomName(NAMES_KURGAN, assignableKurganNames);
-		} else if (race == Player.RACE_NYNAX)
-		{
-			toRet = safeGetRandomName(NAMES_NYNAX, assignableNynaxNames);
-		} else if (race == Player.RACE_SLITH)
-		{
-			toRet = safeGetRandomName(NAMES_SLITH, assignableSlithNames);
-		} else if (race == Player.RACE_XJS9000)
-		{
-			toRet = safeGetRandomName(NAMES_XJS9000, assignableXjs9000Names);
+		case CURMIAN:
+			return safeGetRandomName(NAMES_CURMIAN, assignableCurmianNames);
+		case DRAGORAN:
+			return safeGetRandomName(NAMES_DRAGORAN, assignableDragoranNames);
+		case GRONK:
+			return safeGetRandomName(NAMES_GRONK, assignableGronkNames);
+		case HUMAN:
+			return safeGetRandomName(NAMES_HUMAN, assignableHumanNames);
+		case KURGAN:
+			return safeGetRandomName(NAMES_KURGAN, assignableKurganNames);
+		case NYNAX:
+			return safeGetRandomName(NAMES_NYNAX, assignableNynaxNames);
+		case SLITH:
+			return safeGetRandomName(NAMES_SLITH, assignableSlithNames);
+		case XJS9000:
+			return safeGetRandomName(NAMES_XJS9000, assignableXjs9000Names);
 		}
 
-		return toRet;
+		return "NO NAME";
 	}
 	
 	private static String safeGetRandomName(List<String> all, List<String> available)
 	{
 		if (available.isEmpty())
 		{
-			available = randomNameFill(all);
+			available.addAll(randomNameFill(all));
 		}
 		
-		int nameIndex = Engine.Randint(0, available.size() - 1);
+		int nameIndex = Randomizer.getRandomInt(0, available.size() - 1);
 		return available.remove(nameIndex);
 	}
 
@@ -100,7 +95,7 @@ public class PlayerFactory
 		
 		while (!unshuffledList.isEmpty())
 		{
-			int index = Engine.Randint(0, unshuffledList.size() - 1);
+			int index = Randomizer.getRandomInt(0, unshuffledList.size() - 1);
 			shuffledList.add(unshuffledList.remove(index));
 		}
 		

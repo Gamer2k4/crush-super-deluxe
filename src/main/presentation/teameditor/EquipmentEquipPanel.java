@@ -13,6 +13,7 @@ import javax.swing.border.EtchedBorder;
 
 import main.data.entities.Equipment;
 import main.data.entities.Player;
+import main.data.entities.Skill;
 
 public class EquipmentEquipPanel extends JPanel
 {
@@ -124,7 +125,7 @@ public class EquipmentEquipPanel extends JPanel
 			wornField[i].setText(equip.name);
 		}
 
-		if (player != null && player.hasSkill(Player.SKILL_SLY))
+		if (player != null && player.hasSkill(Skill.SLY))
 			detectionChance /= 2.0;
 
 		wornDetectionLabel.setText("Detection: " + (int) (detectionChance + .5) + "%");

@@ -1,77 +1,39 @@
 package main.presentation.startupscreen;
 
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
+import java.awt.event.ActionListener;
 
-import javax.imageio.ImageIO;
-import javax.swing.JPanel;
+import javax.swing.JButton;
 
-import main.presentation.teameditor.utils.ColorReplacer;
+import main.presentation.common.AbstractScreenPanel;
 
-public abstract class AbstractStartupScreenPanel extends JPanel
+public abstract class AbstractStartupScreenPanel extends AbstractScreenPanel
 {
 	private static final long serialVersionUID = 7193565445403303507L;
 	
-	private static final Color BG_TINT = Color.GREEN;
-	private static final String BG_IMAGE_PATH = Paths.get(System.getProperty("user.dir")).getParent().toString()
-	+ "\\resources\\editor_images\\backgrounds\\";
+	protected static final int BUTTON_HEIGHT = 25;
+	protected static final int BUTTON_WIDTH = 120;
+	protected static final int BUTTON_START_X = 540;
+	protected static final int BUTTON_START_Y = 260;
 	
-	private BufferedImage bgImage;
-	
-	protected AbstractStartupScreenPanel(int height, int width)
+	protected AbstractStartupScreenPanel(int width, int height)
 	{
 		this(new Dimension(width, height));
 	}
 	
 	protected AbstractStartupScreenPanel(Dimension dimension)
 	{
-		setMinimumSize(dimension);
-		setMaximumSize(dimension);
-		setPreferredSize(dimension);
-		setSize(dimension);
-		setLayout(null);
-		
-		setBackgroundImage();
+		super(dimension);
 	}
 	
-	private void setBackgroundImage()
+	protected JButton createAndAddButton(int x, int y, String text, ActionListener actionListener)
 	{
-		String path = BG_IMAGE_PATH + getBgFilename();
-		
-		try
-		{
-			bgImage = ImageIO.read(new File(path));
-		} catch (IOException e)
-		{
-			System.out.println("Startup Screen - Could not load graphic! Path was " + path);
-		}
-		
-		//TODO: doesn't work, but might when we get proper image files
-		bgImage = ColorReplacer.setColors(bgImage, BG_TINT, Color.MAGENTA, Color.BLACK);
-		
-		repaint();
+		JButton button = new JButton(text);
+		button.setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
+		button.setLocation(x, y);
+		button.addActionListener(actionListener);
+		button.setActionCommand(text);
+		add(button);
+		return button;
 	}
-	
-	@Override
-	protected void paintComponent(Graphics g)
-	{
-		super.paintComponent(g);
-		
-		if (bgImage == null)
-			return;
-		
-		Graphics2D g2 = (Graphics2D) g;
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		
-		g2.drawImage(bgImage, 0, 0, null);
-	}
-	
-	protected abstract String getBgFilename();
 }

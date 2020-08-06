@@ -16,6 +16,7 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import main.data.entities.Player;
+import main.data.entities.Race;
 import main.data.entities.Stats;
 import main.data.factory.PlayerFactory;
 import main.presentation.common.AbstractFontFactory;
@@ -101,7 +102,7 @@ public class GamePanel extends AbstractScreenPanel implements MouseListener, Mou
 		addMouseMotionListener(this);
 
 		// updateStatsForPlayer(null);
-		updateStatsForPlayer(PlayerFactory.createPlayerWithRandomName(Player.RACE_GRONK));
+		updateStatsForPlayer(PlayerFactory.createPlayerWithRandomName(Race.GRONK));
 	}
 
 	public void updateViewportImage(BufferedImage image)
@@ -147,7 +148,7 @@ public class GamePanel extends AbstractScreenPanel implements MouseListener, Mou
 	{
 		Point coords = statTextCoords.get(statsType);
 
-		ImageBuffer.addLayer(coords.x, coords.y, fontFactory.generateString(statsText, FontType.FONT_SMALL2));
+		ImageBuffer.addLayer(coords.x, coords.y, fontFactory.generateString(statsText));
 	}
 
 	private String addLeadingZeros(String s, int length)

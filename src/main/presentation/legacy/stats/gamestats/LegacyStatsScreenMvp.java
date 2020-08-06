@@ -95,12 +95,12 @@ public class LegacyStatsScreenMvp extends AbstractLegacyStatsScreenOverview
 		paintTextElement(graphics, 478, 241, turnFound, FontType.FONT_SMALL2, LegacyUiConstants.COLOR_LEGACY_GOLD);
 		paintTextElement(graphics, 478, 257, turnScored, FontType.FONT_SMALL2, LegacyUiConstants.COLOR_LEGACY_GOLD);
 		
-		BufferedImage teamName = fontFactory.generateString(new LegacyTextElement(scoringTeam.teamName, winningTeamColor), FontType.FONT_SMALL2);
-		graphics.drawImage(ImageUtils.padImage(teamName, new Dimension(123, FontType.FONT_SMALL.getSize())), 398, 274, null);
+		BufferedImage teamName = fontFactory.generateString(new LegacyTextElement(scoringTeam.teamName, winningTeamColor, FontType.FONT_SMALL2));
+		graphics.drawImage(ImageUtils.padImage(teamName, new Dimension(123, FontType.FONT_SMALL2.getSize())), 398, 274, null);
 		
 		String playerNameAndNumber = "#" + String.valueOf(scoringPlayer.getRosterIndex()) + " " + scoringPlayer.name;
-		BufferedImage playerName = fontFactory.generateString(new LegacyTextElement(playerNameAndNumber, LegacyUiConstants.COLOR_LEGACY_RED), FontType.FONT_SMALL2);
-		graphics.drawImage(ImageUtils.padImage(playerName, new Dimension(123, FontType.FONT_SMALL.getSize())), 398, 282, null);
+		BufferedImage playerName = fontFactory.generateString(new LegacyTextElement(playerNameAndNumber, LegacyUiConstants.COLOR_LEGACY_RED, FontType.FONT_SMALL2));
+		graphics.drawImage(ImageUtils.padImage(playerName, new Dimension(123, FontType.FONT_SMALL2.getSize())), 398, 282, null);
 	}
 
 	@Override
@@ -108,7 +108,7 @@ public class LegacyStatsScreenMvp extends AbstractLegacyStatsScreenOverview
 	{
 		if (topPlayers.isEmpty())
 		{
-			graphics.drawImage(imageFactory.getImage(ImageType.PROFILE_XJS9000_S), 63, 211, null);
+			graphics.drawImage(imageFactory.getImage(ImageType.PROFILE_XJS9000), 63, 211, null);
 			return;
 		}
 

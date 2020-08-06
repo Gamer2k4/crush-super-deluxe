@@ -103,21 +103,21 @@ public class DebugImageFactory extends AbstractImageFactory
 			return "button_bar.png";
 		case GAME_CLICKMAP:
 			return "button_bar_click_map.png";
-		case PROFILE_CURMIAN:
+		case PROFILE_CURMIAN_L:
 			return "curmian_160x160.png";
-		case PROFILE_DRAGORAN:
+		case PROFILE_DRAGORAN_L:
 			return "dragoran_160x160.png";
-		case PROFILE_GRONK:
+		case PROFILE_GRONK_L:
 			return "gronk_160x160.png";
-		case PROFILE_HUMAN:
+		case PROFILE_HUMAN_L:
 			return "human1_160x160.png";
-		case PROFILE_KURGAN:
+		case PROFILE_KURGAN_L:
 			return "kurgan_160x160.png";
-		case PROFILE_NYNAX:
+		case PROFILE_NYNAX_L:
 			return "nynax_160x160.png";
-		case PROFILE_SLITH:
+		case PROFILE_SLITH_L:
 			return "slith_160x160.png";
-		case PROFILE_XJS9000:
+		case PROFILE_XJS9000_L:
 			return "xjs9000_160x160.png";
 		case GEAR_BACKFIRE_BELT:
 			return "belt_backfire_212x112.png";

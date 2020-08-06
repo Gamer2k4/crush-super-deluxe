@@ -1,11 +1,10 @@
 package main.data;
 
-import java.awt.Color;
-import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.text.ParseException;
 import java.util.List;
 
@@ -13,7 +12,9 @@ import main.data.entities.Player;
 import main.data.entities.Stats;
 import main.data.entities.Team;
 import main.data.factory.PlayerFactory;
+import main.data.load.LegacyTeamLoader;
 import main.data.save.EntityMap;
+import main.data.save.EntitySerializer;
 import main.data.save.SaveHandler;
 
 public class TeamLoader
@@ -47,6 +48,33 @@ public class TeamLoader
 
 		throw new IllegalArgumentException("Unable to read file path: " + path.getAbsolutePath());
 	}
+	
+	public static void saveTeamToFile(Team team, File path)
+	{
+		String fileName = path.getName();
+		String fileExtension = "";
+
+		int index = fileName.indexOf(".");
+
+		if (index > -1)
+		{
+			fileExtension = fileName.substring(index + 1);
+			fileName = fileName.substring(0, index);
+		}
+
+		if (fileExtension.equalsIgnoreCase(DEFAULT_EXTENSION))
+		{
+			saveTeamToDefaultFile(team, path);
+			return;
+		}
+		else if (fileExtension.equalsIgnoreCase(LEGACY_EXTENSION))
+		{
+			saveTeamToLegacyFile(team, path);
+			return;
+		}
+
+		throw new IllegalArgumentException("Unable to read file path: " + path.getAbsolutePath());
+	}
 
 	private static Team loadTeamFromLegacyFile(String fullPath)
 	{
@@ -62,7 +90,7 @@ public class TeamLoader
 			saveHandler.unzipSaveDir();
 		} catch (IOException e)
 		{
-			System.out.println("Data - Error occured while uncompressing save directory!");
+			System.out.println("TeamLoader - Error occured while uncompressing save directory!");
 			return null;
 		}
 
@@ -95,7 +123,7 @@ public class TeamLoader
 		return loadedTeam;
 	}
 
-	public static boolean saveTeamToFile(Team team, File path)
+	public static boolean saveTeamToDefaultFile(Team team, File path)
 	{
 		SaveHandler saveHandler = createDefaultHandlerFromPath(path);
 
@@ -131,7 +159,7 @@ public class TeamLoader
 			saveHandler.zipSaveDir();
 		} catch (IOException e)
 		{
-			System.out.println("Data - Error occured while compressing save directory!");
+			System.out.println("TeamLoader - Error occured while compressing save directory!");
 			return false;
 		}
 
@@ -139,6 +167,22 @@ public class TeamLoader
 		EntityMap.clearMappings();
 
 		return true;
+	}
+	
+	private static void saveTeamToLegacyFile(Team team, File path)
+	{
+		try
+		{
+			DataOutputStream dos = new DataOutputStream(new FileOutputStream(path));
+			EntitySerializer.serializeTeamToStream(dos, team);
+			dos.close();
+		} catch (FileNotFoundException e)
+		{
+			System.out.println("TeamLoader - FileNotFoundException while saving to " + path.getAbsolutePath());
+		} catch (IOException e)
+		{
+			System.out.println("TeamLoader - IOException while saving to " + path.getAbsolutePath() + "; message was " + e.getMessage());
+		}
 	}
 
 	private static SaveHandler createDefaultHandlerFromPath(File path)

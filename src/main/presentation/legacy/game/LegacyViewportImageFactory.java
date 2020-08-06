@@ -316,7 +316,7 @@ public class LegacyViewportImageFactory extends LegacyUiImageFactory
 	
 	private BufferedImage getPlayerSprite(Player player, PlayerSpriteType spriteType, int teamIndex)
 	{
-		return SpriteFactory.getInstance().getPlayerSprite(Race.getRace(player.race), spriteType, teamIndex).getCurrentFrame();
+		return SpriteFactory.getInstance().getPlayerSprite(player.getRace(), spriteType, teamIndex).getCurrentFrame();
 	}
 	
 	private BufferedImage getArenaBaseImage(Arena arena)

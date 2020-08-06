@@ -1,8 +1,7 @@
 package main.presentation.teameditor.common;
 
-import java.util.List;
-
 import main.data.entities.Player;
+import main.data.entities.Skill;
 
 public class GUIPlayerAttributes
 {
@@ -30,7 +29,7 @@ public class GUIPlayerAttributes
 
 	public static String getRace(Player player)
 	{
-		return (player == null) ? "" : Player.races[player.getRace()].toUpperCase();
+		return (player == null) ? "" : player.getRace().name();
 	}
 
 	public static String getValueWithK(Player player)
@@ -105,18 +104,16 @@ public class GUIPlayerAttributes
 		return (player == null) ? "" : String.valueOf(player.getSkillPoints());
 	}
 	
-	public static String getSkills(Player player)
+	public static String getSkillsString(Player player)
 	{
 		if (player == null)
 			return "";
 		
 		String skillString = "";
 		
-		List<String> skills = player.getSkillNameList();
-		
-		for (String skill : skills)
+		for (Skill skill : player.getSkills())
 		{
-			skillString = skillString + skill + ", ";
+			skillString = skillString + skill.getName() + ", ";
 		}
 		
 		return skillString.substring(0, skillString.length() - 2);
@@ -129,12 +126,18 @@ public class GUIPlayerAttributes
 	
 	public static String getSeasons(Player player)
 	{
-		return "0";		//TODO: update this once stats are implemented
+		if (player == null)
+			return "0";
+		
+		return "" + player.getSeasons();
 	}
 	
 	public static String getRating(Player player)
 	{
-		return "0/0";		//TODO: update this once stats are implemented
+		if (player == null)
+			return "0 / 0";
+		
+		return player.getXP() + " / " + player.getAverageRating();
 	}
 	
 	public static String getAttribute(Player player, int index)

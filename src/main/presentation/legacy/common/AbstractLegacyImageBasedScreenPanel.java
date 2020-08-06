@@ -124,8 +124,16 @@ public abstract class AbstractLegacyImageBasedScreenPanel extends AbstractScreen
 
 	protected void paintTextElement(Graphics2D graphics, int x, int y, String text, FontType fontType, Color color)
 	{
-		LegacyTextElement element = new LegacyTextElement(text, color);
-		graphics.drawImage(fontFactory.generateString(element, fontType), x, y, null);
+		LegacyTextElement element = new LegacyTextElement(text, color, fontType);
+		graphics.drawImage(fontFactory.generateString(element), x, y, null);
+	}
+
+	protected void paintPaddedTextElement(Graphics2D graphics, int x, int y, int width, String text, FontType fontType, Color color)
+	{
+		LegacyTextElement element = new LegacyTextElement(text, color, fontType);
+		BufferedImage textString = fontFactory.generateString(element);
+		textString = ImageUtils.padImage(textString, new Dimension(width, fontType.getSize()));
+		graphics.drawImage(textString, x, y, null);
 	}
 
 	@Override

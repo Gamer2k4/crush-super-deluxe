@@ -390,8 +390,6 @@ public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecora
 	@Override
 	protected void keyAction(ActionEvent keyAction)
 	{
-		System.out.println("in settings!");
-		
 		if (teamNameField.isActive())
 			teamNameField.pressKey(keyAction);
 		
@@ -405,5 +403,11 @@ public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecora
 		teamNameField.deactivate();
 		teamCoachField.deactivate();
 		super.mousePressed(event);
+	}
+
+	@Override
+	public void resetScreen()
+	{
+		refreshTeam();
 	}
 }

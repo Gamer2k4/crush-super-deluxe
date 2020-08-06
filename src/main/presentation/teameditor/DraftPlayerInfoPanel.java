@@ -9,12 +9,12 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
 
 import main.data.entities.Player;
+import main.data.entities.Race;
+import main.presentation.teameditor.common.PlayerFlavorStats;
 
 public class DraftPlayerInfoPanel extends AbstractPlayerInfoPanel
 {
 	private static final long serialVersionUID = 1416276204171667448L;
-
-	private FlavorStats[] flavorStats = new FlavorStats[8];
 
 	private JPanel namePane;
 	private JLabel raceLabel;
@@ -39,7 +39,6 @@ public class DraftPlayerInfoPanel extends AbstractPlayerInfoPanel
 	public DraftPlayerInfoPanel(int imageSize, int labelWidth, int labelHeight)
 	{
 		super(imageSize, labelWidth, labelHeight, 24);
-		loadFlavorStats();
 
 		setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 		setLayout(null);
@@ -58,11 +57,11 @@ public class DraftPlayerInfoPanel extends AbstractPlayerInfoPanel
 		createCostLabel();
 	}
 
-	public void updatePanel(int playerRace, BufferedImage playerImage)
+	public void updatePanel(Race playerRace, BufferedImage playerImage)
 	{
 		Player player = new Player(playerRace, "DRAFTEE");
 
-		raceLabel.setText(Player.races[playerRace].toUpperCase());
+		raceLabel.setText(playerRace.name());
 
 		APlabel.setText(String.valueOf(player.getAttributeWithoutModifiers(Player.ATT_AP)));
 		CHlabel.setText(String.valueOf(player.getAttributeWithoutModifiers(Player.ATT_CH)));
@@ -73,28 +72,18 @@ public class DraftPlayerInfoPanel extends AbstractPlayerInfoPanel
 		HDlabel.setText(String.valueOf(player.getAttributeWithoutModifiers(Player.ATT_HD)));
 		DAlabel.setText(String.valueOf(player.getAttributeWithoutModifiers(Player.ATT_DA)));
 
-		heightLabel.setText(flavorStats[playerRace].height + " Ft");
-		weightLabel.setText(flavorStats[playerRace].weight + " Lbs");
-		worldLabel.setText(flavorStats[playerRace].world);
-		specialLabel.setText(flavorStats[playerRace].special);
+		PlayerFlavorStats flavorStats = PlayerFlavorStats.getFlavorStats(playerRace);
+		
+		heightLabel.setText(flavorStats.height + " Ft");
+		weightLabel.setText(flavorStats.weight + " Lbs");
+		worldLabel.setText(flavorStats.world);
+		specialLabel.setText(flavorStats.special);
 		
 		costLabel.setText(player.getSalary() + "K");
 
 		setRosterImage(player, playerImage);
 
 		repaint();
-	}
-
-	private void loadFlavorStats()
-	{
-		flavorStats[0] = new FlavorStats("2.8", 85, "Curmadon", "High Jump");
-		flavorStats[1] = new FlavorStats("7.1", 145, "Bakus", "Pop Up");
-		flavorStats[2] = new FlavorStats("7.0", 560, "Daboo", "Regenerate");
-		flavorStats[3] = new FlavorStats("6.0", 200, "Earth", "Uncommon Valor");
-		flavorStats[4] = new FlavorStats("4.2", 275, "Kra", "Blood Lust");
-		flavorStats[5] = new FlavorStats("4.9", 110, "Volticon", "Hive Mind");
-		flavorStats[6] = new FlavorStats("5.4", 260, "Slogotha", "Death Reek");
-		flavorStats[7] = new FlavorStats("6.0", 375, "XJS - Fab. 9", "Gyro Stabilizer");
 	}
 
 	private void createRaceNameLabel()
@@ -256,21 +245,5 @@ public class DraftPlayerInfoPanel extends AbstractPlayerInfoPanel
 		costPane.add(costLabel);
 
 		add(costPane);
-	}
-
-	private class FlavorStats
-	{
-		public String height;
-		public int weight;
-		public String world;
-		public String special;
-
-		public FlavorStats(String height, int weight, String world, String special)
-		{
-			this.height = height;
-			this.weight = weight;
-			this.world = world;
-			this.special = special;
-		}
 	}
 }

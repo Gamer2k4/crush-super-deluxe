@@ -13,6 +13,8 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -52,6 +54,8 @@ import javax.swing.text.StyledDocument;
 
 import main.data.entities.Equipment;
 import main.data.entities.Player;
+import main.data.entities.Race;
+import main.data.entities.Skill;
 import main.data.entities.Team;
 import main.data.factory.PlayerFactory;
 import main.presentation.common.ImagePanel;
@@ -64,7 +68,6 @@ import main.presentation.common.image.LegacyImageFactory;
 import main.presentation.legacy.teameditor.ScreenCommand;
 import main.presentation.teamcolorpanel.TeamColorPanel;
 import main.presentation.teamcolorpanel.TeamHelmetColorPanel;
-import main.presentation.teameditor.common.EditorValue;
 import main.presentation.teameditor.common.GUIPlayerAttributes;
 import main.presentation.teameditor.common.GUIStatsFormatter;
 import main.presentation.teameditor.common.SkillButtonValidator;
@@ -132,7 +135,7 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 	private RosterPlayerInfoPanel rosterPlayerInfoPanel;
 	private DraftPlayerInfoPanel draftPlayerInfoPanel;
 
-	private JToggleButton[] skillButtons = new JToggleButton[Player.TOTAL_SKILLS + 1];
+	private Map<Skill, JToggleButton> skillButtons = new HashMap<Skill, JToggleButton>();
 
 	private TeamColorPanel teamColorPanel;
 	private ArenaDisplayPanel arenaDisplayPanel;
@@ -210,7 +213,6 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 	private static final String ACTION_STATS_SCOPE = "statsScope";
 	private static final String ACTION_CANCEL = "cancel";
 
-	private static final int MAX_VALUE = 900;
 	private static final int MAX_TEAM_NAME_LENGTH = 13;
 	private static final int MAX_PLAYER_NAME_LENGTH = 8;
 	private static final String TEAM_VIEW = "Team";
@@ -219,11 +221,12 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 	private static final String EQUIP_VIEW = "Outfit";
 
 	private int currentPlayerIndex = 0;
-	private int draftSelection = 0;
+	private Race draftSelection = Race.HUMAN;
 	private int equipmentOwnedSelection = 0;
 	private boolean inOutfitScreen = false;
 	private int currentStatsView = 0;
 	private int currentStatsScope = 1;
+	private int maxBudget = 900;
 	
 	private ActionListener externalListener;
 	private JButton exitTrigger = new JButton();
@@ -245,7 +248,7 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 		colorReplacer = LegacyColorReplacer.getInstance();
 		
 		COLOR_PANEL_SIZE = (int) (imageFactory.getImageSize(ImageType.EDITOR_HELMET).getHeight());
-		PLAYER_IMAGE_SIZE = (int) (imageFactory.getImageSize(ImageType.PROFILE_CURMIAN).getHeight());
+		PLAYER_IMAGE_SIZE = (int) (imageFactory.getImageSize(ImageType.PROFILE_CURMIAN_L).getHeight());
 		DOCBOT_IMAGE_HEIGHT = (int) (imageFactory.getImageSize(ImageType.EDITOR_DOCBOT).getHeight());
 		DOCBOT_IMAGE_WIDTH = (int) (imageFactory.getImageSize(ImageType.EDITOR_DOCBOT).getWidth());
 
@@ -290,7 +293,7 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 	
 	private void buildPanel()
 	{
-		skillButtonValidator = new SkillButtonValidator(Player.TOTAL_SKILLS);
+		skillButtonValidator = new SkillButtonValidator();
 
 		fileChooser = new JFileChooser();
 		fileChooser.setAcceptAllFileFilterUsed(false);
@@ -906,79 +909,77 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 		JPanel panel = new JPanel();
 		panel.setLayout(null);
 
-		skillButtons[0] = null;
-
 		// Power
-		createNewSkillButton(panel, "Terror", Player.SKILL_TERROR, Color.YELLOW, 155, 10,
+		createNewSkillButton(panel, "Terror", Skill.TERROR, Color.YELLOW, 155, 10,
 				"This is the Terror skill.  It costs 100 skill points, and at the start of each turn, there is a 33% chance"
 						+ " that all adjacent opposing players collapse.");
-		createNewSkillButton(panel, "Charge", Player.SKILL_CHARGE, Color.YELLOW, 50, 35,
+		createNewSkillButton(panel, "Charge", Skill.CHARGE, Color.YELLOW, 50, 35,
 				"This is the Charge skill.  It costs 80 skill points, and reduces a check cost to only 10AP.");
-		createNewSkillButton(panel, "Juggernaut", Player.SKILL_JUGGERNAUT, Color.ORANGE, 260, 35,
+		createNewSkillButton(panel, "Juggernaut", Skill.JUGGERNAUT, Color.ORANGE, 260, 35,
 				"This is the Juggernaut skill.  It costs 80 skill points, and prevents a player from being knocked down"
 						+ " or pushed from a check unless KO'd, injured, or killed.");
-		createNewSkillButton(panel, "Checkmaster", Player.SKILL_CHECKMASTER, Color.YELLOW, 50, 60,
+		createNewSkillButton(panel, "Checkmaster", Skill.CHECKMASTER, Color.YELLOW, 50, 60,
 				"This is the Checkmaster skill.  It costs 60 skill points, and increases the CH score of the player by 10.");
-		createNewSkillButton(panel, "Vicious", Player.SKILL_VICIOUS, Color.ORANGE, 190, 60,
+		createNewSkillButton(panel, "Vicious", Skill.VICIOUS, Color.ORANGE, 190, 60,
 				"This is the Vicious skill.  It costs 60 skill points, and adds to the injury type of a successful check.");
-		createNewSkillButton(panel, "Resilient", Player.SKILL_RESILIENT, Color.RED, 330, 60,
+		createNewSkillButton(panel, "Resilient", Skill.RESILIENT, Color.RED, 330, 60,
 				"This is the Resilient skill.  It costs 60 skill points, and subtracts from the injury type of a successful check.");
-		createNewSkillButton(panel, "Tactics", Player.SKILL_TACTICS, Color.YELLOW, 50, 85,
+		createNewSkillButton(panel, "Tactics", Skill.TACTICS, Color.YELLOW, 50, 85,
 				"This is the Tactics skill.  It costs 40 skill points, and prevents opponents from getting assists on this player.");
-		createNewSkillButton(panel, "Brutal", Player.SKILL_BRUTAL, Color.ORANGE, 190, 85,
+		createNewSkillButton(panel, "Brutal", Skill.BRUTAL, Color.ORANGE, 190, 85,
 				"This is the Brutal skill.  It costs 40 skill points, and increases the ST score of the player by 10.");
-		createNewSkillButton(panel, "Stalwart", Player.SKILL_STALWART, Color.RED, 330, 85,
+		createNewSkillButton(panel, "Stalwart", Skill.STALWART, Color.RED, 330, 85,
 				"This is the Stalwart skill.  It costs 40 skill points, and increases the TG score of the player by 10.");
-		createNewSkillButton(panel, "Guard", Player.SKILL_GUARD, Color.RED, 330, 110,
+		createNewSkillButton(panel, "Guard", Skill.GUARD, Color.RED, 330, 110,
 				"This is the Guard skill.  It costs 20 skill points, and increases the assist bonus for the player by 150%.");
 
 		// Agility
-		createNewSkillButton(panel, "Doomstrike", Player.SKILL_DOOMSTRIKE, DARK_BLUE, 155, 160,
+		createNewSkillButton(panel, "Doomstrike", Skill.DOOMSTRIKE, DARK_BLUE, 155, 160,
 				"This is the Doomstrike skill.  It costs 100 skill points, and gives the player a 16% chance of injuring"
 						+ " the opponent during a checking attempt.", true);
-		createNewSkillButton(panel, "Fist of Iron", Player.SKILL_FIST_OF_IRON, DARK_BLUE, 155, 185,
+		createNewSkillButton(panel, "Fist of Iron", Skill.FIST_OF_IRON, DARK_BLUE, 155, 185,
 				"This is the Fist of Iron skill.  It costs 80 skill points, and gives the player a 16% chance of stunning"
 						+ " the opponent during a checking attempt.", true);
-		createNewSkillButton(panel, "Strip", Player.SKILL_STRIP, DARK_BLUE, 50, 210,
+		createNewSkillButton(panel, "Strip", Skill.STRIP, DARK_BLUE, 50, 210,
 				"This is the Strip skill.  It costs 60 skill points, and gives the player a 33% chance of stripping the ball"
 						+ " out of an adjacent player's hands at the end of each turn.", true);
-		createNewSkillButton(panel, "Quickening", Player.SKILL_QUICKENING, LIGHT_BLUE, 260, 210,
+		createNewSkillButton(panel, "Quickening", Skill.QUICKENING, LIGHT_BLUE, 260, 210,
 				"This is the Quickening skill.  It costs 60 skill points, and increases the AP score of the player by 10.");
-		createNewSkillButton(panel, "Scoop", Player.SKILL_SCOOP, DARK_BLUE, 50, 235,
+		createNewSkillButton(panel, "Scoop", Skill.SCOOP, DARK_BLUE, 50, 235,
 				"This is the Scoop skill.  It costs 40 skill points, and allows the player to pick up the ball without any AP cost.", true);
-		createNewSkillButton(panel, "Judo", Player.SKILL_JUDO, LIGHT_BLUE, 190, 235,
+		createNewSkillButton(panel, "Judo", Skill.JUDO, LIGHT_BLUE, 190, 235,
 				"This is the Judo skill.  It costs 40 skill points, and raises the player's CH to the same level as"
 						+ " any opposing player who attempts to check them.");
-		createNewSkillButton(panel, "Combo", Player.SKILL_COMBO, Color.CYAN, 330, 235,
+		createNewSkillButton(panel, "Combo", Skill.COMBO, Color.CYAN, 330, 235,
 				"This is the Combo skill.  It costs 40 skill points, and gives the player two opportunites to reaction check, instead of one.");
-		createNewSkillButton(panel, "Juggling", Player.SKILL_JUGGLING, DARK_BLUE, 50, 260,
+		createNewSkillButton(panel, "Juggling", Skill.JUGGLING, DARK_BLUE, 50, 260,
 				"This is the Juggling skill.  It costs 20 skill points, and increases the HD score of the player by 10.", true);
-		createNewSkillButton(panel, "Gymnastics", Player.SKILL_GYMNASTICS, LIGHT_BLUE, 190, 260,
+		createNewSkillButton(panel, "Gymnastics", Skill.GYMNASTICS, LIGHT_BLUE, 190, 260,
 				"This is the Gymnastics skill.  It costs 20 skill points, and increases the DA and JP score of the player by 10.");
-		createNewSkillButton(panel, "Boxing", Player.SKILL_BOXING, Color.CYAN, 330, 260,
+		createNewSkillButton(panel, "Boxing", Skill.BOXING, Color.CYAN, 330, 260,
 				"This is the Boxing skill.  It costs 20 skill points, and increases the RF score of the player by 10.");
 
 		// Psyche
-		createNewSkillButton(panel, "Sensei", Player.SKILL_SENSEI, DARK_GREEN, 120, 320,
+		createNewSkillButton(panel, "Sensei", Skill.SENSEI, DARK_GREEN, 120, 320,
 				"This is the Sensei skill.  It costs 100 skill points, and makes all skills 10% easier for team members to achieve."
 						+ "  Effect not cumulative.", true);
-		createNewSkillButton(panel, "Awe", Player.SKILL_AWE, DARK_GREEN, 50, 345,
+		createNewSkillButton(panel, "Awe", Skill.AWE, DARK_GREEN, 50, 345,
 				"This is the Awe skill.  It costs 80 skill points, and causes opposing players to react"
 						+ " only 5% of the time to this player.", true);
-		createNewSkillButton(panel, "Healer", Player.SKILL_HEALER, LIGHT_GREEN, 190, 345,
+		createNewSkillButton(panel, "Healer", Skill.HEALER, LIGHT_GREEN, 190, 345,
 				"This is the Healer skill.  It costs 80 skill points, and gives each player a 2% chance, before each game,"
 						+ " of healing all injured attributes.");
-		createNewSkillButton(panel, "Leader", Player.SKILL_LEADER, DARK_GREEN, 50, 370,
+		createNewSkillButton(panel, "Leader", Skill.LEADER, DARK_GREEN, 50, 370,
 				"This is the Leader/Hive Overseer skill.  It costs 60 skill points, and all players within"
 						+ " 5 tiles receive 5 bonus to their CH.  Hive Overseer adds an additional +1 to Hive Mind effect."
 						+ " (Nynax only - replaces Leader skill)", true);
-		createNewSkillButton(panel, "Karma", Player.SKILL_KARMA, LIGHT_GREEN, 190, 370,
+		createNewSkillButton(panel, "Karma", Skill.KARMA, LIGHT_GREEN, 190, 370,
 				"This is the Karma skill.  It costs 60 skill points, and allows a player to cheat death once per season.");
-		createNewSkillButton(panel, "Stoic", Player.SKILL_STOIC, DARK_GREEN, 50, 395,
+		createNewSkillButton(panel, "Stoic", Skill.STOIC, DARK_GREEN, 50, 395,
 				"This is the Stoic skill.  It costs 40 skill points, and makes a player immune to Terror and Awe.", true);
-		createNewSkillButton(panel, "Sly", Player.SKILL_SLY, LIGHT_GREEN, 190, 395,
+		createNewSkillButton(panel, "Sly", Skill.SLY, LIGHT_GREEN, 190, 395,
 				"This is the Sly skill.  It costs 40 skill points, and reduces the overall player equipment detection factor by 1/2.");
-		createNewSkillButton(panel, "Intuition", Player.SKILL_INTUITION, LIGHT_GREEN, 190, 420,
+		createNewSkillButton(panel, "Intuition", Skill.INTUITION, LIGHT_GREEN, 190, 420,
 				"This is the Intuition skill.  It costs 20 skill points, and doubles the player's chance of finding the ball.");
 
 		return panel;
@@ -1304,19 +1305,19 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 		return button;
 	}
 
-	private JToggleButton createNewSkillButton(JPanel parent, String text, int index, final Color color, int x, int y, String skillDesc)
+	private JToggleButton createNewSkillButton(JPanel parent, String text, Skill skill, final Color color, int x, int y, String skillDesc)
 	{
-		return createNewSkillButton(parent, text, index, color, x, y, skillDesc, false);
+		return createNewSkillButton(parent, text, skill, color, x, y, skillDesc, false);
 	}
 
-	private JToggleButton createNewSkillButton(JPanel parent, String text, int index, final Color color, int x, int y, String skillDesc,
+	private JToggleButton createNewSkillButton(JPanel parent, String text, Skill skill, final Color color, int x, int y, String skillDesc,
 			boolean whiteText)
 	{
 		JToggleButton button = new JToggleButton(text);
 
 		button.setSize(SKILL_BUTTON_WIDTH, SKILL_BUTTON_HEIGHT);
 		button.setLocation(x, y);
-		button.setActionCommand(ACTION_SKILL_GAIN + index);
+		button.setActionCommand(ACTION_SKILL_GAIN + skill.getLegacyIndex());
 		button.addActionListener(this);
 		button.setBackground(color);
 		button.setToolTipText(skillDesc);
@@ -1333,7 +1334,7 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 			}
 		});
 
-		skillButtons[index] = button;
+		skillButtons.put(skill, button);
 		parent.add(button);
 
 		return button;
@@ -1519,10 +1520,10 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 		} else if (command.startsWith(ACTION_SKILL_GAIN))
 		{
 			int skillIndex = Integer.parseInt(command.substring(ACTION_SKILL_GAIN.length()));
-			gainSkill(skillIndex);
+			gainSkill(Skill.fromLegacyIndex(skillIndex));
 		} else if (command.startsWith(ACTION_DRAFT))
 		{
-			draftSelection = Integer.parseInt(command.substring(ACTION_DRAFT.length()));
+			draftSelection = Race.getRace(Integer.parseInt(command.substring(ACTION_DRAFT.length())));
 			setDraftImage();
 		} else if (command.equals(ACTION_HIRE))
 		{
@@ -1566,43 +1567,18 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 
 	private void firePlayer()
 	{
-		Player player = teamUpdater.getPlayer(currentPlayerIndex);
-
-		// doesn't do anything if there's no one to fire
-		if (player == null)
-			return;
-
-		// give all the equipment back to the team
-		for (int i = 0; i < 4; i++)
-		{
-			if (player.getEquipment(i) >= 0)
-			{
-				teamUpdater.addEquipment(player.unequipItem(i));
-			}
-		}
-
-		// clear the slot
-		teamUpdater.setPlayer(currentPlayerIndex, null);
-
+		teamUpdater.firePlayer(currentPlayerIndex);
 		refreshTeam();
 	}
 
 	private void hirePlayer()
 	{
-		int budget = MAX_VALUE - teamUpdater.getIntValue(EditorValue.TOTAL_COST);
-		int playerCost = new Player(draftSelection, "COST_CHECK").getSalary();
-
-		if (budget < playerCost)
-			return;
-
-		boolean canDraft = teamUpdater.pushPlayersForDraft(currentPlayerIndex);
-
-		if (canDraft)
+		Player playerToHire = PlayerFactory.createPlayerWithRandomName(draftSelection);
+		boolean draftSuccess = teamUpdater.hirePlayer(currentPlayerIndex, playerToHire, maxBudget);
+		
+		if (draftSuccess)
 		{
-			teamUpdater.setPlayer(currentPlayerIndex, PlayerFactory.createPlayerWithRandomName(draftSelection));
-
 			selectPlayer(currentPlayerIndex + 1);
-
 			refreshTeam();
 		}
 	}
@@ -1611,7 +1587,7 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 	{
 		int equipmentIndex = equipmentShopPane.getSelectedEquipmentIndex();
 
-		int budget = MAX_VALUE - teamUpdater.getIntValue(EditorValue.TOTAL_COST);
+		int budget = maxBudget - teamUpdater.getTeam().getValue();
 		int equipCost = Equipment.getEquipment(equipmentIndex).cost;
 
 		if (budget < equipCost)
@@ -1673,15 +1649,15 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 		refreshTeam();
 	}
 
-	private void gainSkill(int skillIndex)
+	private void gainSkill(Skill skill)
 	{
 		Player player = teamUpdater.getPlayer(currentPlayerIndex);
-		player.gainSkill(skillIndex);
+		player.gainSkill(skill);
 		teamUpdater.setPlayer(currentPlayerIndex, player);
 		updateSkillsPanel();
 		refreshPlayerPane();
 		
-		if (skillIndex == Player.SKILL_SLY)
+		if (skill == Skill.SLY)
 			refreshEquipmentPane();
 	}
 
@@ -1777,12 +1753,7 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 
 	private void swapPlayers(int firstIndex, int secondIndex)
 	{
-		Player player1 = teamUpdater.getPlayer(firstIndex);
-		Player player2 = teamUpdater.getPlayer(secondIndex);
-
-		teamUpdater.setPlayer(firstIndex, player2);
-		teamUpdater.setPlayer(secondIndex, player1);
-
+		teamUpdater.swapPlayers(firstIndex, secondIndex);
 		refreshRosterTable();
 	}
 
@@ -1809,17 +1780,21 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 	{
 		Player player = teamUpdater.getPlayer(currentPlayerIndex);
 
-		for (int i = 1; i <= Player.TOTAL_SKILLS - 1; i++)	//total minus 1 because the last is ninja master
+		for (Skill skill : Skill.values())	//total minus 1 because the last is ninja master
 		{
-			JToggleButton currentButton = skillButtons[i];
-			currentButton.setEnabled(skillButtonValidator.isButtonEnabled(i, player));
-			currentButton.setSelected(skillButtonValidator.isButtonSelected(i, player));
+			JToggleButton currentButton = skillButtons.get(skill);
+			
+			if (currentButton == null)
+				continue;
+			
+			currentButton.setEnabled(skillButtonValidator.isButtonEnabled(skill, player));
+			currentButton.setSelected(skillButtonValidator.isButtonSelected(skill, player));
 		}
 	}
 
 	private void setDraftImage()
 	{
-		draftPlayerInfoPanel.updatePanel(draftSelection, teamUpdater.getPlayerImage(draftSelection));
+		draftPlayerInfoPanel.updatePanel(draftSelection, teamUpdater.getLargePlayerImage(draftSelection));
 	}
 
 	private void refreshTeam()
@@ -1952,7 +1927,7 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 		BufferedImage playerImage = null;
 
 		if (player != null)
-			playerImage = teamUpdater.getPlayerImage(player.getRace());
+			playerImage = teamUpdater.getLargePlayerImage(player.getRace());
 
 		rosterPlayerInfoPanel.updatePanel(player, currentPlayerIndex, playerImage);
 	}
@@ -1981,7 +1956,7 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 	private void refreshDocbotPane()
 	{
 		Team team = teamUpdater.getTeam();
-		int budget = MAX_VALUE - teamUpdater.getIntValue(EditorValue.TOTAL_COST);
+		int budget = maxBudget - teamUpdater.getTeam().getValue();
 		int docbotCost = teamUpdater.getDocbotCost();
 		int treatmentCosts[] = { 50, 40, 30, 30 };
 
@@ -2016,8 +1991,8 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 		teamCost.setForeground(Color.BLACK);
 		teamTreasury.setForeground(Color.BLACK);
 
-		int value = teamUpdater.getIntValue(EditorValue.TOTAL_COST);
-		int treasury = MAX_VALUE - value;
+		int value = teamUpdater.getTeam().getValue();
+		int treasury = maxBudget - value;
 
 		if (treasury < 0)
 		{
@@ -2074,7 +2049,13 @@ public class TeamEditorPanel extends JPanel implements ActionListener, MouseList
 	@Override
 	public void setBudget(int budget)
 	{
-		// TODO Auto-generated method stub
-		
+		maxBudget = budget;
+		refreshTeam();
+	}
+
+	@Override
+	public int getBudget()
+	{
+		return maxBudget;
 	}
 }

@@ -21,6 +21,8 @@ import main.data.Data;
 import main.data.Event;
 import main.data.entities.Arena;
 import main.data.entities.Player;
+import main.data.entities.Race;
+import main.data.entities.Skill;
 import main.data.factory.PlayerFactory;
 import main.data.factory.SimpleArenaFactory;
 import main.logic.Engine;
@@ -68,8 +70,8 @@ public class LegacyEngineTest
 	@Test
 	public void getAssistBonus_noAdjecentPlayers_noBonus()
 	{
-		Player team1attacker = PlayerFactory.createPlayerWithDefinedName(Player.RACE_HUMAN, "Player1");
-		Player team2defender = PlayerFactory.createPlayerWithDefinedName(Player.RACE_GRONK, "Player2");
+		Player team1attacker = PlayerFactory.createPlayerWithDefinedName(Race.HUMAN, "Player1");
+		Player team2defender = PlayerFactory.createPlayerWithDefinedName(Race.GRONK, "Player2");
 		
 		expect(mockData.clone()).andReturn(mockLocalData);
 		assistExpects(mockLocalData, team1attacker, team2defender, 0, 14, 14, team1attacker, null, null, null, team2defender, null, null, null, null);
@@ -85,9 +87,9 @@ public class LegacyEngineTest
 	@Test
 	public void getAssistBonus_oneAdjecentAlly_bonusOfTen()
 	{
-		Player team1attacker = createPlayer(Player.RACE_HUMAN, "Team 1 Attacker", Player.STS_OKAY);
-		Player team2defender = createPlayer(Player.RACE_GRONK, "Team 2 Defender", Player.STS_OKAY);
-		Player team1ally = createPlayer(Player.RACE_HUMAN, "Team 1 Ally", Player.STS_OKAY);
+		Player team1attacker = createPlayer(Race.HUMAN, "Team 1 Attacker", Player.STS_OKAY);
+		Player team2defender = createPlayer(Race.GRONK, "Team 2 Defender", Player.STS_OKAY);
+		Player team1ally = createPlayer(Race.HUMAN, "Team 1 Ally", Player.STS_OKAY);
 		
 		expect(mockData.clone()).andReturn(mockLocalData);
 		assistExpects(mockLocalData, team1attacker, team2defender, 0, 14, 14, team1attacker, null, null, null, team2defender, null, null, team1ally, null);
@@ -105,12 +107,12 @@ public class LegacyEngineTest
 	@Test
 	public void getAssistBonus_oneStunnedAllyOneAllyWithGuard_bonusOfFifteen()
 	{
-		Player team1attacker = createPlayer(Player.RACE_HUMAN, "Team 1 Attacker", Player.STS_OKAY);
-		Player team2defender = createPlayer(Player.RACE_GRONK, "Team 2 Defender", Player.STS_OKAY);
-		Player team1stunnedAlly = createPlayer(Player.RACE_HUMAN, "Team 1 Stunned Ally", Player.STS_STUN);
-		Player team1guardAlly = createPlayer(Player.RACE_HUMAN, "Team 1 Guard Ally", Player.STS_OKAY);
+		Player team1attacker = createPlayer(Race.HUMAN, "Team 1 Attacker", Player.STS_OKAY);
+		Player team2defender = createPlayer(Race.GRONK, "Team 2 Defender", Player.STS_OKAY);
+		Player team1stunnedAlly = createPlayer(Race.HUMAN, "Team 1 Stunned Ally", Player.STS_STUN);
+		Player team1guardAlly = createPlayer(Race.HUMAN, "Team 1 Guard Ally", Player.STS_OKAY);
 		
-		team1guardAlly.gainSkill(Player.SKILL_GUARD);
+		team1guardAlly.gainSkill(Skill.GUARD);
 		
 		expect(mockData.clone()).andReturn(mockLocalData);
 		assistExpects(mockLocalData, team1attacker, team2defender, 0, 14, 14, team1attacker, team1guardAlly, null, null, team2defender, null, null, team1stunnedAlly, null);
@@ -128,9 +130,9 @@ public class LegacyEngineTest
 	@Test
 	public void getAssistBonus_oneAdjecentEnemy_noBonus() // bonuses are additive, not subtractive
 	{
-		Player team1attacker = createPlayer(Player.RACE_HUMAN, "Team 1 Attacker", Player.STS_OKAY);
-		Player team2defender = createPlayer(Player.RACE_GRONK, "Team 2 Defender", Player.STS_OKAY);
-		Player team2ally = createPlayer(Player.RACE_HUMAN, "Team 2 Ally", Player.STS_OKAY);
+		Player team1attacker = createPlayer(Race.HUMAN, "Team 1 Attacker", Player.STS_OKAY);
+		Player team2defender = createPlayer(Race.GRONK, "Team 2 Defender", Player.STS_OKAY);
+		Player team2ally = createPlayer(Race.HUMAN, "Team 2 Ally", Player.STS_OKAY);
 		
 		expect(mockData.clone()).andReturn(mockLocalData);
 		assistExpects(mockLocalData, team1attacker, team2defender, 0, 14, 14, team1attacker, null, null, null, team2defender, null, null, team2ally, null);
@@ -148,10 +150,10 @@ public class LegacyEngineTest
 	@Test
 	public void getAssistBonus_defenderHasTactics_noBonus()	//tactics negates assist bonuses
 	{
-		Player team1attacker = createPlayer(Player.RACE_HUMAN, "Team 1 Attacker", Player.STS_OKAY);
-		Player team2defender = createPlayer(Player.RACE_GRONK, "Team 2 Defender", Player.STS_OKAY);
+		Player team1attacker = createPlayer(Race.HUMAN, "Team 1 Attacker", Player.STS_OKAY);
+		Player team2defender = createPlayer(Race.GRONK, "Team 2 Defender", Player.STS_OKAY);
 		
-		team2defender.gainSkill(Player.SKILL_TACTICS);
+		team2defender.gainSkill(Skill.TACTICS);
 		
 		expect(mockData.clone()).andReturn(mockLocalData);
 		
@@ -188,7 +190,7 @@ public class LegacyEngineTest
 	@Test
 	public void generateEvents_jumpEventOverElectricTiles_tilesAvoided()
 	{
-		Player player = createPlayer(Player.RACE_HUMAN, "Player", Player.STS_OKAY);
+		Player player = createPlayer(Race.HUMAN, "Player", Player.STS_OKAY);
 		
 		int playerIndex = 0;
 		
@@ -262,8 +264,8 @@ public class LegacyEngineTest
 	@Test
 	public void generateEvents_moveEventWithReactionCheckAndKnockdown_properEventsGenerated()
 	{
-		Player movingPlayer = createPlayer(Player.RACE_HUMAN, "Player1", Player.STS_OKAY);
-		Player reflexCheckingPlayer = createPlayer(Player.RACE_GRONK, "Player2", Player.STS_OKAY);
+		Player movingPlayer = createPlayer(Race.HUMAN, "Player1", Player.STS_OKAY);
+		Player reflexCheckingPlayer = createPlayer(Race.GRONK, "Player2", Player.STS_OKAY);
 		
 		int player1Index = 0;
 		int player2Index = 9;
@@ -410,7 +412,7 @@ public class LegacyEngineTest
 		}
 	}
 	
-	private Player createPlayer(int race, String name, int status)
+	private Player createPlayer(Race race, String name, int status)
 	{
 		Player player = PlayerFactory.createPlayerWithDefinedName(race, name);
 		player.status = status;

@@ -1,7 +1,14 @@
 package main.presentation.legacy.teameditor;
 
+import java.awt.event.ActionEvent;
+
 public enum ScreenCommand
-{
+{	
+	MAIN_SCREEN,
+	BEGIN_EXHIBITION,
+	BEGIN_TOURNAMENT,
+	BEGIN_LEAGUE,
+	
 	SHOW_RUSHING,
 	SHOW_CHECKING,
 	SHOW_CHECK_TAB,
@@ -68,6 +75,8 @@ public enum ScreenCommand
 	TEAM_COLOR_51,
 	TEAM_COLOR_52,
 
+	SWAP_PLAYERS,
+	
 	SELECT_PLAYER_0,
 	SELECT_PLAYER_1,
 	SELECT_PLAYER_2,
@@ -96,7 +105,30 @@ public enum ScreenCommand
 	RENAME_PLAYER_10,
 	RENAME_PLAYER_11,
 	RENAME_PLAYER_12,
-	RENAME_PLAYER_13;
+	RENAME_PLAYER_13,
+	
+	STOCK_DRAFT_SELECT_HUMAN,
+	STOCK_DRAFT_SELECT_GRONK,
+	STOCK_DRAFT_SELECT_CURMIAN,
+	STOCK_DRAFT_SELECT_DRAGORAN,
+	STOCK_DRAFT_SELECT_NYNAX,
+	STOCK_DRAFT_SELECT_SLITH,
+	STOCK_DRAFT_SELECT_KURGAN,
+	STOCK_DRAFT_SELECT_XJS9000,
+	
+	HIRE_PLAYER,
+	FIRE_PLAYER;
+	
+	public static ScreenCommand fromActionEvent(ActionEvent ae)
+	{
+		for (ScreenCommand command : values())
+		{
+			if (command.name().equals(ae.getActionCommand()))
+				return command;
+		}
+		
+		throw new IllegalArgumentException("No ScreenCommand exists for action command [" + ae.getActionCommand() + "]");
+	}
 	
 	public boolean isEditorViewChange()
 	{

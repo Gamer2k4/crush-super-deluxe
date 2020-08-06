@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import main.data.entities.Player;
+import main.presentation.common.ImagePanel;
 
 public abstract class AbstractPlayerInfoPanel extends JPanel
 {

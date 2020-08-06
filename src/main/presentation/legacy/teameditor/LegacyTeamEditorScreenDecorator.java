@@ -18,14 +18,14 @@ public abstract class LegacyTeamEditorScreenDecorator extends AbstractLegacyImag
 {
 	private static final long serialVersionUID = -7716937697732616483L;
 	
-	protected LegacyTeamEditorScreen screenToPaint;
+	protected LegacyTeamEditorScreen teamEditorScreen;
 	protected TeamUpdater teamUpdater;
 	protected boolean buttonsEnabled = false;
 	
 	public LegacyTeamEditorScreenDecorator(LegacyTeamEditorScreen screenToPaint)
 	{
 		super(ImageUtils.createBlankBufferedImage(new Dimension(1, 1)), null);
-		this.screenToPaint = screenToPaint;
+		this.teamEditorScreen = screenToPaint;
 		this.teamUpdater = screenToPaint.teamUpdater;
 		screenToPaint.addMouseListener(this);
 		addKeyBindings(screenToPaint);
@@ -36,7 +36,7 @@ public abstract class LegacyTeamEditorScreenDecorator extends AbstractLegacyImag
 		paintText(graphics);
 		paintImages(graphics);
 		paintButtonShading(graphics);
-		screenToPaint.requestFocusInWindow();
+		teamEditorScreen.requestFocusInWindow();
 	}
 	
 	public void enableButtons()
@@ -53,13 +53,7 @@ public abstract class LegacyTeamEditorScreenDecorator extends AbstractLegacyImag
 	protected void handleCommand(ScreenCommand command)
 	{
 		if (buttonsEnabled)
-			screenToPaint.handleCommand(command);
-	}
-	
-	@Override
-	public void resetScreen()
-	{
-		//not used
+			teamEditorScreen.handleCommand(command);
 	}
 	
 	private void addKeyBindings(AbstractLegacyImageBasedScreenPanel keyEventSource)
@@ -74,11 +68,11 @@ public abstract class LegacyTeamEditorScreenDecorator extends AbstractLegacyImag
 		        Logger.debug("Action; length is " + command.length() + ", first char has int value of " + charValue);
 		        
 		        if (charValue == 10)
-		        	keyAction(new ActionEvent(event.getSource(), event.getID(), LegacyTextField.ENTER));
+		        	fireKeyAction(new ActionEvent(event.getSource(), event.getID(), LegacyTextField.ENTER));
 		        else if (charValue == 27)
-		        	keyAction(new ActionEvent(event.getSource(), event.getID(), LegacyTextField.ESCAPE));
+		        	fireKeyAction(new ActionEvent(event.getSource(), event.getID(), LegacyTextField.ESCAPE));
 		        else
-		        	keyAction(event);
+		        	fireKeyAction(event);
 		    }
 		};
 		
@@ -96,5 +90,11 @@ public abstract class LegacyTeamEditorScreenDecorator extends AbstractLegacyImag
 		keyEventSource.getActionMap().put(LegacyTextField.ESCAPE, printAction);
 	}
 	
+	//Note that this is a little coupled, but it works 
+	protected void fireKeyAction(ActionEvent event)
+	{
+		teamEditorScreen.keyAction(event);
+	}
+
 	protected abstract void keyAction(ActionEvent keyAction);
 }

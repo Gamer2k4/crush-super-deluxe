@@ -10,6 +10,7 @@ public class GameSelectPanel extends AbstractStartupScreenPanel
 	public static final String EXHIB_TEXT = "Exhibition";
 	public static final String TOURN_TEXT = "Tournament";
 	public static final String LEAGUE_TEXT = "League";
+	public static final String DRAFT_TEXT = "Draft";
 	public static final String BACK_TEXT = "Back";
 	
 	protected GameSelectPanel(int width, int height, ActionListener actionListener)
@@ -22,9 +23,9 @@ public class GameSelectPanel extends AbstractStartupScreenPanel
 	
 	private void addButtons(ActionListener actionListener)
 	{
-		String[] buttonTexts = {EXHIB_TEXT, TOURN_TEXT, LEAGUE_TEXT, BACK_TEXT}; 
+		String[] buttonTexts = {EXHIB_TEXT, TOURN_TEXT, LEAGUE_TEXT, DRAFT_TEXT, BACK_TEXT}; 
 		
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 5; i++)
 		{
 			createAndAddButton(BUTTON_START_X, BUTTON_START_Y + (i * (BUTTON_HEIGHT + 10)), buttonTexts[i], actionListener);
 		}

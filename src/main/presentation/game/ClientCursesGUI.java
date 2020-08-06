@@ -836,7 +836,7 @@ public class ClientCursesGUI extends GameRunnerGUI implements KeyListener, Actio
 
 			Color fg = WHITE;
 			Color bg = BLACK;
-			String icon = iconList[p.getRace()];
+			String icon = iconList[p.getRace().getIndex()];
 
 			// set team color
 			int team = getData().getTeamIndexOfPlayer(p);

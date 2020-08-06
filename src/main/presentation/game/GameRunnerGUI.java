@@ -9,6 +9,8 @@ import java.util.Map;
 
 import main.data.Event;
 import main.data.entities.Player;
+import main.data.entities.Race;
+import main.data.entities.Skill;
 import main.logic.Client;
 import main.logic.Server;
 import main.presentation.common.AbstractScreenPanel;
@@ -128,7 +130,7 @@ public abstract class GameRunnerGUI extends GameGUI
 					int playerStatus = playerToJump.getStatus();
 
 					// if the player in the way is down, stunned, or if the jumper is a curmian (which can jump standing players), there's nothing in the way
-					if (playerStatus == Player.STS_DOWN || playerStatus == Player.STS_STUN || plyr.getRace() == Player.RACE_CURMIAN)
+					if (playerStatus == Player.STS_DOWN || playerStatus == Player.STS_STUN || plyr.getRace() == Race.CURMIAN)
 					{
 						playerInWay = false;
 					} else
@@ -214,7 +216,7 @@ public abstract class GameRunnerGUI extends GameGUI
 		}
 
 		// no targets are valid if the player doesn't have enough AP
-		if (plyr.currentAP < 10 || (plyr.currentAP < 20 && !plyr.hasSkill(Player.SKILL_CHARGE)))
+		if (plyr.currentAP < 10 || (plyr.currentAP < 20 && !plyr.hasSkill(Skill.CHARGE)))
 			highlights.clear();
 
 		// switch back to moving if there are no valid targets
@@ -284,7 +286,7 @@ public abstract class GameRunnerGUI extends GameGUI
 			return false;
 		System.out.println("Jump Check 1");
 
-		if (currentPlayer.currentAP >= 30 || (currentPlayer.currentAP >= 20 && currentPlayer.race == Player.RACE_CURMIAN))
+		if (currentPlayer.currentAP >= 30 || (currentPlayer.currentAP >= 20 && currentPlayer.getRace() == Race.CURMIAN))
 			return true;
 		System.out.println("Jump Check 2");
 		return false;
@@ -294,7 +296,7 @@ public abstract class GameRunnerGUI extends GameGUI
 	{
 		if (!canCurrentPlayerAct())
 			return false;
-		if (currentPlayer.currentAP >= 20 || (currentPlayer.currentAP >= 10 && currentPlayer.hasSkill(Player.SKILL_CHARGE)))
+		if (currentPlayer.currentAP >= 20 || (currentPlayer.currentAP >= 10 && currentPlayer.hasSkill(Skill.CHARGE)))
 			return true;
 		return false;
 	}

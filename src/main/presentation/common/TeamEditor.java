@@ -8,4 +8,5 @@ public interface TeamEditor
 	public Team getTeam();
 	public void setLoadEnabled(boolean isEnabled);
 	public void setBudget(int budget);
+	public int getBudget();
 }

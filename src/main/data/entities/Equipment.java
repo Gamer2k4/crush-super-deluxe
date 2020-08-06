@@ -19,33 +19,33 @@ public class Equipment
 	
 	public static final int EQUIP_NONE = -2;
 	public static final int EQUIP_BLANK = -1;
+
+	public static final int EQUIP_HEAVY_ARMOR = 0;
+	public static final int EQUIP_REINFORCED_ARMOR = 1;
+	public static final int EQUIP_REPULSOR_ARMOR = 2;
+	public static final int EQUIP_SPIKED_ARMOR = 3;
+	public static final int EQUIP_SURGE_ARMOR = 4;
+	public static final int EQUIP_VORTEX_ARMOR = 5;
 	
-	public static final int EQUIP_REINFORCED_ARMOR = 0;
-	public static final int EQUIP_HEAVY_ARMOR = 1;
-	public static final int EQUIP_SPIKED_ARMOR = 2;
-	public static final int EQUIP_SURGE_ARMOR = 3;
-	public static final int EQUIP_VORTEX_ARMOR = 4;
-	public static final int EQUIP_REPULSOR_ARMOR = 5;
-	
-	public static final int EQUIP_SAAI_GLOVES = 6;
-	public static final int EQUIP_REPULSOR_GLOVES = 7;
-	public static final int EQUIP_MAGNETIC_GLOVES = 8;
-	public static final int EQUIP_SURGE_GLOVES = 9;
-	public static final int EQUIP_SPIKED_GLOVES = 10;
-	
-	public static final int EQUIP_SAAI_BOOTS = 11;
-	public static final int EQUIP_BOUNDER_BOOTS = 12;
-	public static final int EQUIP_MAGNETIC_BOOTS = 13;
-	public static final int EQUIP_SPIKED_BOOTS = 14;
+	public static final int EQUIP_BACKFIRE_BELT = 6;
+	public static final int EQUIP_BOOSTER_BELT = 7;
+	public static final int EQUIP_CLOAKING_BELT = 8;
+	public static final int EQUIP_HOLOGRAM_BELT = 9;
+	public static final int EQUIP_FIELD_INTEGRITY_BELT = 10;
+	public static final int EQUIP_MEDICAL_BELT = 11;
+	public static final int EQUIP_SCRAMBLER_BELT = 12;
+
+	public static final int EQUIP_SPIKED_BOOTS = 13;
+	public static final int EQUIP_BOUNDER_BOOTS = 14;
 	public static final int EQUIP_INSULATED_BOOTS = 15;
-	
-	public static final int EQUIP_MEDICAL_BELT = 16;
-	public static final int EQUIP_FIELD_INTEGRITY_BELT = 17;
-	public static final int EQUIP_BOOSTER_BELT = 18;
-	public static final int EQUIP_BACKFIRE_BELT = 19;
-	public static final int EQUIP_CLOAKING_BELT = 20;
-	public static final int EQUIP_HOLOGRAM_BELT = 21;
-	public static final int EQUIP_SCRAMBLER_BELT = 22;
+	public static final int EQUIP_MAGNETIC_BOOTS = 16;
+	public static final int EQUIP_SAAI_BOOTS = 17;
+
+	public static final int EQUIP_MAGNETIC_GLOVES = 18;
+	public static final int EQUIP_REPULSOR_GLOVES = 19;
+	public static final int EQUIP_SAAI_GLOVES = 20;
+	public static final int EQUIP_SPIKED_GLOVES = 21;
+	public static final int EQUIP_SURGE_GLOVES = 22;
 	
 	public static final int EQUIP_NO_TYPE = -1;
 	public static final int EQUIP_ARMOR = 0;

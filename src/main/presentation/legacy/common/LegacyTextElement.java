@@ -6,6 +6,7 @@ public class LegacyTextElement
 {
 	private String text;
 	private Color color;
+	private FontType font;
 
 	public LegacyTextElement(String text)
 	{
@@ -14,8 +15,14 @@ public class LegacyTextElement
 	
 	public LegacyTextElement(String text, Color color)
 	{
+		this(text, color, FontType.FONT_SMALL2);
+	}
+	
+	public LegacyTextElement(String text, Color color, FontType font)
+	{
 		this.text = text;
 		this.color = color;
+		this.font = font;
 	}
 
 	public String getText()
@@ -28,8 +35,8 @@ public class LegacyTextElement
 		return color;
 	}
 	
-	public void setColor(Color color)
+	public FontType getFont()
 	{
-		this.color = color;
+		return font;
 	}
 }

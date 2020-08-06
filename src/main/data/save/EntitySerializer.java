@@ -7,6 +7,7 @@ import java.util.List;
 
 import main.data.entities.Equipment;
 import main.data.entities.Player;
+import main.data.entities.Skill;
 import main.data.entities.Stats;
 import main.data.entities.Team;
 
@@ -34,7 +35,7 @@ public class EntitySerializer
 		ByteFileWriter.writeShortBytes(dos, player.getSkillPoints());
 		ByteFileWriter.padBytes(dos, 2);
 		ByteFileWriter.writeByte(dos, 1);	//TODO: unknown, but always appears as 1 in the save files
-		ByteFileWriter.writeByte(dos, player.race);
+		ByteFileWriter.writeByte(dos, player.getRace().getIndex());
 		ByteFileWriter.padBytes(dos, 4);
 		ByteFileWriter.writeByte(dos, player.getAttributeWithoutModifiers(Player.ATT_AP));	//currentAP, but the legacy files have this match the stat
 		ByteFileWriter.writeByte(dos, player.getAttributeWithoutModifiers(Player.ATT_AP));
@@ -160,17 +161,16 @@ public class EntitySerializer
 	
 	private static void writePlayerSkills(DataOutputStream dos, Player player) throws IOException
 	{
-		List<Integer> skills = player.getSkillIndexList();
-		skills.add(0, player.race + 100);	//TODO: racial ability hack: pass in the player's race and get back the skill of the racial ability
+		List<Skill> skills = player.getSkills();
 		
 		for (int i = 0; i < MAX_SKILLS; i++)
 		{
 			int index = 0;
 			
 			if (i < skills.size())
-				index = skills.get(i);
+				index = skills.get(i).getLegacyIndex();
 			
-			ByteFileWriter.writeByte(dos, convertToLegacySkillIndex(index));
+			ByteFileWriter.writeByte(dos, index);
 		}
 	}
 	
@@ -230,93 +230,6 @@ public class EntitySerializer
 			return 0;
 		
 		return weeksOut;
-	}
-	
-	private static Integer convertToLegacySkillIndex(int skillIndex)
-	{
-		switch (skillIndex)
-		{
-		case 0:
-			return 0;
-		//if a race is passed in, return the index corresponding to their racial ability
-		case Player.RACE_SLITH + 100:
-			return 1;
-		case Player.RACE_DRAGORAN + 100:
-			return 2;
-		case Player.RACE_CURMIAN + 100:
-			return 3;
-		case Player.RACE_GRONK + 100:
-			return 4;
-		case Player.RACE_KURGAN + 100:
-			return 5;
-		case Player.RACE_NYNAX + 100:
-			return 6;
-		case Player.RACE_XJS9000 + 100:
-			return 7;
-		case Player.RACE_HUMAN + 100:
-			return 8;
-		//otherwise just return the corresponding skill
-		case Player.SKILL_TERROR:
-			return 9;
-		case Player.SKILL_JUGGERNAUT:
-			return 10;
-		case Player.SKILL_TACTICS:
-			return 11;
-		case Player.SKILL_VICIOUS:
-			return 12;
-		case Player.SKILL_BRUTAL:
-			return 13;
-		case Player.SKILL_CHECKMASTER:
-			return 14;
-		case Player.SKILL_STALWART:
-			return 15;
-		case Player.SKILL_GUARD:
-			return 16;
-		case Player.SKILL_RESILIENT:
-			return 17;
-		case Player.SKILL_CHARGE:
-			return 18;
-		case Player.SKILL_BOXING:
-			return 19;
-		case Player.SKILL_COMBO:
-			return 20;
-		case Player.SKILL_QUICKENING:
-			return 21;
-		case Player.SKILL_GYMNASTICS:
-			return 22;
-		case Player.SKILL_JUGGLING:
-			return 23;
-		case Player.SKILL_SCOOP:
-			return 24;
-		case Player.SKILL_STRIP:
-			return 25;
-		case Player.SKILL_JUDO:
-			return 26;
-		case Player.SKILL_FIST_OF_IRON:
-			return 27;
-		case Player.SKILL_DOOMSTRIKE:
-			return 28;
-		case Player.SKILL_AWE:
-			return 29;
-		case Player.SKILL_STOIC:
-			return 30;
-		case Player.SKILL_LEADER:
-			return 31;
-		case Player.SKILL_SENSEI:
-			return 32;
-		case Player.SKILL_SLY:
-			return 33;
-		case Player.SKILL_INTUITION:
-			return 34;
-		case Player.SKILL_HEALER:
-			return 35;
-		case Player.SKILL_KARMA:
-			return 26;
-		case Player.SKILL_NINJA_MASTER:
-			return 37;
-		}
-
-		return -1;
 	}
 	
 	private static Integer convertToLegacyInjuryLevel(int injuryLevel)

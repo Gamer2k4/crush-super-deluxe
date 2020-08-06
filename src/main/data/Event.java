@@ -23,6 +23,7 @@ public class Event implements Serializable
 	public static final int HANDOFF_PASS = 0;
 	public static final int HANDOFF_HURL = 1;
 	
+	public static final int CHECK_UNRESOLVED = -2;
 	public static final int CHECK_CRITFAIL = -1;
 	public static final int CHECK_DODGE = 0;
 	public static final int CHECK_FAIL = 1;
@@ -91,6 +92,31 @@ public class Event implements Serializable
 		return toRet;
 	}
 	
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+			return true;
+
+		Event event;
+
+		if (obj != null && obj instanceof Event)
+			event = (Event) obj;
+		else
+			return false;
+
+		if (type != event.type)
+			return false;
+
+		for (int i = 0; i < TOTAL_FLAGS; i++)
+		{
+			if (flags[i] != event.flags[i])
+				return false;
+		}
+
+		return true;
+	}
+	
 	public int getType()
 	{
 		return type;
@@ -106,8 +132,14 @@ public class Event implements Serializable
 	
 	public static Event move(int player, int targetX, int targetY, boolean slide, boolean jump, boolean knockdown)
 	{
+		return move(player, 0, targetX, targetY, slide, jump, knockdown);
+	}
+	
+	public static Event move(int player, int direction, int targetX, int targetY, boolean slide, boolean jump, boolean knockdown)
+	{
 		Event e = new Event(EVENT_MOVE);
 		e.flags[0] = player;
+		e.flags[1] = direction;	//this is optional; used for GUIs that care about facing
 		e.flags[2] = targetX;
 		e.flags[3] = targetY;
 		e.flags[4] = 0;
@@ -234,7 +266,7 @@ public class Event implements Serializable
  * Key
  * ---
  * EVENT_TURN
- * 0 - current turn
+ * 0 - current turn player
  * 
  * EVENT_MOVE:
  * 0 - p1 index
@@ -281,7 +313,7 @@ public class Event implements Serializable
  * EVENT_CHECK
  * 0 - p1 index (-1 if the field, such as falling damage or getting shocked)
  * 1 - p2 index
- * 2 - result (-1 - attacker falls, 0 - dodged, 1 - nothing, 2 - both fall, 3 - defender pushed, 4 - defender falls, 5 - defender pushed and falls)
+ * 2 - result (-2 - unresolved, -1 - attacker falls, 0 - dodged, 1 - nothing, 2 - both fall, 3 - defender pushed, 4 - defender falls, 5 - defender pushed and falls)
  * 3 - reflex boolean (1 means the player doesn't need to use AP)
  * 
  * EVENT_EJECT

@@ -4,12 +4,14 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
 
 import main.data.entities.Arena;
+import main.data.factory.SimpleArenaFactory;
+import main.presentation.common.image.ArenaImageGenerator;
 
 public class ArenaDisplayPanel extends JPanel
 {
@@ -17,19 +19,21 @@ public class ArenaDisplayPanel extends JPanel
 	
 	private Arena arena;	
 	private static final int TILE_SIZE = 3;
+	private static final int ARENA_SIDE_LENGTH = 30;
 
 	public ArenaDisplayPanel(int arenaNumber)
 	{
+		setBackground(Color.BLACK);
 		setArena(arenaNumber);
 		
-		this.setMinimumSize(new Dimension(30 * TILE_SIZE + 2, 30 * TILE_SIZE + 2));
-		this.setMaximumSize(new Dimension(30 * TILE_SIZE + 2, 30 * TILE_SIZE + 2));
-		this.setPreferredSize(new Dimension(30 * TILE_SIZE + 2, 30 * TILE_SIZE + 2));
+		this.setMinimumSize(new Dimension(ARENA_SIDE_LENGTH * TILE_SIZE + 2, ARENA_SIDE_LENGTH * TILE_SIZE + 2));
+		this.setMaximumSize(new Dimension(ARENA_SIDE_LENGTH * TILE_SIZE + 2, ARENA_SIDE_LENGTH * TILE_SIZE + 2));
+		this.setPreferredSize(new Dimension(ARENA_SIDE_LENGTH * TILE_SIZE + 2, ARENA_SIDE_LENGTH * TILE_SIZE + 2));
 	}
 	
 	public void setArena(int arenaNumber)
 	{
-		arena = Arena.generateArena(arenaNumber);
+		arena = SimpleArenaFactory.getInstance().generateArena(arenaNumber);
 		repaint();
 	}
 
@@ -40,29 +44,17 @@ public class ArenaDisplayPanel extends JPanel
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-		for (int i = 0; i < 30; i++)
+		for (int i = 0; i < ARENA_SIDE_LENGTH; i++)
 		{
-			for (int j = 0; j < 30; j++)
+			for (int j = 0; j < ARENA_SIDE_LENGTH; j++)
 			{
-				drawTile(g2, j, i, arena.getTile(i, j));
+				ArenaImageGenerator.drawTile(g2, j, i, arena.getTile(i, j), TILE_SIZE);
 			}
 		}
 	}
 	
-	private void drawTile(Graphics2D g2, int x, int y, int tile)
+	public BufferedImage getArenaImage(int tileSize)
 	{
-		Color fillColor = Color.BLACK;
-		
-		if (tile == Arena.TILE_TELE || tile == Arena.TILE_GOAL)
-			fillColor = Color.BLUE;
-		else if (tile == Arena.TILE_PAD)
-			fillColor = Color.CYAN;
-		else if (tile == Arena.TILE_WALL || tile == Arena.TILE_BIN)
-			fillColor = Color.GRAY;
-		
-		Rectangle tileRect = new Rectangle(TILE_SIZE * x, TILE_SIZE * y, TILE_SIZE, TILE_SIZE);
-		
-		g2.setColor(fillColor);
-		g2.fill(tileRect);
+		return ArenaImageGenerator.getArenaImage(arena, ARENA_SIDE_LENGTH, tileSize);
 	}
 }

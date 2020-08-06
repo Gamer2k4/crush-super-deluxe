@@ -3,7 +3,7 @@ package main.presentation.teameditor.tablemodels;
 import javax.swing.table.AbstractTableModel;
 
 import main.data.entities.Team;
-import main.presentation.teameditor.utils.GUIPlayerAttributes;
+import main.presentation.teameditor.common.GUIPlayerAttributes;
 
 public class RosterTableModel extends AbstractTableModel
 {

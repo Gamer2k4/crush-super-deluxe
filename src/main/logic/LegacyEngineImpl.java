@@ -11,6 +11,7 @@ import main.data.Event;
 import main.data.entities.Arena;
 import main.data.entities.Equipment;
 import main.data.entities.Player;
+import main.data.entities.Skill;
 import main.presentation.common.Logger;
 /**
  * class Engine
@@ -223,7 +224,7 @@ public class LegacyEngineImpl implements Engine
 				if (ballLoc.x == playerMoveCoords.x && ballLoc.y == playerMoveCoords.y)
 				{
 					int hands = activePlayer.getAttributeWithModifiers(Player.ATT_HD);
-					if (!activePlayer.hasSkill(Player.SKILL_SCOOP))
+					if (!activePlayer.hasSkill(Skill.SCOOP))
 					{
 						curAP -= 10;
 						if (curAP >= 0) toRet.offer(e);	//treat it as moving again if the player has the AP for it (autofail otherwise)
@@ -287,7 +288,7 @@ public class LegacyEngineImpl implements Engine
 				{
 					int isCorrect = Randomizer.getRandomInt(1, curArena.getUntriedBinCount());
 					
-					if (isCorrect == 1 || (isCorrect == 2 && activePlayer.hasSkill(Player.SKILL_INTUITION)))
+					if (isCorrect == 1 || (isCorrect == 2 && activePlayer.hasSkill(Skill.INTUITION)))
 					{
 						toRet.offer(Event.tryBallBin(theCommand.flags[0], binIndex, 1));
 					}
@@ -593,7 +594,7 @@ public class LegacyEngineImpl implements Engine
 	private int getLocalAssistBonus(Player ally, Player target)
 	{
 		//tactics negates assist bonuses
-		if (target.hasSkill(Player.SKILL_TACTICS))
+		if (target.hasSkill(Skill.TACTICS))
 			return 0;
 		
 		int team = localData.getTeamIndexOfPlayer(ally);
@@ -620,7 +621,7 @@ public class LegacyEngineImpl implements Engine
 					toRet += 10;
 					
 					//teammates with guard help even more
-					if (p.hasSkill(Player.SKILL_GUARD))
+					if (p.hasSkill(Skill.GUARD))
 						toRet += 5;
 					
 					System.out.println("ENGINE - GET ASSIST: Teammate found; assist bonus is now " + toRet + ".");
@@ -671,35 +672,35 @@ public class LegacyEngineImpl implements Engine
 		if (isCheck)
 		{
 			//auto-injure 16% of the time with Doomstrike (manual says 25%)
-			if (attacker.hasSkill(Player.SKILL_DOOMSTRIKE) && Randomizer.getRandomInt(1, 6) == 1 && injLevel < Player.INJURY_TRIVIAL)
+			if (attacker.hasSkill(Skill.DOOMSTRIKE) && Randomizer.getRandomInt(1, 6) == 1 && injLevel < Player.INJURY_TRIVIAL)
 			{
 				System.out.println("ENGINE - INJURY CALC: Doomstrike activated.");
 				injLevel = Player.INJURY_TRIVIAL;
 			}
 			
 			//auto-stun 16% of the time with Fist of Iron (manual says 25%)
-			if (attacker.hasSkill(Player.SKILL_FIST_OF_IRON) && Randomizer.getRandomInt(1, 6) == 1 && injLevel < Player.INJURY_STUN)
+			if (attacker.hasSkill(Skill.FIST_OF_IRON) && Randomizer.getRandomInt(1, 6) == 1 && injLevel < Player.INJURY_STUN)
 			{
 				System.out.println("ENGINE - INJURY CALC: Fist of Iron activated.");
 				injLevel = Player.INJURY_STUN;
 			}
 			
 			//Vicious adds to the injury type
-			if (attacker.hasSkill(Player.SKILL_VICIOUS))
+			if (attacker.hasSkill(Skill.VICIOUS))
 			{
 				System.out.println("ENGINE - INJURY CALC: Vicious activated.");
 				injLevel++;
 			}
 			
 			//Resilient subtracts from the injury type
-			if (defender.hasSkill(Player.SKILL_RESILIENT))
+			if (defender.hasSkill(Skill.RESILIENT))
 			{
 				System.out.println("ENGINE - INJURY CALC: Resilient activated.");
 				injLevel--;
 			}
 		}
 		
-		if (injLevel <= Player.INJURY_KNOCKDOWN && defender.hasSkill(Player.SKILL_JUGGERNAUT))	//juggernaut prevents basic knockdown
+		if (injLevel <= Player.INJURY_KNOCKDOWN && defender.hasSkill(Skill.JUGGERNAUT))	//juggernaut prevents basic knockdown
 			toRet = Event.setStatus(pIndex, Player.STS_OKAY);
 		else if (injLevel <= Player.INJURY_KNOCKDOWN)
 			toRet = Event.setStatus(pIndex, Player.STS_DOWN);
@@ -932,7 +933,7 @@ public class LegacyEngineImpl implements Engine
 				if (checkingPlayer != null && checkingPlayer.status == Player.STS_OKAY && localData.getTeamIndexOfPlayer(checkingPlayer) != team)
 				{
 					//don't reaction check if moving player has Awe
-					if (checkedPlayer.hasSkill(Player.SKILL_AWE) && !checkingPlayer.hasSkill(Player.SKILL_STOIC) && Randomizer.getRandomInt(1, 20) < 20)
+					if (checkedPlayer.hasSkill(Skill.AWE) && !checkingPlayer.hasSkill(Skill.STOIC) && Randomizer.getRandomInt(1, 20) < 20)
 						continue;
 					
 					//reflex check passed, or the second check of a combo
@@ -945,7 +946,7 @@ public class LegacyEngineImpl implements Engine
 						toRet.addAll(checkResult);
 						
 						//throw another reflex check if player has Combo skill
-						if (checkingPlayer.hasSkill(Player.SKILL_COMBO))
+						if (checkingPlayer.hasSkill(Skill.COMBO))
 						{
 							if (combo) //if we're already in a combo, get out of it and move to the next player (combo check already happened by this point)
 							{

@@ -7,7 +7,6 @@ import main.data.entities.Stats;
 
 public class GUIStatsFormatter
 {
-	private static String[] races = { "HUMAN", "GRONK", "CURMIAN", "DRAGORAN", "NYNAX", "SLITH", "KURGAN", "XJS9000" };
 	private static Player currentPlayer;
 	private static Stats currentStats;
 
@@ -38,7 +37,7 @@ public class GUIStatsFormatter
 
 	public static String getRace()
 	{
-		return (currentPlayer == null) ? "" : races[currentPlayer.getRace()];
+		return (currentPlayer == null) ? "" : currentPlayer.getRace().name();
 	}
 
 	public static String getRushAttempts()

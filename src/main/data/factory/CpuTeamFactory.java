@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import main.data.entities.Race;
 import main.data.entities.Team;
 import main.logic.Randomizer;
 
@@ -28,7 +29,7 @@ public class CpuTeamFactory
 		Team team = new Team();
 		
 		for (int i = 0; i < 9; i++)
-			team.addPlayer(PlayerFactory.createPlayerWithRandomName(Randomizer.getRandomInt(0, 7)));
+			team.addPlayer(PlayerFactory.createPlayerWithRandomName(Race.getRace(Randomizer.getRandomInt(0, 7))));
 		
 		return team;
 	}

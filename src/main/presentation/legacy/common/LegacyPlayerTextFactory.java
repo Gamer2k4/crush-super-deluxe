@@ -5,6 +5,7 @@ import java.awt.Color;
 import main.data.Data;
 import main.data.entities.Player;
 import main.data.entities.Stats;
+import main.data.factory.PlayerFactory;
 
 public class LegacyPlayerTextFactory
 {
@@ -67,11 +68,12 @@ public class LegacyPlayerTextFactory
 		return new LegacyTextElement(getIntAsText(average, 3), LegacyUiConstants.COLOR_LEGACY_DULL_GREEN);
 	}
 	
-	public static LegacyTextElement getColoredAttributeWithModifiers(int attribute, Color defaultColor)
+	public static LegacyTextElement getColoredAttributeWithModifiers(int attribute, Color defaultColor, Color enhancedColor)
 	{
 		Color color = defaultColor;
 		
-		int baseAttribute = currentPlayer.getAttributeWithoutModifiers(attribute);
+		Player basePlayer = PlayerFactory.createPlayerWithDefinedName(currentPlayer.getRace(), "BASE");
+		int baseAttribute = basePlayer.getAttributeWithoutModifiers(attribute);
 		int modifiedAttribute = currentPlayer.getAttributeWithModifiers(attribute);
 		
 		if (modifiedAttribute > 99)
@@ -81,8 +83,26 @@ public class LegacyPlayerTextFactory
 			color = LegacyUiConstants.COLOR_LEGACY_RED;
 		
 		if (modifiedAttribute > baseAttribute)
-			color = LegacyUiConstants.COLOR_LEGACY_GOLD;
+			color = enhancedColor;
 		
 		return new LegacyTextElement(getIntAsText(modifiedAttribute, 2), color);
+	}
+	
+	public static LegacyTextElement getColoredCost(Color defaultColor, Color enhancedColor)
+	{
+		Color color = defaultColor;
+		
+		Player basePlayer = PlayerFactory.createPlayerWithDefinedName(currentPlayer.getRace(), "BASE");
+		
+		int baseCost = basePlayer.getSalary();
+		int currentCost = currentPlayer.getSalary();
+		
+		if (currentCost < baseCost)
+			color = LegacyUiConstants.COLOR_LEGACY_RED;
+		
+		if (currentCost > baseCost)
+			color = enhancedColor;
+		
+		return new LegacyTextElement(getIntAsText(currentCost, 3), color);		//note that the cost doesn't actually have leading zeroes
 	}
 }

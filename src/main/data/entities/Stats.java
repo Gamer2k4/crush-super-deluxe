@@ -11,24 +11,38 @@ import main.data.save.SaveTokenTag;
 
 public class Stats extends SaveableEntity
 {
-	public static final int STATS_CHECKS_THROWN = 0;
-	public static final int STATS_CHECKS_LANDED = 1;
-	public static final int STATS_SACKS = 2;
-	public static final int STATS_INJURIES = 3;
-	public static final int STATS_KILLS = 4;
-	public static final int STATS_RUSHING_ATTEMPTS = 5;
-	public static final int STATS_RUSHING_YARDS = 6;
+	public static final int GAME_STATS = 0;
+	public static final int SEASON_STATS = 1;
+	public static final int CAREER_STATS = 2;
+	
+	//player stats
+	public static final int STATS_RUSHING_YARDS = 0;
+	public static final int STATS_KILLS_FOR = 1;
+	public static final int STATS_KILLS_AGAINST = 2;
+	public static final int STATS_INJURIES_FOR = 3;
+	public static final int STATS_INJURIES_AGAINST = 4;
+	public static final int STATS_CHECKS_THROWN = 5;
+	public static final int STATS_CHECKS_LANDED = 6;
 	public static final int STATS_PADS_ACTIVATED = 7;
-	public static final int STATS_GOALS_SCORED = 8;
-	public static final int STATS_GAMES_PLAYED = 9;
-	public static final int STATS_GAMES_WON = 10;
-	public static final int STATS_HIGHEST_RATING = 11;
+	public static final int STATS_FUMBLES = 8;
+	public static final int STATS_RUSHING_ATTEMPTS = 9;
+	public static final int STATS_BALL_CONTROL = 10;
+	public static final int STATS_SACKS_AGAINST = 11;
+	public static final int STATS_SACKS_FOR = 12;
+	public static final int STATS_GOALS_SCORED = 13;
+	public static final int STATS_GAMES_PLAYED = 14;
+	public static final int STATS_HIGHEST_RATING = 15;
+	
+	//team stats
+	public static final int STATS_EJECTIONS = 16;
+	public static final int STATS_MUTATIONS = 17;
+	public static final int STATS_WINS = 18;
+	public static final int STATS_LOSSES = 19;
+	public static final int STATS_TIES = 20;
 
-	public static final int TOTAL_STATS = 12;
+	public static final int TOTAL_STATS = 21;
 
 	private int[] statFields;
-
-	// TODO: update with more career-based values, if there are any - remember to update save fields as well
 
 	public Stats()
 	{
@@ -49,6 +63,12 @@ public class Stats extends SaveableEntity
 	public int getStat(int statIndex)
 	{
 		return statFields[statIndex];
+	}
+
+	//used for loading a player
+	public void setStat(int statIndex, int value)
+	{
+		statFields[statIndex] = value;
 	}
 
 	public void updateWithResults(Stats gameResults)
@@ -79,17 +99,42 @@ public class Stats extends SaveableEntity
 			statFields[STATS_CHECKS_LANDED]++;
 		
 		if (sack)
-			statFields[STATS_SACKS]++;
+			statFields[STATS_SACKS_FOR]++;
+	}
+	
+	public void getSacked()
+	{
+		statFields[STATS_SACKS_AGAINST]++;
 	}
 
 	public void injure()
 	{
-		statFields[STATS_INJURIES]++;
+		statFields[STATS_INJURIES_FOR]++;
+	}
+
+	public void getInjured()
+	{
+		statFields[STATS_INJURIES_AGAINST]++;
 	}
 
 	public void kill()
 	{
-		statFields[STATS_KILLS]++;
+		statFields[STATS_KILLS_FOR]++;
+	}
+
+	public void getKilled()
+	{
+		statFields[STATS_KILLS_AGAINST]++;
+	}
+
+	public void mutate()
+	{
+		statFields[STATS_MUTATIONS]++;
+	}
+
+	public void eject()
+	{
+		statFields[STATS_EJECTIONS]++;
 	}
 
 	// call this whenever the player gets the ball (handoff, bin, or pickup)
@@ -98,28 +143,50 @@ public class Stats extends SaveableEntity
 	{
 		statFields[STATS_RUSHING_ATTEMPTS]++;
 	}
+	public void fumbleBall()
+	{
+		statFields[STATS_FUMBLES]++;
+	}
 
 	// call this each time the player moves with the ball
 	public void rush(int yards)
 	{
 		statFields[STATS_RUSHING_YARDS] += yards;
 	}
+	
+	// call this each time a team begins their turn with control of the ball	//TODO: confirm this is correct
+	public void controlBall()
+	{
+		statFields[STATS_BALL_CONTROL] ++;
+	}
 
 	// call this upon winning; exclusive with score()
 	public void teamWon()
 	{
-		statFields[STATS_GAMES_WON]++;
+		statFields[STATS_WINS]++;
+	}
+
+	// call this upon losing
+	public void teamLost()
+	{
+		statFields[STATS_LOSSES]++;
+	}
+
+	// call this upon tying
+	public void teamTied()
+	{
+		statFields[STATS_TIES]++;
 	}
 
 	// call this if the player scores; exclusive with teamWon()
 	public void score()
 	{
 		statFields[STATS_GOALS_SCORED]++;
-		statFields[STATS_GAMES_WON]++;
+		statFields[STATS_WINS]++;
 	}
 
 	// call this upon successfully teleporting in for the first time
-	public void playedGame()
+	public void enterGame()
 	{
 		statFields[STATS_GAMES_PLAYED]++;
 	}
@@ -127,13 +194,13 @@ public class Stats extends SaveableEntity
 	// call this once the game concludes
 	public int getXP()
 	{
-		int toRet = 2 + 10 * statFields[STATS_INJURIES] + 1 * statFields[STATS_SACKS] + 12 * statFields[STATS_KILLS] + 6
+		int toRet = 10 * statFields[STATS_INJURIES_FOR] + 1 * statFields[STATS_SACKS_FOR] + 12 * statFields[STATS_KILLS_FOR] + 6
 				* statFields[STATS_PADS_ACTIVATED] + 2 * statFields[STATS_CHECKS_LANDED] + (int) (.5 * statFields[STATS_RUSHING_YARDS]);
 		if (statFields[STATS_GOALS_SCORED] > 0)
 			toRet += 20;
 		if (statFields[STATS_GAMES_PLAYED] > 0)
 			toRet += 2;
-		if (statFields[STATS_GAMES_WON] > 0)
+		if (statFields[STATS_WINS] > 0)
 			toRet += 2;
 
 		return toRet;
@@ -156,7 +223,7 @@ public class Stats extends SaveableEntity
 
 		String statsUid = getUniqueId();
 
-		if (EntityMap.getPlayer(statsUid) == null)
+		if (EntityMap.getStats(statsUid) == null)
 			statsUid = EntityMap.put(statsUid, this);
 		else
 			statsUid = EntityMap.getSimpleKey(statsUid);
@@ -200,6 +267,14 @@ public class Stats extends SaveableEntity
 		case S_STS:
 			saveToken = ssb.getToken(saveTokenTag);
 			strVals = saveToken.getContentSet();
+			
+			//older save files had fewer stats and in a different order
+			if (TOTAL_STATS > strVals.size())
+			{
+				System.out.println("Stats data is from an outdated save configuration.  Skipping loading of stats.");
+				break;
+			}
+			
 			for (int i = 0; i < TOTAL_STATS; i++)
 			{
 				statFields[i] = Integer.parseInt(strVals.get(i));

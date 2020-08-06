@@ -90,7 +90,7 @@ public class SpriteFactory
 	{
 		for (int race = 0; race < 8; race++)
 		{
-			teamRaceSpriteSheets[teamIndex][race] = LegacyColorReplacer.getInstance().setColors(getPlayerSpriteSheet(race), mainColor, trimColor, LegacyUiConstants.COLOR_LEGACY_TRANSPARENT);
+			teamRaceSpriteSheets[teamIndex][race] = LegacyColorReplacer.getInstance().setColors(getPlayerSpriteSheet(Race.getRace(race)), mainColor, trimColor, LegacyUiConstants.COLOR_LEGACY_TRANSPARENT);
 		}
 		
 		generateAndMapPlayerSprites(teamIndex);
@@ -123,25 +123,25 @@ public class SpriteFactory
 		return spriteSheet.getSubimage(0, 30 * index, 35, 30);
 	}
 
-	private BufferedImage getPlayerSpriteSheet(int race)
+	private BufferedImage getPlayerSpriteSheet(Race race)
 	{
 		switch (race)
 		{
-		case Player.RACE_CURMIAN:
+		case CURMIAN:
 			return imageFactory.getImage(ImageType.SPRITES_CURMIAN);
-		case Player.RACE_DRAGORAN:
+		case DRAGORAN:
 			return imageFactory.getImage(ImageType.SPRITES_DRAGORAN);
-		case Player.RACE_GRONK:
+		case GRONK:
 			return imageFactory.getImage(ImageType.SPRITES_GRONK);
-		case Player.RACE_HUMAN:
+		case HUMAN:
 			return imageFactory.getImage(ImageType.SPRITES_HUMAN);
-		case Player.RACE_KURGAN:
+		case KURGAN:
 			return imageFactory.getImage(ImageType.SPRITES_KURGAN);
-		case Player.RACE_NYNAX:
+		case NYNAX:
 			return imageFactory.getImage(ImageType.SPRITES_NYNAX);
-		case Player.RACE_SLITH:
+		case SLITH:
 			return imageFactory.getImage(ImageType.SPRITES_SLITH);
-		case Player.RACE_XJS9000:
+		case XJS9000:
 			return imageFactory.getImage(ImageType.SPRITES_XJS9000);
 		}
 		

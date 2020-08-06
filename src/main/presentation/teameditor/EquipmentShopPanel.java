@@ -16,8 +16,9 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
 import main.data.entities.Equipment;
-import main.presentation.teameditor.utils.ImageType;
-import main.presentation.teameditor.utils.TeamUpdater;
+import main.presentation.common.ImagePanel;
+import main.presentation.common.image.ImageType;
+import main.presentation.teameditor.common.TeamUpdater;
 
 public class EquipmentShopPanel extends JPanel implements ActionListener
 {
@@ -180,7 +181,7 @@ public class EquipmentShopPanel extends JPanel implements ActionListener
 		descriptionPane = new JTextPane();
 		descriptionPane.setLocation(15, 15);
 		descriptionPane.setSize(descPane.getWidth() - 30, descPane.getHeight() - 30);
-		descriptionPane.setBackground(TeamEditorGUI.BG_COLOR);
+		descriptionPane.setBackground(TeamEditorPanel.BG_COLOR);
 		
 		StyledDocument doc = descriptionPane.getStyledDocument();
 		SimpleAttributeSet center = new SimpleAttributeSet();

@@ -1,17 +1,20 @@
 package main.presentation.teameditor.common;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import main.data.entities.Player;
+import main.data.entities.Skill;
 
 public class SkillButtonValidator
 {
-	private int skillCosts[];
-	private String skillPrereqs[];
+	private Map<Skill, List<Skill>> skillPrereqs = new HashMap<Skill, List<Skill>>();
 	private boolean isSensei;
 
-	public SkillButtonValidator(int totalSkills)
+	public SkillButtonValidator()
 	{
-		skillCosts = new int[totalSkills + 1];
-		skillPrereqs = new String[totalSkills + 1];
 		this.isSensei = false;
 		
 		fillRequirements();
@@ -23,7 +26,7 @@ public class SkillButtonValidator
 		isSensei = hasSensei;
 	}
 
-	public boolean isButtonEnabled(int skill, Player player)
+	public boolean isButtonEnabled(Skill skill, Player player)
 	{
 		if (player == null)
 			return false;
@@ -40,9 +43,9 @@ public class SkillButtonValidator
 		return true;
 	}
 
-	private int getSkillXpCost(int skill, Player player)
+	private int getSkillXpCost(Skill skill, Player player)
 	{
-		int xpCost = skillCosts[skill];
+		int xpCost = skill.getCost();
 
 		// TODO: check for Intelligent quirk
 		// TODO: check for Moron quirk
@@ -53,97 +56,67 @@ public class SkillButtonValidator
 		return xpCost;
 	}
 	
-	private boolean hasRequiredSkills(int skill, Player player)
+	private boolean hasRequiredSkills(Skill skill, Player player)
 	{
-		String prereqs = skillPrereqs[skill];
+		List<Skill> prereqs = skillPrereqs.get(skill);
 		
-		for (int i = 0; i < prereqs.length(); i++)
+		if (prereqs == null)
+			return true;
+		
+		for (Skill prereq : prereqs)
 		{
-			int prereqIndex = prereqs.charAt(i) - 65;
-			if (!player.hasSkill(prereqIndex))
+			if (!player.hasSkill(prereq))
 				return false;
 		}
 		
 		return true;
 	}
 
-	public boolean isButtonSelected(int skill, Player player)
+	public boolean isButtonSelected(Skill skill, Player player)
 	{
 		return (player != null && player.hasSkill(skill));
 	}
 
 	private void fillRequirements()
 	{
-		skillCosts[0] = 0;
-		skillCosts[Player.SKILL_INTUITION] = 20;
-		skillCosts[Player.SKILL_STOIC] = 40;
-		skillCosts[Player.SKILL_SLY] = 40;
-		skillCosts[Player.SKILL_LEADER] = 60;
-		skillCosts[Player.SKILL_KARMA] = 60;
-		skillCosts[Player.SKILL_AWE] = 80;
-		skillCosts[Player.SKILL_HEALER] = 80;
-		skillCosts[Player.SKILL_SENSEI] = 100;
+		addPrereq(Skill.SLY, Skill.INTUITION);
+		addPrereq(Skill.LEADER, Skill.STOIC);
+		addPrereq(Skill.KARMA, Skill.SLY);
+		addPrereq(Skill.AWE, Skill.LEADER);
+		addPrereq(Skill.HEALER, Skill.KARMA);
+		addPrereq(Skill.SENSEI, Skill.AWE);
+		addPrereq(Skill.SENSEI, Skill.HEALER);
 
-		skillCosts[Player.SKILL_JUGGLING] = 20;
-		skillCosts[Player.SKILL_GYMNASTICS] = 20;
-		skillCosts[Player.SKILL_BOXING] = 20;
-		skillCosts[Player.SKILL_SCOOP] = 40;
-		skillCosts[Player.SKILL_JUDO] = 40;
-		skillCosts[Player.SKILL_COMBO] = 40;
-		skillCosts[Player.SKILL_STRIP] = 60;
-		skillCosts[Player.SKILL_QUICKENING] = 60;
-		skillCosts[Player.SKILL_FIST_OF_IRON] = 80;
-		skillCosts[Player.SKILL_DOOMSTRIKE] = 100;
+		addPrereq(Skill.SCOOP, Skill.JUGGLING);
+		addPrereq(Skill.JUDO, Skill.GYMNASTICS);
+		addPrereq(Skill.COMBO, Skill.BOXING);
+		addPrereq(Skill.STRIP, Skill.SCOOP);
+		addPrereq(Skill.QUICKENING, Skill.JUDO);
+		addPrereq(Skill.QUICKENING, Skill.COMBO);
+		addPrereq(Skill.FIST_OF_IRON, Skill.STRIP);
+		addPrereq(Skill.FIST_OF_IRON, Skill.QUICKENING);
+		addPrereq(Skill.DOOMSTRIKE, Skill.FIST_OF_IRON);
 
-		skillCosts[Player.SKILL_GUARD] = 20;
-		skillCosts[Player.SKILL_TACTICS] = 40;
-		skillCosts[Player.SKILL_BRUTAL] = 40;
-		skillCosts[Player.SKILL_STALWART] = 40;
-		skillCosts[Player.SKILL_CHECKMASTER] = 60;
-		skillCosts[Player.SKILL_VICIOUS] = 60;
-		skillCosts[Player.SKILL_RESILIENT] = 60;
-		skillCosts[Player.SKILL_CHARGE] = 80;
-		skillCosts[Player.SKILL_JUGGERNAUT] = 80;
-		skillCosts[Player.SKILL_TERROR] = 100;
-
-		for (int i = 0; i < skillPrereqs.length; i++)
-			skillPrereqs[i] = "";
-
-		addPrereq(Player.SKILL_SLY, Player.SKILL_INTUITION);
-		addPrereq(Player.SKILL_LEADER, Player.SKILL_STOIC);
-		addPrereq(Player.SKILL_KARMA, Player.SKILL_SLY);
-		addPrereq(Player.SKILL_AWE, Player.SKILL_LEADER);
-		addPrereq(Player.SKILL_HEALER, Player.SKILL_KARMA);
-		addPrereq(Player.SKILL_SENSEI, Player.SKILL_AWE);
-		addPrereq(Player.SKILL_SENSEI, Player.SKILL_HEALER);
-
-		addPrereq(Player.SKILL_SCOOP, Player.SKILL_JUGGLING);
-		addPrereq(Player.SKILL_JUDO, Player.SKILL_GYMNASTICS);
-		addPrereq(Player.SKILL_COMBO, Player.SKILL_BOXING);
-		addPrereq(Player.SKILL_STRIP, Player.SKILL_SCOOP);
-		addPrereq(Player.SKILL_QUICKENING, Player.SKILL_JUDO);
-		addPrereq(Player.SKILL_QUICKENING, Player.SKILL_COMBO);
-		addPrereq(Player.SKILL_FIST_OF_IRON, Player.SKILL_STRIP);
-		addPrereq(Player.SKILL_FIST_OF_IRON, Player.SKILL_QUICKENING);
-		addPrereq(Player.SKILL_DOOMSTRIKE, Player.SKILL_FIST_OF_IRON);
-
-		addPrereq(Player.SKILL_STALWART, Player.SKILL_GUARD);
-		addPrereq(Player.SKILL_CHECKMASTER, Player.SKILL_TACTICS);
-		addPrereq(Player.SKILL_VICIOUS, Player.SKILL_BRUTAL);
-		addPrereq(Player.SKILL_RESILIENT, Player.SKILL_STALWART);
-		addPrereq(Player.SKILL_CHARGE, Player.SKILL_CHECKMASTER);
-		addPrereq(Player.SKILL_JUGGERNAUT, Player.SKILL_VICIOUS);
-		addPrereq(Player.SKILL_JUGGERNAUT, Player.SKILL_RESILIENT);
-		addPrereq(Player.SKILL_TERROR, Player.SKILL_CHARGE);
-		addPrereq(Player.SKILL_TERROR, Player.SKILL_JUGGERNAUT);
+		addPrereq(Skill.STALWART, Skill.GUARD);
+		addPrereq(Skill.CHECKMASTER, Skill.TACTICS);
+		addPrereq(Skill.VICIOUS, Skill.BRUTAL);
+		addPrereq(Skill.RESILIENT, Skill.STALWART);
+		addPrereq(Skill.CHARGE, Skill.CHECKMASTER);
+		addPrereq(Skill.JUGGERNAUT, Skill.VICIOUS);
+		addPrereq(Skill.JUGGERNAUT, Skill.RESILIENT);
+		addPrereq(Skill.TERROR, Skill.CHARGE);
+		addPrereq(Skill.TERROR, Skill.JUGGERNAUT);
 	}
 
-	private void addPrereq(int skill, int requiredSkill)
+	private void addPrereq(Skill skill, Skill requiredSkill)
 	{
-		String preReqs = skillPrereqs[skill];
-
-		preReqs = preReqs + (char) (requiredSkill + 65);
-
-		skillPrereqs[skill] = preReqs;
+		List<Skill> prereqs = skillPrereqs.get(skill);
+		
+		if (prereqs == null)
+			prereqs = new ArrayList<Skill>();
+		
+		prereqs.add(requiredSkill);
+		
+		skillPrereqs.put(skill, prereqs);
 	}
 }

@@ -9,6 +9,7 @@ import java.util.Map;
 import main.data.entities.Arena;
 import main.data.entities.Equipment;
 import main.data.entities.Player;
+import main.data.entities.Skill;
 import main.data.entities.Stats;
 import main.data.entities.Team;
 import main.data.factory.LegacyArenaFactory;
@@ -59,17 +60,17 @@ public class DataImpl implements Data
 		// go through each player, clone it, and record its location
 		for (int i = 0; i < allPlayers.size(); i++)
 		{
-			Player p = allPlayers.get(i);
+			Player player = allPlayers.get(i);
 
 			// no player on the team
-			if (p == null)
+			if (player == null)
 			{
 				toRet.allPlayers.add(null);
 				continue;
 			}
 
-			Player newPlayer = p.clone();
-			Point oldLoc = pointOfPlayer.get(p);
+			Player newPlayer = player.clone();
+			Point oldLoc = pointOfPlayer.get(player);
 
 			// the player is in play (as opposed to on deck, blobbed, whatever)
 			if (oldLoc != null)
@@ -82,11 +83,11 @@ public class DataImpl implements Data
 			toRet.teamOfPlayer.put(newPlayer, (int) (i / TEAM_SIZE));
 
 			// make this player the ball carrier if necessary
-			if (p == ballCarrier)
+			if (player == ballCarrier)
 				toRet.ballCarrier = newPlayer;
 
 			// copy over the player's stats
-			Stats newStats = statsOfPlayer.get(p).clone();
+			Stats newStats = statsOfPlayer.get(player).clone();
 			toRet.statsOfPlayer.put(newPlayer, newStats);
 
 			// finally, add it to the list
@@ -180,15 +181,15 @@ public class DataImpl implements Data
 
 			for (int j = 0; j < TEAM_SIZE; j++)		//only bring in players within the defined team size, even if they have more available
 			{
-				Player p = curTeam.getPlayer(j);
+				Player player = curTeam.getPlayer(j);
 				
-				if (p != null)
+				if (player != null)
 				{
-					Player pClone = putPlayerOnDeck(p.clone());
+					Player playerClone = putPlayerOnDeck(player.clone());
 					
-					teamOfPlayer.put(pClone, i);
-					statsOfPlayer.put(pClone, new Stats());
-					allPlayers.add(pClone);
+					teamOfPlayer.put(playerClone, i);
+					statsOfPlayer.put(playerClone, new Stats());
+					allPlayers.add(playerClone);
 					
 				} else
 				{
@@ -226,13 +227,14 @@ public class DataImpl implements Data
 	private void endGame(int winningTeam)
 	{
 		//save the stats for everyone
-		for (Player p : allPlayers)
+		for (Player player : allPlayers)
 		{
-			if (p != null)
+			if (player != null)
 			{
-				Stats stats = statsOfPlayer.get(p);
+				Stats stats = statsOfPlayer.get(player);
 				stats.setStat(Stats.STATS_HIGHEST_RATING, stats.getXP());
-				p.addXP(stats);
+				player.addXP(stats);
+				player.incrementGamesPlayed();
 			}
 		}
 		
@@ -244,30 +246,30 @@ public class DataImpl implements Data
 			int startingIndex = i * TEAM_SIZE;
 			for (int j = startingIndex; j < startingIndex + TEAM_SIZE; j++)
 			{
-				Player p = allPlayers.get(j);
+				Player player = allPlayers.get(j);
 
-				if (p == null)
+				if (player == null)
 					continue;
 				
-				team.getLastGameStats().updateWithResults(p.getLastGameStats());	//even if the player is dead, his stats should still add to the team's
+				team.getLastGameStats().updateWithResults(player.getLastGameStats());	//even if the player is dead, his stats should still add to the team's
 				
-				if (p.status == Player.STS_DEAD)	//remove the player from the team if he's dead
+				if (player.status == Player.STS_DEAD)	//remove the player from the team if he's dead
 				{
 					//put the dead player's gear back in the team inventory
 					for (int k = 0; k < 4; k++)
 					{
-						int itemIndex = p.unequipItem(k);
+						int itemIndex = player.unequipItem(k);
 						if (itemIndex != Equipment.EQUIP_NONE)
 							team.getEquipment().add(Integer.valueOf(itemIndex));
 					}
 					
-					p = null;						//TODO: if halls of fame exist, keep track of the player still
+					player = null;						//TODO: if halls of fame exist, keep track of the player still
 				}
 				
-				if (p != null)
-					p.recoverInjuries(1);
+				if (player != null)
+					player.recoverInjuries(1);
 				
-				team.setPlayer(j - startingIndex, p);
+				team.setPlayer(j - startingIndex, player);
 			}
 		}
 		
@@ -292,66 +294,66 @@ public class DataImpl implements Data
 			endGame(winningTeam);
 		} else if (theEvent.getType() == Event.EVENT_RECVR)
 		{
-			Player p = getPlayer(theEvent.flags[0]);
+			Player player = getPlayer(theEvent.flags[0]);
 
-			if (p != null)
+			if (player != null)
 			{
-				if (p.status == Player.STS_OKAY)
+				if (player.status == Player.STS_OKAY)
 				{
-					p.currentAP = p.getAttributeWithModifiers(Player.ATT_AP);
-				} else if (p.status == Player.STS_STUN)
+					player.currentAP = player.getAttributeWithModifiers(Player.ATT_AP);
+				} else if (player.status == Player.STS_STUN)
 				{
-					p.status = Player.STS_DOWN;
-				} else if (p.status == Player.STS_DOWN)
+					player.status = Player.STS_DOWN;
+				} else if (player.status == Player.STS_DOWN)
 				{
-					p.status = Player.STS_OKAY;
+					player.status = Player.STS_OKAY;
 
-					if (p.race == Player.RACE_DRAGORAN) // TODO: racial abilities are actually skills
-						p.currentAP = p.getAttributeWithModifiers(Player.ATT_AP) - AP_POPUP_COST;
+					if (player.hasSkill(Skill.POP_UP))
+						player.currentAP = player.getAttributeWithModifiers(Player.ATT_AP) - AP_POPUP_COST;
 					else
-						p.currentAP = halfAttribute(p.getAttributeWithModifiers(Player.ATT_AP));
+						player.currentAP = halfAttribute(player.getAttributeWithModifiers(Player.ATT_AP));
 				}
 			}
 		} else if (theEvent.getType() == Event.EVENT_STS)
 		{
 			// this ONLY changes a player's status (used for LATE, EGO, and basic stunning)
 			// attributes are left untouched (if they need to be altered, another event should be sent
-			Player p = getPlayer(theEvent.flags[0]);
+			Player player = getPlayer(theEvent.flags[0]);
 
-			if (p != null)
+			if (player != null)
 			{
-				p.status = theEvent.flags[2];
-				p.currentAP = 0; // TODO I don't like this, but it's easiest. This also makes Juggernaut simple.
+				player.status = theEvent.flags[2];
+				player.currentAP = 0; // TODO I don't like this, but it's easiest. This also makes Juggernaut simple.
 			}
 		} else if (theEvent.getType() == Event.EVENT_MOVE)
 		{
 			// again, this is sanitized, so each move event should be from one legal tile to one legal adjacent tile
 			// in other words, we expect these to each take 10 AP, and we expect the player to have at least 10 AP to begin with
 
-			Player p = getPlayer(theEvent.flags[0]);
+			Player player = getPlayer(theEvent.flags[0]);
 			Point destination = new Point(theEvent.flags[2], theEvent.flags[3]);
 			boolean isSliding = (theEvent.flags[4] == 1);
 			boolean isJumping = (theEvent.flags[5] == 1);
 
 			// slides don't occur on the player's turn, so they don't consume AP
 			if (!isSliding)
-				p.currentAP -= AP_MOVE_COST;
+				player.currentAP -= AP_MOVE_COST;
 
 			// if this is a jump, we don't want to blindly wipe out someone the player is jumping over
 			if (isJumping)
-				updatePlayerLocationForJump(p, destination);
+				updatePlayerLocationForJump(player, destination);
 			else
-				updatePlayerLocation(p, destination);
+				updatePlayerLocation(player, destination);
 
 			// because a jump is treated as two move events, it automatically reduces the AP by 20. For non-Curmians,
 			// it should cumulatively be reduced an additional 10AP (5AP per move event).
 			int highJumpApModifier = (AP_JUMP_COST - AP_HIGH_JUMP_COST) / 2;
 			
-			if (isJumping && p.getRace() != Player.RACE_CURMIAN) // TODO: racial abilities are actually skills
-				p.currentAP -= highJumpApModifier;
+			if (isJumping && !player.hasSkill(Skill.HIGH_JUMP))
+				player.currentAP -= highJumpApModifier;
 			
-			if (p == ballCarrier)
-				statsOfPlayer.get(p).rush(1);
+			if (player == ballCarrier)
+				statsOfPlayer.get(player).rush(1);
 		} else if (theEvent.getType() == Event.EVENT_TELE)
 		{
 			processTeleport(theEvent);
@@ -359,22 +361,22 @@ public class DataImpl implements Data
 		{
 			System.out.println("BIN EVENT");
 
-			Player p = getPlayer(theEvent.flags[0]);
+			Player player = getPlayer(theEvent.flags[0]);
 			int binIndex = theEvent.flags[2];
 			int result = theEvent.flags[3];
 
-			p.currentAP = 0;
+			player.currentAP = 0;
 
 			arena.setBinStatus(binIndex, result + 1);
 
 			if (result == 1) // success, so make all of them failed
 			{
 				arena.ballFound(binIndex);
-				ballCarrier = p;
-				statsOfPlayer.get(p).getBall();
+				ballCarrier = player;
+				statsOfPlayer.get(player).getBall();
 			}
 
-			statsOfPlayer.get(p).tryPad();
+			statsOfPlayer.get(player).tryPad();
 		} else if (theEvent.getType() == Event.EVENT_BALLMOVE)
 		{
 			System.out.println("DATA MOVING BALL");
@@ -387,31 +389,31 @@ public class DataImpl implements Data
 			ballCarrier = null;
 		} else if (theEvent.getType() == Event.EVENT_GETBALL)
 		{
-			Player p = getPlayer(theEvent.flags[0]);
+			Player player = getPlayer(theEvent.flags[0]);
 
 			// check if player missed the ball
 			if (theEvent.flags[2] == 0)
 			{
-				p.currentAP = 0;
+				player.currentAP = 0;
 			} else
 			{
 				ball.x = -1;
 				ball.y = -1;
 
-				ballCarrier = p;
-				statsOfPlayer.get(p).getBall();
+				ballCarrier = player;
+				statsOfPlayer.get(player).getBall();
 				
 				//TODO: the additional AP cost to get the ball is treated by the engine as a duplicate move
 			}
 		} else if (theEvent.getType() == Event.EVENT_HANDOFF)
 		{
-			Player p = getPlayer(theEvent.flags[0]);
+			Player player = getPlayer(theEvent.flags[0]);
 
 			// handoffs cost 10AP, hurling costs 20
 			if (theEvent.flags[2] == Event.HANDOFF_HURL)
-				p.currentAP -= AP_HURL_COST;
+				player.currentAP -= AP_HURL_COST;
 			else
-				p.currentAP -= AP_HANDOFF_COST;
+				player.currentAP -= AP_HANDOFF_COST;
 
 			ballCarrier = getPlayer(theEvent.flags[1]); // we're going to get a BALLMOVE event after this if it was a hurl, so this doesn't hurt
 			statsOfPlayer.get(ballCarrier).getBall();
@@ -428,7 +430,7 @@ public class DataImpl implements Data
 			// deduct the proper amount of AP
 			if (theEvent.flags[3] == 1) // if this is a reflex check
 				attacker.currentAP -= 0; // technically unnecessary, but it makes sense this way
-			else if (attacker.hasSkill(Player.SKILL_CHARGE))
+			else if (attacker.hasSkill(Skill.CHARGE))
 				attacker.currentAP -= AP_CHARGE_COST;
 			else
 				attacker.currentAP -= AP_CHECK_COST;
@@ -467,7 +469,7 @@ public class DataImpl implements Data
 			statsOfPlayer.get(attacker).check(success, sack);
 		} else if (theEvent.getType() == Event.EVENT_EJECT)
 		{
-			Player p = getPlayer(theEvent.flags[0]);
+			Player player = getPlayer(theEvent.flags[0]);
 			Player attacker = getPlayer(theEvent.flags[1]);
 
 			//stat variables
@@ -475,46 +477,46 @@ public class DataImpl implements Data
 			boolean kill = false;
 			
 			// get the player off the field
-			clearPlayerLocation(p);
+			clearPlayerLocation(player);
 
 			// set player status
 			if (theEvent.flags[2] == Event.EJECT_REF)
 			{
-				p.status = Player.STS_OUT;
-				statsOfPlayer.get(p).eject();
+				player.status = Player.STS_OUT;
+				statsOfPlayer.get(player).eject();
 			} else if (theEvent.flags[2] == Event.EJECT_BLOB)
 			{
-				p.status = Player.STS_BLOB;
-				statsOfPlayer.get(p).mutate();
+				player.status = Player.STS_BLOB;
+				statsOfPlayer.get(player).mutate();
 			} else if (theEvent.flags[2] == Event.EJECT_TRIVIAL)
 			{
-				p.status = Player.STS_HURT;
-				p.setInjuryType(Player.INJURY_TRIVIAL);
+				player.status = Player.STS_HURT;
+				player.setInjuryType(Player.INJURY_TRIVIAL);
 				injury = true;
 			} else if (theEvent.flags[2] == Event.EJECT_SERIOUS)
 			{
-				p.status = Player.STS_HURT;
-				p.setInjuryType(Player.INJURY_CRIPPLING);
+				player.status = Player.STS_HURT;
+				player.setInjuryType(Player.INJURY_CRIPPLING);
 				injury = true;
 
 				if (theEvent.flags[4] == 0 && theEvent.flags[6] == 0)
-					p.setInjuryType(Player.INJURY_MINOR);
+					player.setInjuryType(Player.INJURY_MINOR);
 			} else if (theEvent.flags[2] == Event.EJECT_DEATH)
 			{
-				p.status = Player.STS_DEAD;
-				statsOfPlayer.get(p).getKilled();
+				player.status = Player.STS_DEAD;
+				statsOfPlayer.get(player).getKilled();
 				kill = true;
 			}
 			
 			if (injury)		//getting killed is already handled in EJECT_DEATH
-				statsOfPlayer.get(p).getInjured();
+				statsOfPlayer.get(player).getInjured();
 			
 			System.out.println("Data - eject event: " + theEvent);
 
 			// damage the player's attributes if there was an injury
-			p.applyInjury(theEvent.flags[3], theEvent.flags[4]);
-			p.applyInjury(theEvent.flags[5], theEvent.flags[6]);
-			p.setWeeksOut(theEvent.flags[7] + 1);		//add 1 because we're subtracting one for a week passed once the game is done
+			player.applyInjury(theEvent.flags[3], theEvent.flags[4]);
+			player.applyInjury(theEvent.flags[5], theEvent.flags[6]);
+			player.setWeeksOut(theEvent.flags[7] + 1);		//add 1 because we're subtracting one for a week passed once the game is done
 			
 			if (attacker != null)
 			{
@@ -541,12 +543,12 @@ public class DataImpl implements Data
 		int startingIndex = currentTeam * TEAM_SIZE;
 		for (int j = startingIndex; j < startingIndex + TEAM_SIZE; j++)
 		{
-			Player p = allPlayers.get(j);
+			Player player = allPlayers.get(j);
 
-			if (p == null)
+			if (player == null)
 				continue;
 			
-			p.currentAP = 0;
+			player.currentAP = 0;
 		}
 		
 		currentTeam = newTurnPlayerIndex;
@@ -559,7 +561,7 @@ public class DataImpl implements Data
 
 	private void processTeleport(Event theEvent)
 	{
-		Player p = getPlayer(theEvent.flags[0]);
+		Player player = getPlayer(theEvent.flags[0]);
 		int tele1 = theEvent.flags[2];
 		int tele2 = theEvent.flags[3];
 
@@ -568,32 +570,31 @@ public class DataImpl implements Data
 		if (tele1 != -1)
 		{
 			// see if there's a player that we displaced
-			Point oldLoc = getLocationOfPlayer(p);
+			Point oldLoc = getLocationOfPlayer(player);
 			Player oldPlayer = getPlayerAtLocation(oldLoc);
 
-			clearPlayerLocation(p);
+			clearPlayerLocation(player);
 
 			// If we just nulled a spot where a player should exist (by way of a forced teleport), put that player back.
 			// Note that the pointOfPlayer map should be unaffected.
-			if (p != oldPlayer)
+			if (player != oldPlayer)
 			{
 				setPlayerAtLocation(oldLoc, oldPlayer);
 			}
 
 			// XJS bots have gyro stablizers
-			// TODO: racial abilities are actually skills
-			if (p.race != Player.RACE_XJS9000)
-				p.currentAP = 0;
+			if (!player.hasSkill(Skill.GYRO_STABILIZER))
+				player.currentAP = 0;
 		} else
 		{
-			p.status = Player.STS_OKAY;
-			p.currentAP = p.getAttributeWithModifiers(Player.ATT_AP);
-			statsOfPlayer.get(p).enterGame();
+			player.status = Player.STS_OKAY;
+			player.currentAP = player.getAttributeWithModifiers(Player.ATT_AP);
+			statsOfPlayer.get(player).enterGame();
 		}
 
 		if (tele1 != tele2)
 		{
-			updatePlayerLocation(p, newLoc);
+			updatePlayerLocation(player, newLoc);
 		}
 
 		// And this is all we need to do. It's really as simple as that: if another teleport forced this one, don't clear out the old space.

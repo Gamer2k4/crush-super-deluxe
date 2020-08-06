@@ -33,4 +33,9 @@ public enum Race
 		
 		return null;
 	}
+	
+	public static int getTotalRaces()
+	{
+		return values().length;
+	}
 }

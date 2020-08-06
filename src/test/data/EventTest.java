@@ -24,7 +24,7 @@ public class EventTest {
 	public void testUpdateTurnEvent()
 	{
 		event = Event.updateTurnPlayer(1);
-		toStringVal = "EVENT_TURN, 1, 0, 0, 0, 0, 0, 0";
+		toStringVal = "EVENT_TURN, 1, 0, 0, 0, 0, 0, 0, 0";
 		type = Event.EVENT_TURN;
 		
 		assertEquals(1, event.flags[0]);
@@ -43,7 +43,7 @@ public class EventTest {
 	public void testMoveEvent_TrueArgs()
 	{
 		event = Event.move(3, 22, 16, true, true, true);
-		toStringVal = "EVENT_MOVE, 3, 0, 22, 16, 1, 1, 1";
+		toStringVal = "EVENT_MOVE, 3, 0, 22, 16, 1, 1, 1, 0";
 		type = Event.EVENT_MOVE;
 		
 		assertEquals(3, event.flags[0]);
@@ -62,7 +62,7 @@ public class EventTest {
 	public void testMoveEvent_FalseArgs()
 	{
 		event = Event.move(2, 11, 4, false, false, false);
-		toStringVal = "EVENT_MOVE, 2, 0, 11, 4, 0, 0, 0";
+		toStringVal = "EVENT_MOVE, 2, 0, 11, 4, 0, 0, 0, 0";
 		type = Event.EVENT_MOVE;
 		
 		assertEquals(2, event.flags[0]);
@@ -81,7 +81,7 @@ public class EventTest {
 	public void testTeleportEvent()
 	{
 		event = Event.teleport(2, 5, 8);
-		toStringVal = "EVENT_TELE, 2, 0, 5, 8, 0, 0, 0";
+		toStringVal = "EVENT_TELE, 2, 0, 5, 8, 0, 0, 0, 0";
 		type = Event.EVENT_TELE;
 		
 		assertEquals(2, event.flags[0]);

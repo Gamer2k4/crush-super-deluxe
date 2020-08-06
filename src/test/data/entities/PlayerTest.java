@@ -2,11 +2,16 @@ package test.data.entities;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import main.data.entities.Player;
-import main.data.factory.PlayerFactory;
+
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import main.data.entities.Player;
+import main.data.entities.Race;
+import main.data.entities.Skill;
+import main.data.factory.PlayerFactory;
 
 public class PlayerTest {
 
@@ -17,7 +22,7 @@ public class PlayerTest {
 	public void setUp()
 	{
 		blankPlayer = PlayerFactory.createEmptyPlayer();
-		humanPlayer = PlayerFactory.createPlayerWithRandomName(Player.RACE_HUMAN);
+		humanPlayer = PlayerFactory.createPlayerWithDefinedName(Race.HUMAN, "HUMAN");
 	}
 	
 	@Test
@@ -49,7 +54,7 @@ public class PlayerTest {
 	@Test
 	public void newPlayerEqualsSelf()
 	{
-		Player player = PlayerFactory.createPlayerWithRandomName(Player.RACE_GRONK);
+		Player player = PlayerFactory.createPlayerWithRandomName(Race.GRONK);
 		
 		assertTrue(player.equals(player));
 	}
@@ -57,7 +62,7 @@ public class PlayerTest {
 	@Test
 	public void clonedPlayerEqualsSelf()
 	{
-		Player player = PlayerFactory.createPlayerWithRandomName(Player.RACE_SLITH);
+		Player player = PlayerFactory.createPlayerWithRandomName(Race.SLITH);
 		Player player2 = player.clone();
 		
 		assertEquals(player.hashCode(), player2.hashCode());
@@ -66,36 +71,42 @@ public class PlayerTest {
 	}
 	
 	@Test
-	public void getSkillListNoSkills()
-	{
-		assertEquals("None", humanPlayer.getSkillList());
-	}
-	
-	@Test
 	public void getSkillListStoicThenSlySkills()
 	{
-		humanPlayer.gainSkill(Player.SKILL_STOIC);
-		humanPlayer.gainSkill(Player.SKILL_SLY);
+		humanPlayer.gainSkill(Skill.STOIC);
+		humanPlayer.gainSkill(Skill.SLY);
 		
-		assertEquals("Stoic, Sly", humanPlayer.getSkillList());
+		List<Skill> skills = humanPlayer.getSkills();
+		assertEquals(3, skills.size());
+		assertEquals(Skill.UNCOMMON_VALOR, skills.get(0));
+		assertEquals(Skill.STOIC, skills.get(1));
+		assertEquals(Skill.SLY, skills.get(2));
 	}
 	
 	@Test
 	public void getSkillListSlyThenStoicSkills()
 	{
-		humanPlayer.gainSkill(Player.SKILL_SLY);
-		humanPlayer.gainSkill(Player.SKILL_STOIC);
+		humanPlayer.gainSkill(Skill.SLY);
+		humanPlayer.gainSkill(Skill.STOIC);
 		
-		assertEquals("Sly, Stoic", humanPlayer.getSkillList());
+		List<Skill> skills = humanPlayer.getSkills();
+		assertEquals(3, skills.size());
+		assertEquals(Skill.UNCOMMON_VALOR, skills.get(0));
+		assertEquals(Skill.SLY, skills.get(1));
+		assertEquals(Skill.STOIC, skills.get(2));
 	}
 	
 	@Test
 	public void gainSkillAddingSameSkill()
 	{
-		humanPlayer.gainSkill(Player.SKILL_GUARD);
-		humanPlayer.gainSkill(Player.SKILL_GUARD);
+		humanPlayer.gainSkill(Skill.GUARD);
+		humanPlayer.gainSkill(Skill.GUARD);
 		
-		assertTrue(humanPlayer.hasSkill(Player.SKILL_GUARD));
-		assertEquals("Guard", humanPlayer.getSkillList());
+		assertTrue(humanPlayer.hasSkill(Skill.GUARD));
+		
+		List<Skill> skills = humanPlayer.getSkills();
+		assertEquals(2, skills.size());
+		assertEquals(Skill.UNCOMMON_VALOR, skills.get(0));
+		assertEquals(Skill.GUARD, skills.get(1));
 	}
 }

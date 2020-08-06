@@ -112,6 +112,7 @@ public class LegacyFontFactory extends AbstractFontFactory
 		codeMap.put(':', 53);
 		codeMap.put(' ', 54);	//should be correct
 		codeMap.put(',', 55);
+		codeMap.put('/', 50);	//seems to be a one-off for font_small2
 		
 		codeMap.put('_', 54);
 	}

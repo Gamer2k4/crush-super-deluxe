@@ -11,6 +11,7 @@ import main.data.DataImpl;
 import main.data.Event;
 import main.data.entities.Arena;
 import main.data.entities.Player;
+import main.data.entities.Race;
 import main.data.entities.Team;
 import main.data.factory.PlayerFactory;
 
@@ -100,16 +101,16 @@ public class DataComponentTest
 	private Team createTeamWithCurmianAndXjs()
 	{
 		Team team = new Team();
-		team.addPlayer(PlayerFactory.createPlayerWithDefinedName(Player.RACE_CURMIAN, "curmian1"));
-		team.addPlayer(PlayerFactory.createPlayerWithDefinedName(Player.RACE_XJS9000, "xjs1"));
+		team.addPlayer(PlayerFactory.createPlayerWithDefinedName(Race.CURMIAN, "curmian1"));
+		team.addPlayer(PlayerFactory.createPlayerWithDefinedName(Race.XJS9000, "xjs1"));
 		return team;
 	}
 	
 	private Team createTeamWithTwoHumans()
 	{
 		Team team = new Team();
-		team.addPlayer(PlayerFactory.createPlayerWithDefinedName(Player.RACE_HUMAN, "human1"));
-		team.addPlayer(PlayerFactory.createPlayerWithDefinedName(Player.RACE_HUMAN, "human2"));
+		team.addPlayer(PlayerFactory.createPlayerWithDefinedName(Race.HUMAN, "human1"));
+		team.addPlayer(PlayerFactory.createPlayerWithDefinedName(Race.HUMAN, "human2"));
 		return team;
 	}
 }

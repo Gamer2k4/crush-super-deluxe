@@ -113,14 +113,14 @@ public class LegacyImageFactory extends AbstractImageFactory
 		loadedImages = new HashMap<ImageType, BufferedImage>();
 		colorMap = new InGameColorMap();
 
-		loadImage(ImageType.PROFILE_CURMIAN_S, "curmian.png", "CURMIAN.DVE");
-		loadImage(ImageType.PROFILE_DRAGORAN_S, "dragoran.png", "ZIZANI.DVE");
-		loadImage(ImageType.PROFILE_GRONK_S, "gronk.png", "GRONK.DVE");
-		loadImage(ImageType.PROFILE_HUMAN_S, "human.png", "HUMAN.DVE");
-		loadImage(ImageType.PROFILE_KURGAN_S, "kurgan.png", "ROTHGAR.DVE");
-		loadImage(ImageType.PROFILE_NYNAX_S, "nynax.png", "NYNAX.DVE");
-		loadImage(ImageType.PROFILE_SLITH_S, "slith.png", "SLITH.DVE");
-		loadImage(ImageType.PROFILE_XJS9000_S, "xjs9000.png", "ROBOT.DVE");
+		loadImage(ImageType.PROFILE_CURMIAN, "curmian.png", "CURMIAN.DVE");
+		loadImage(ImageType.PROFILE_DRAGORAN, "dragoran.png", "ZIZANI.DVE");
+		loadImage(ImageType.PROFILE_GRONK, "gronk.png", "GRONK.DVE");
+		loadImage(ImageType.PROFILE_HUMAN, "human.png", "HUMAN.DVE");
+		loadImage(ImageType.PROFILE_KURGAN, "kurgan.png", "ROTHGAR.DVE");
+		loadImage(ImageType.PROFILE_NYNAX, "nynax.png", "NYNAX.DVE");
+		loadImage(ImageType.PROFILE_SLITH, "slith.png", "SLITH.DVE");
+		loadImage(ImageType.PROFILE_XJS9000, "xjs9000.png", "ROBOT.DVE");
 		upscaleAndTrimRaceImages();
 
 		loadImage(ImageType.GEAR_ALLGEAR, "gear.png", "EQUIP.DVE");
@@ -150,11 +150,19 @@ public class LegacyImageFactory extends AbstractImageFactory
 		loadImage(ImageType.BG_BG8, "bg8.png", "BG8.DVE");
 		correctBackgroundImages();
 		
+		loadImage(ImageType.SCREEN_EXHIBITION_START, "mexb.png", "mexb.dve");
+		loadImage(ImageType.SCREEN_TOURNAMENT_START, "tourn2.png", "TOURN2.DVE");
+		loadImage(ImageType.SCREEN_TOURNAMENT_SETUP, "tourn1.png", "TOURN1.DVE");
+		loadImage(ImageType.SCREEN_LEAGUE_START, "league1.png", "LEAGUE1.DVE");
+		loadImage(ImageType.SCREEN_LEAGUE_SETUP, "league2.png", "league2.dve");
+		
 		loadImage(ImageType.SCREEN_TEAM_EDITOR_START, "rostbar.png", "ROSTBAR.DVE");
 		loadImage(ImageType.SCREEN_TEAM_EDITOR_SETTINGS, "settings.png", "SETTINGS.DVE");
 		loadImage(ImageType.SCREEN_TEAM_EDITOR_ACQUIRE, "acquire.png", "ACQUIRE.DVE");
 		loadImage(ImageType.SCREEN_TEAM_EDITOR_OUTFIT, "outfit.png", "OUTFIT.DVE");
 		loadImage(ImageType.SCREEN_TEAM_EDITOR_DRAFT, "stock.png", "STOCK.DVE");
+		loadImage(ImageType.SCREEN_TEAM_EDITOR_POOL_DRAFT_GENERAL, "draftg.png", "DRAFTG.DVE");
+		loadImage(ImageType.SCREEN_TEAM_EDITOR_POOL_DRAFT_DETAILED, "draftd.png", "DRAFTD.DVE");
 		loadImage(ImageType.SCREEN_TEAM_EDITOR_DOCBOT, "docbot.png", "DOCBOT.DVE");
 		loadImage(ImageType.SCREEN_TEAM_EDITOR_POWER, "power.png", "POWER.DVE");
 		loadImage(ImageType.SCREEN_TEAM_EDITOR_AGILITY, "agility.png", "AGILITY.DVE");
@@ -180,6 +188,8 @@ public class LegacyImageFactory extends AbstractImageFactory
 		loadSprites();
 		loadMaps();
 		loadFonts();
+		loadCursors();
+		loadOutsideGameImages();
 	}
 
 	private void createCacheDirectory()
@@ -270,16 +280,66 @@ public class LegacyImageFactory extends AbstractImageFactory
 		Logger.output("Done!");
 	}
 
+	private void loadCursors()
+	{
+		Logger.logMessage(" Loading cursors...", Logger.OUTPUT, false);
+		
+		loadImage(ImageType.POINTER_COMP1, "pointer_comp1.png", "COMP1.PNT");
+		loadImage(ImageType.POINTER_COMP2, "pointer_comp2.png", "COMP2.PNT");
+		loadImage(ImageType.POINTER_COMP3, "pointer_comp3.png", "COMP3.PNT");
+		loadImage(ImageType.POINTER_COMP4, "pointer_comp4.png", "COMP4.PNT");
+		loadImage(ImageType.POINTER_COMPUTER, "pointer_computer.png", "COMPUTER.PNT");
+		loadImage(ImageType.POINTER_CRUSH, "pointer_crush.png", "CRUSH.PNT");
+		loadImage(ImageType.POINTER_NET1, "pointer_net1.png", "NET1.PNT");
+		loadImage(ImageType.POINTER_NET2, "pointer_net2.png", "NET2.PNT");
+		loadImage(ImageType.POINTER_NET3, "pointer_net3.png", "NET3.PNT");
+		loadImage(ImageType.POINTER_NET4, "pointer_net4.png", "NET4.PNT");
+		loadImage(ImageType.POINTER_QUESTION, "pointer_question.png", "QUESTION.PNT");
+		loadImage(ImageType.POINTER_SWAP, "pointer_swap.png", "SWAP.PNT");
+		
+		padCursorImage(ImageType.POINTER_COMP1);
+		padCursorImage(ImageType.POINTER_COMP2);
+		padCursorImage(ImageType.POINTER_COMP3);
+		padCursorImage(ImageType.POINTER_COMP4);
+		padCursorImage(ImageType.POINTER_COMPUTER);
+		padCursorImage(ImageType.POINTER_CRUSH);
+		padCursorImage(ImageType.POINTER_NET1);
+		padCursorImage(ImageType.POINTER_NET2);
+		padCursorImage(ImageType.POINTER_NET3);
+		padCursorImage(ImageType.POINTER_NET4);
+		padCursorImage(ImageType.POINTER_QUESTION);
+		padCursorImage(ImageType.POINTER_SWAP);
+		
+		Logger.output("Done!");
+	}
+
+	private void loadOutsideGameImages()
+	{
+		Logger.logMessage(" Loading legacy out-of-game images...", Logger.OUTPUT, false);
+		
+		colorMap = new OutsideGameColorMap();
+		
+		loadImage(ImageType.MAIN_MENU, "main.png", "main.dve");
+		loadImage(ImageType.MENU, "menu.png", "MENU.DVE");
+		loadImage(ImageType.MENU2, "menu2.png", "MENU2.DVE");
+		loadImage(ImageType.POINTER_MAIN, "pointer_main.png", "main.pnt");
+		padCursorImage(ImageType.POINTER_MAIN);
+		
+		colorMap = new InGameColorMap();
+		
+		Logger.output("Done!");
+	}
+
 	private void upscaleAndTrimRaceImages()
 	{
-		loadedImages.put(ImageType.PROFILE_CURMIAN, resizeRaceImage(loadedImages.get(ImageType.PROFILE_CURMIAN_S)));
-		loadedImages.put(ImageType.PROFILE_DRAGORAN, resizeRaceImage(loadedImages.get(ImageType.PROFILE_DRAGORAN_S)));
-		loadedImages.put(ImageType.PROFILE_GRONK, resizeRaceImage(loadedImages.get(ImageType.PROFILE_GRONK_S)));
-		loadedImages.put(ImageType.PROFILE_HUMAN, resizeRaceImage(loadedImages.get(ImageType.PROFILE_HUMAN_S)));
-		loadedImages.put(ImageType.PROFILE_KURGAN, resizeRaceImage(loadedImages.get(ImageType.PROFILE_KURGAN_S)));
-		loadedImages.put(ImageType.PROFILE_NYNAX, resizeRaceImage(loadedImages.get(ImageType.PROFILE_NYNAX_S)));
-		loadedImages.put(ImageType.PROFILE_SLITH, resizeRaceImage(loadedImages.get(ImageType.PROFILE_SLITH_S)));
-		loadedImages.put(ImageType.PROFILE_XJS9000, resizeRaceImage(loadedImages.get(ImageType.PROFILE_XJS9000_S)));
+		loadedImages.put(ImageType.PROFILE_CURMIAN_L, resizeRaceImage(loadedImages.get(ImageType.PROFILE_CURMIAN)));
+		loadedImages.put(ImageType.PROFILE_DRAGORAN_L, resizeRaceImage(loadedImages.get(ImageType.PROFILE_DRAGORAN)));
+		loadedImages.put(ImageType.PROFILE_GRONK_L, resizeRaceImage(loadedImages.get(ImageType.PROFILE_GRONK)));
+		loadedImages.put(ImageType.PROFILE_HUMAN_L, resizeRaceImage(loadedImages.get(ImageType.PROFILE_HUMAN)));
+		loadedImages.put(ImageType.PROFILE_KURGAN_L, resizeRaceImage(loadedImages.get(ImageType.PROFILE_KURGAN)));
+		loadedImages.put(ImageType.PROFILE_NYNAX_L, resizeRaceImage(loadedImages.get(ImageType.PROFILE_NYNAX)));
+		loadedImages.put(ImageType.PROFILE_SLITH_L, resizeRaceImage(loadedImages.get(ImageType.PROFILE_SLITH)));
+		loadedImages.put(ImageType.PROFILE_XJS9000_L, resizeRaceImage(loadedImages.get(ImageType.PROFILE_XJS9000)));
 	}
 
 	private BufferedImage resizeRaceImage(BufferedImage originalImage)
@@ -350,17 +410,43 @@ public class LegacyImageFactory extends AbstractImageFactory
 		loadedImages.put(ImageType.TEAM_COLOR_DIAMONDS, diamonds);
 	}
 
+//	private void extractHelmetImage()
+//	{
+//		BufferedImage smallHelmet = ImageUtils.deepCopy(loadedImages.get(ImageType.SCREEN_TEAM_EDITOR_ROSTER_DETAILED).getSubimage(7, 9, 36, 36));
+//
+//		for (int i = 0; i < 36; i++)
+//		{
+//			for (int j = 0; j < 36; j++)
+//			{
+//				Color pixelColor = new Color(smallHelmet.getRGB(i, j));
+//
+//				if (ImageUtils.rgbEquals(pixelColor, new Color(103, 120, 143)))
+//				{
+//					pixelColor = new Color(0, 0, 0, 0);
+//				}
+//
+//				smallHelmet.setRGB(i, j, pixelColor.getRGB());
+//			}
+//		}
+//		
+//		loadedImages.put(ImageType.EDITOR_HELMET_S, smallHelmet);
+//		loadedImages.put(ImageType.EDITOR_HELMET, ImageUtils.scaleImage(smallHelmet, 2));
+//	}
+	
 	private void extractHelmetImage()
 	{
-		BufferedImage smallHelmet = ImageUtils.deepCopy(loadedImages.get(ImageType.SCREEN_TEAM_EDITOR_ROSTER_DETAILED).getSubimage(7, 9, 36, 36));
+		BufferedImage smallHelmet = ImageUtils.deepCopy(loadedImages.get(ImageType.SCREEN_TEAM_EDITOR_ROSTER_DETAILED).getSubimage(10, 12, 30, 30));
 
-		for (int i = 0; i < 36; i++)
+		for (int i = 0; i < 30; i++)
 		{
-			for (int j = 0; j < 36; j++)
+			for (int j = 0; j < 30; j++)
 			{
 				Color pixelColor = new Color(smallHelmet.getRGB(i, j));
 
-				if (ImageUtils.rgbEquals(pixelColor, new Color(103, 120, 143)))
+				if (ImageUtils.rgbEquals(pixelColor, new Color(103, 120, 143)) ||
+					ImageUtils.rgbEquals(pixelColor, new Color(135, 135, 135)) ||
+					ImageUtils.rgbEquals(pixelColor, new Color(80, 96, 112)) ||
+					ImageUtils.rgbEquals(pixelColor, new Color(23, 24, 31)))
 				{
 					pixelColor = new Color(0, 0, 0, 0);
 				}
@@ -485,6 +571,7 @@ public class LegacyImageFactory extends AbstractImageFactory
 		
 		BufferedImage sourceStatsImage = loadedImages.get(ImageType.SCREEN_STATS_CARNAGE);
 		BufferedImage sourceSettingsImage = loadedImages.get(ImageType.SCREEN_TEAM_EDITOR_SETTINGS);
+		BufferedImage sourceExhibImage = loadedImages.get(ImageType.SCREEN_EXHIBITION_START);
 		
 		BufferedImage smallButton = sourceStatsImage.getSubimage(586, 339, 35, 17);
 		smallButton = ImageUtils.replaceColor(smallButton, buttonColor, LegacyUiConstants.COLOR_LEGACY_TRANSPARENT);
@@ -506,6 +593,18 @@ public class LegacyImageFactory extends AbstractImageFactory
 		arenaSetButton = ImageUtils.replaceColor(arenaSetButton, buttonColor, LegacyUiConstants.COLOR_LEGACY_TRANSPARENT);
 		loadedImages.put(ImageType.BUTTON_ARENA_SET_NORMAL, arenaSetButton);
 		loadedImages.put(ImageType.BUTTON_ARENA_SET_CLICKED, swapColors(arenaSetButton, lightColor, darkColor));
+		
+		BufferedImage smallButton2 = sourceExhibImage.getSubimage(585, 342, 37, 17);
+		smallButton2 = ImageUtils.replaceColor(smallButton2, buttonColor, LegacyUiConstants.COLOR_LEGACY_TRANSPARENT);
+		loadedImages.put(ImageType.BUTTON_SMALL2_NORMAL, smallButton2);
+		loadedImages.put(ImageType.BUTTON_SMALL2_CLICKED, swapColors(smallButton2, lightColor, darkColor));
+	}
+
+	private void padCursorImage(ImageType cursorImage)
+	{
+		BufferedImage paddedImage = ImageUtils.createBlankBufferedImage(new Dimension(32, 32));
+		ImageUtils.copySrcIntoDstAt(loadedImages.get(cursorImage), paddedImage, 0, 0);
+		loadedImages.put(cursorImage, paddedImage);
 	}
 	
 	private BufferedImage swapColors(BufferedImage image, Color color1, Color color2)
@@ -522,13 +621,6 @@ public class LegacyImageFactory extends AbstractImageFactory
 	private int mid(int a, int b)
 	{
 		return (a + b) / 2;
-	}
-
-	@Deprecated
-	private void loadImage(ImageType type, String originalFileName)
-	{
-		BufferedImage image = loadLegacyImageFile(originalFileName);
-		loadedImages.put(type, image);
 	}
 
 	private void loadImage(ImageType type, String cachedFileName, String originalFileName)

@@ -38,7 +38,7 @@ public class StatsTableRow implements Comparable<StatsTableRow>
 	public StatsTableRow(Team team, int statsType)
 	{
 		GUIStatsFormatter.setStatsType(statsType);
-		Player teamPlayer = PlayerFactory.createPlayerWithDefinedName(0, team.teamName);
+		Player teamPlayer = PlayerFactory.createPlayerWithDefinedName(null, team.teamName);
 		
 		//Stats teamStats = team.getTeamStats(FIELDED_TEAM_SIZE, statsType);	//TODO: for now, just doing this at a game level (that is, the first 9 players)
 		Stats teamStats = team.getLastGameStats();

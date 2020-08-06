@@ -10,6 +10,8 @@ import java.util.List;
 
 import main.data.entities.Equipment;
 import main.data.entities.Player;
+import main.data.entities.Race;
+import main.data.entities.Skill;
 import main.data.entities.Stats;
 import main.data.entities.Team;
 import main.data.factory.PlayerFactory;
@@ -84,8 +86,9 @@ public class LegacyTeamLoader extends ByteFileReader
 		scanBytes(dis, 4);
 		readUnsignedByte(dis); // current AP
 
-		// TODO: These are already enhanced by skills - that is, a Dragoran with Quickening will have his AP listed as 80 here.
-		// however, worn equipment does NOT add to these skills
+		// These are already enhanced by skills - that is, a Dragoran with Quickening will have his AP listed as 80 here.
+		// However, worn equipment does NOT add to these skills.
+		// All skills will be adjusted appropriately when the skills are read in.
 		for (int i = 0; i < 8; i++)
 		{
 			int stat = readUnsignedByte(dis);
@@ -121,8 +124,8 @@ public class LegacyTeamLoader extends ByteFileReader
 
 		scanBytes(dis, 14); // UNKNOWN
 
-		readShortBytes(dis); // perhaps games played
-		readUnsignedByte(dis); // seasons played
+		int gamesPlayed = readShortBytes(dis);
+		int totalSeasons = readUnsignedByte(dis);
 
 		scanBytes(dis, 16); // likely in-game stats
 		
@@ -161,11 +164,12 @@ public class LegacyTeamLoader extends ByteFileReader
 		for (int i = 0; i < MAX_SKILLS; i++)
 		{
 			int skillIndex = readUnsignedByte(dis);
-			int skill = getLegacySkills(skillIndex);
 
-			if (skill != -1)
+			if (skillIndex != 0)
 			{
+				Skill skill = Skill.fromLegacyIndex(skillIndex);
 				player.gainSkill(skill);
+				adjustAttributeForSkill(player, skill);		//This is needed because the player is saved with attributes permanently modified by skills, but the code here doesn't do that.
 			}
 		}
 
@@ -192,14 +196,36 @@ public class LegacyTeamLoader extends ByteFileReader
 
 		scanBytes(dis, 3); // UNKNOWN
 
-		player.race = race;
+		player.setRace(Race.getRace(race));
 		player.name = name;
 		player.setWeeksOut(weeksOut);
 		player.setInjuryType(injuryLevel);
+		player.setGamesPlayed(gamesPlayed);
+		player.setSeasons(totalSeasons);
 
 		// System.out.println("\n\tPlayer loaded: " + player.saveAsText());
 
 		return player;
+	}
+
+	private static void adjustAttributeForSkill(Player player, Skill skill)
+	{
+		if (skill == Skill.BRUTAL)
+			player.changeAttribute(Player.ATT_ST, -10);
+		else if (skill == Skill.STALWART)
+			player.changeAttribute(Player.ATT_TG, -10);
+		else if (skill == Skill.CHECKMASTER)
+			player.changeAttribute(Player.ATT_CH, -10);
+		else if (skill == Skill.GYMNASTICS)
+			player.changeAttribute(Player.ATT_JP, -10);
+		else if (skill == Skill.GYMNASTICS)
+			player.changeAttribute(Player.ATT_DA, -10);
+		else if (skill == Skill.BOXING)
+			player.changeAttribute(Player.ATT_RF, -10);
+		else if (skill == Skill.JUGGLING)
+			player.changeAttribute(Player.ATT_HD, -10);
+		else if (skill == Skill.QUICKENING)
+			player.changeAttribute(Player.ATT_AP, -10);
 	}
 
 	private static Team loadLegacyTeam(DataInputStream dis) throws IOException
@@ -421,91 +447,5 @@ public class LegacyTeamLoader extends ByteFileReader
 		}
 
 		return Equipment.EQUIP_NONE;
-	}
-
-	// TODO: correct the skill indexes in Player.java
-	private static Integer getLegacySkills(int skillIndex)
-	{
-		switch (skillIndex)
-		{
-		case 0: // no skill has an index of 0
-		case 1:
-			// return Equipment.EQUIP_REINFORCED_ARMOR; Death Reek
-		case 2:
-			// return Equipment.EQUIP_REPULSOR_ARMOR; Pop Up
-		case 3:
-			// return Equipment.EQUIP_SPIKED_ARMOR; High Jump
-		case 4:
-			// return Equipment.EQUIP_SURGE_ARMOR; Regenerate
-		case 5:
-			// return Equipment.EQUIP_VORTEX_ARMOR; Blood Lust
-		case 6:
-			// return Equipment.EQUIP_BACKFIRE_BELT; Hive Mind
-		case 7:
-			// return Equipment.EQUIP_BOOSTER_BELT; Gyro Stabilizer
-		case 8:
-			// return Equipment.EQUIP_CLOAKING_BELT; Uncommon Valor
-			return -1;
-		case 9:
-			return Player.SKILL_TERROR;
-		case 10:
-			return Player.SKILL_JUGGERNAUT;
-		case 11:
-			return Player.SKILL_TACTICS;
-		case 12:
-			return Player.SKILL_VICIOUS;
-		case 13:
-			return Player.SKILL_BRUTAL;
-		case 14:
-			return Player.SKILL_CHECKMASTER;
-		case 15:
-			return Player.SKILL_STALWART;
-		case 16:
-			return Player.SKILL_GUARD;
-		case 17:
-			return Player.SKILL_RESILIENT;
-		case 18:
-			return Player.SKILL_CHARGE;
-		case 19:
-			return Player.SKILL_BOXING;
-		case 20:
-			return Player.SKILL_COMBO;
-		case 21:
-			return Player.SKILL_QUICKENING;
-		case 22:
-			return Player.SKILL_GYMNASTICS;
-		case 23:
-			return Player.SKILL_JUGGLING;
-		case 24:
-			return Player.SKILL_SCOOP;
-		case 25:
-			return Player.SKILL_STRIP;
-		case 26:
-			return Player.SKILL_JUDO;
-		case 27:
-			return Player.SKILL_FIST_OF_IRON;
-		case 28:
-			return Player.SKILL_DOOMSTRIKE;
-		case 29:
-			return Player.SKILL_AWE;
-		case 30:
-			return Player.SKILL_STOIC;
-		case 31:
-			return Player.SKILL_LEADER;
-		case 32:
-			return Player.SKILL_SENSEI;
-		case 33:
-			return Player.SKILL_SLY;
-		case 34:
-			return Player.SKILL_INTUITION;
-		case 35:
-			return Player.SKILL_HEALER;
-		case 36:
-			return Player.SKILL_KARMA;
-		case 37:
-			return Player.SKILL_NINJA_MASTER;
-		}
-
-		return -1;
 	}
 }

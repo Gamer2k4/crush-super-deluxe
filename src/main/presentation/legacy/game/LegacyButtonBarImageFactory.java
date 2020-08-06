@@ -184,13 +184,13 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 		ImageBuffer.addLayer(1, 0, fontFactory.generateString(String.valueOf(playerNumber), LegacyUiConstants.COLOR_LEGACY_WHITE, FontType.FONT_SMALL));
 		ImageBuffer.addLayer(15, 0, fontFactory.generateString(currentPlayer.name, LegacyUiConstants.COLOR_LEGACY_WHITE));
 		
-		LegacyTextElement apText = LegacyPlayerTextFactory.getColoredAttributeWithModifiers(Player.ATT_AP, LegacyUiConstants.COLOR_LEGACY_BLUE);
+		LegacyTextElement apText = LegacyPlayerTextFactory.getColoredAttributeWithModifiers(Player.ATT_AP, LegacyUiConstants.COLOR_LEGACY_BLUE, LegacyUiConstants.COLOR_LEGACY_GOLD);
 		ImageBuffer.addLayer(7, 15, fontFactory.generateString(apText));
 		ImageBuffer.addLayer(50, 13, fontFactory.generateString(String.valueOf(currentPlayer.currentAP), LegacyUiConstants.COLOR_LEGACY_GREEN, FontType.FONT_BIG));
 		
 		for (int i = 1; i < 8; i++)
 		{
-			LegacyTextElement text = LegacyPlayerTextFactory.getColoredAttributeWithModifiers(i, LegacyUiConstants.COLOR_LEGACY_BLUE);
+			LegacyTextElement text = LegacyPlayerTextFactory.getColoredAttributeWithModifiers(i, LegacyUiConstants.COLOR_LEGACY_BLUE, LegacyUiConstants.COLOR_LEGACY_GOLD);
 			ImageBuffer.addLayer(65 + (19 * i), 17, fontFactory.generateString(text));
 		}
 		

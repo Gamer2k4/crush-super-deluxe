@@ -45,8 +45,8 @@ public class LegacyStatsScreenChecking extends AbstractLegacyStatsScreenChecking
 			paintTextElement(graphics, 420, y, statsStrings[3], FontType.FONT_SMALL, LegacyUiConstants.COLOR_LEGACY_GREY);
 			paintTextElement(graphics, 478, y, formatAverage(statsStrings[4]), FontType.FONT_SMALL, LegacyUiConstants.COLOR_LEGACY_GREY);
 
-			BufferedImage teamName = fontFactory.generateString(new LegacyTextElement(statsStrings[1], teamColor), FontType.FONT_SMALL2);
-			graphics.drawImage(ImageUtils.padImage(teamName, new Dimension(78, FontType.FONT_SMALL.getSize())), 251, y, null);
+			BufferedImage teamName = fontFactory.generateString(new LegacyTextElement(statsStrings[1], teamColor, FontType.FONT_SMALL2));
+			graphics.drawImage(ImageUtils.padImage(teamName, new Dimension(78, FontType.FONT_SMALL2.getSize())), 251, y, null);
 		}
 	}
 

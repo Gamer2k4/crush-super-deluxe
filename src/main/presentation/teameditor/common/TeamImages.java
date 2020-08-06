@@ -2,9 +2,12 @@ package main.presentation.teameditor.common;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.util.HashMap;
+import java.util.Map;
 
 import main.data.entities.Equipment;
-import main.data.entities.Player;
+import main.data.entities.Race;
+import main.data.entities.Team;
 import main.presentation.common.image.AbstractColorReplacer;
 import main.presentation.common.image.AbstractImageFactory;
 import main.presentation.common.image.ImageType;
@@ -13,11 +16,14 @@ import main.presentation.common.image.LegacyImageFactory;
 
 public class TeamImages
 {
-	private BufferedImage[] raceTemplates;
-	private BufferedImage[] raceImages;
-	private BufferedImage[] gearTemplates;
-	private BufferedImage[] gearImages;
-	private BufferedImage helmetImage;
+	private static Map<Race, BufferedImage> raceTemplates = null;
+	private static Map<Race, BufferedImage> largeRaceTemplates = null;
+	private static Map<Race, BufferedImage> raceImages = new HashMap<Race, BufferedImage>();
+	private static Map<Race, BufferedImage> largeRaceImages = new HashMap<Race, BufferedImage>();
+	
+	private static BufferedImage[] gearTemplates = null;
+	private BufferedImage[] gearImages = null;
+	private BufferedImage helmetImage = null;
 	
 	private AbstractImageFactory imageFactory;
 	private AbstractColorReplacer colorReplacer;
@@ -27,7 +33,6 @@ public class TeamImages
 		imageFactory = LegacyImageFactory.getInstance();
 		colorReplacer = LegacyColorReplacer.getInstance();
 		
-		raceImages = new BufferedImage[Player.TOTAL_RACES];
 		gearImages = new BufferedImage[Equipment.EQUIP_TYPE_COUNT];
 		loadRaceTemplates();
 		loadGearTemplates();
@@ -37,27 +42,27 @@ public class TeamImages
 
 	private void loadRaceTemplates()
 	{
-		raceTemplates = new BufferedImage[Player.TOTAL_RACES];
-
-		ImageType raceTypes[] = new ImageType[Player.TOTAL_RACES];
+		if (raceTemplates != null)
+			return;
 		
-		raceTypes[Player.RACE_HUMAN] = ImageType.PROFILE_HUMAN;
-		raceTypes[Player.RACE_GRONK] = ImageType.PROFILE_GRONK;
-		raceTypes[Player.RACE_CURMIAN] = ImageType.PROFILE_CURMIAN;
-		raceTypes[Player.RACE_DRAGORAN] = ImageType.PROFILE_DRAGORAN;
-		raceTypes[Player.RACE_NYNAX] = ImageType.PROFILE_NYNAX;
-		raceTypes[Player.RACE_SLITH] = ImageType.PROFILE_SLITH;
-		raceTypes[Player.RACE_KURGAN] = ImageType.PROFILE_KURGAN;
-		raceTypes[Player.RACE_XJS9000] = ImageType.PROFILE_XJS9000;
+		raceTemplates = new HashMap<Race, BufferedImage>();
+		largeRaceTemplates = new HashMap<Race, BufferedImage>();
 		
-		for (int i = 0; i < Player.TOTAL_RACES; i++)
+		for (Race race : Race.values())
 		{
-			raceTemplates[i] = imageFactory.getImage(raceTypes[i]);
+			String imageName = "PROFILE_" + race.name();
+			String largeImageName = imageName + "_L";
+			
+			raceTemplates.put(race, imageFactory.getImage(ImageType.valueOf(imageName)));
+			largeRaceTemplates.put(race, imageFactory.getImage(ImageType.valueOf(largeImageName)));
 		}
 	}
 
 	private void loadGearTemplates()
 	{
+		if (gearTemplates != null)
+			return;
+		
 		gearTemplates = new BufferedImage[Equipment.EQUIP_TYPE_COUNT];
 
 		ImageType gearTypes[] = new ImageType[Equipment.EQUIP_TYPE_COUNT];
@@ -99,9 +104,10 @@ public class TeamImages
 	{
 		Color transparentBg = new Color(0, 0, 0, 0);
 		
-		for (int i = 0; i < Player.TOTAL_RACES; i++)
+		for (Race race : Race.values())
 		{
-			raceImages[i] = colorReplacer.setColors(raceTemplates[i], mainColor, trimColor, transparentBg);
+			raceImages.put(race, colorReplacer.setColors(raceTemplates.get(race), mainColor, trimColor, transparentBg));
+			largeRaceImages.put(race, colorReplacer.setColors(largeRaceTemplates.get(race), mainColor, trimColor, transparentBg));
 		}
 		
 		for (int i = 0; i < Equipment.EQUIP_TYPE_COUNT; i++)
@@ -112,9 +118,14 @@ public class TeamImages
 		helmetImage = colorReplacer.setColors(imageFactory.getImage(ImageType.EDITOR_HELMET_S), mainColor, trimColor, transparentBg);
 	}
 
-	public BufferedImage getPlayerImage(int race)
+	public BufferedImage getPlayerImage(Race race)
 	{
-		return raceImages[race];
+		return raceImages.get(race);
+	}
+
+	public BufferedImage getLargePlayerImage(Race race)
+	{
+		return largeRaceImages.get(race);
 	}
 
 	public BufferedImage getEquipmentImage(int equipment)
@@ -125,5 +136,10 @@ public class TeamImages
 	public BufferedImage getHelmetImage()
 	{
 		return helmetImage;
+	}
+	
+	public static BufferedImage getHelmetImage(Team team)
+	{
+		return LegacyColorReplacer.getInstance().setColors(LegacyImageFactory.getInstance().getImage(ImageType.EDITOR_HELMET_S), team.teamColors[0], team.teamColors[1], new Color(0, 0, 0, 0));
 	}
 }

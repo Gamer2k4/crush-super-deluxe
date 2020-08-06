@@ -18,6 +18,7 @@ import java.util.zip.ZipOutputStream;
 import main.data.entities.Player;
 import main.data.entities.Stats;
 import main.data.entities.Team;
+import main.presentation.common.Logger;
 
 public class SaveHandler
 {
@@ -65,7 +66,7 @@ public class SaveHandler
 		boolean success = saveFolder.mkdirs();
 
 		if (!success)
-			System.out.println("Could not create data directory for " + directory + "!");
+			Logger.error("Could not create data directory for " + directory + "!");
 	}
 
 	private void deleteDirectory(String directory)
@@ -225,9 +226,10 @@ public class SaveHandler
 			}
 
 			in.close();
+			s.close();
 		} catch (IOException e)
 		{
-			System.out.println("SaveHandler - Could not read file " + path);
+			Logger.warn("SaveHandler - Could not read file " + path);
 			return new ArrayList<String>();
 		}
 

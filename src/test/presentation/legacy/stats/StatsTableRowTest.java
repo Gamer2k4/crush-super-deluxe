@@ -3,6 +3,7 @@ package test.presentation.legacy.stats;
 import static org.junit.Assert.assertEquals;
 
 import main.data.entities.Player;
+import main.data.entities.Race;
 import main.data.entities.Stats;
 import main.data.entities.Team;
 import main.data.factory.PlayerFactory;
@@ -23,8 +24,8 @@ public class StatsTableRowTest
 	@Before
 	public void setup()
 	{
-		player1 = PlayerFactory.createPlayerWithDefinedName(Player.RACE_HUMAN, "Bob");
-		player2 = PlayerFactory.createPlayerWithDefinedName(Player.RACE_HUMAN, "Carl");
+		player1 = PlayerFactory.createPlayerWithDefinedName(Race.HUMAN, "Bob");
+		player2 = PlayerFactory.createPlayerWithDefinedName(Race.HUMAN, "Carl");
 		
 		Team team = new Team();
 		
