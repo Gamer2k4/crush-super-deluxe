@@ -20,6 +20,8 @@ public class TeamUpdater
 	
 	private Team team;
 	private TeamImages teamImages;
+
+	private int currentPlayerIndex = 0;
 	
 	private JButton updateButton;
 
@@ -159,7 +161,7 @@ public class TeamUpdater
 		return player;
 	}
 	
-	public boolean hirePlayer(int currentPlayerIndex, Player player, int budgetLimit)
+	public boolean hirePlayer(int playerIndex, Player player, int budgetLimit)
 	{
 		int budget = budgetLimit - team.getValue();
 		int playerCost = player.getSalary();
@@ -167,10 +169,10 @@ public class TeamUpdater
 		if (budget < playerCost)
 			return false;
 
-		boolean canDraft = pushPlayersForDraft(currentPlayerIndex);
+		boolean canDraft = pushPlayersForDraft(playerIndex);
 
 		if (canDraft)
-			setPlayer(currentPlayerIndex, player);
+			setPlayer(playerIndex, player);
 		
 		return canDraft;
 	}
@@ -269,5 +271,27 @@ public class TeamUpdater
 	public void addUpdateListener(ActionListener listener)
 	{
 		updateButton.addActionListener(listener);
+	}
+
+	public int getCurrentPlayerIndex()
+	{
+		return currentPlayerIndex;
+	}
+
+	public void setCurrentPlayerIndex(int currentPlayerIndex)
+	{
+		this.currentPlayerIndex = currentPlayerIndex;
+	}
+	
+	public void selectPreviousPlayer()
+	{
+		if (currentPlayerIndex > 0)
+			currentPlayerIndex--;
+	}
+	
+	public void selectNextPlayer()
+	{
+		if (currentPlayerIndex < Team.MAX_TEAM_SIZE - 1)
+			currentPlayerIndex++;
 	}
 }

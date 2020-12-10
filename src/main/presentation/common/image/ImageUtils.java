@@ -117,7 +117,7 @@ public abstract class ImageUtils
 			//TODO: this is the result of a RasterFormatException in the Checking stats screen; I think it happened when one team had checking stats but they were all dead
 			//this would be when padding the team name
 			//seems like it's when the name is too long?
-			System.out.format("Dimension width: %d Dimension height: %d; Image width: %d Image Height: %d", width, height, bi.getWidth(), bi.getHeight());
+//			System.out.format("Dimension width: %d Dimension height: %d; Image width: %d Image Height: %d", width, height, bi.getWidth(), bi.getHeight());
 			return deepCopy(bi.getSubimage(0, 0, width, height));
 		}
 

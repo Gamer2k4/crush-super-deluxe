@@ -65,7 +65,7 @@ import main.presentation.common.image.AbstractImageFactory;
 import main.presentation.common.image.ImageType;
 import main.presentation.common.image.LegacyColorReplacer;
 import main.presentation.common.image.LegacyImageFactory;
-import main.presentation.legacy.teameditor.ScreenCommand;
+import main.presentation.legacy.framework.ScreenCommand;
 import main.presentation.teamcolorpanel.TeamColorPanel;
 import main.presentation.teamcolorpanel.TeamHelmetColorPanel;
 import main.presentation.teameditor.common.GUIPlayerAttributes;

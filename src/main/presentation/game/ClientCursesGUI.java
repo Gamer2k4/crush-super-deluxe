@@ -24,6 +24,7 @@ import main.presentation.common.AbstractScreenPanel;
 import main.presentation.common.Logger;
 import main.presentation.curses.terminal.CursesTerminal;
 import main.presentation.curses.terminal.CursesTerminalAsciiPanelImpl;
+import main.presentation.legacy.framework.AbstractLegacyScreen;
 import main.presentation.startupscreen.CursesGameInProgressPanel;
 
 public class ClientCursesGUI extends GameRunnerGUI implements KeyListener, ActionListener
@@ -919,9 +920,9 @@ public class ClientCursesGUI extends GameRunnerGUI implements KeyListener, Actio
 	}
 
 	@Override
-	public AbstractScreenPanel getDisplayPanel()
+	public AbstractLegacyScreen getDisplayScreen()
 	{
-		return new CursesGameInProgressPanel(new Dimension(100, 200));
+		return new CursesGameInProgressPanel();
 	}
 
 	@Override

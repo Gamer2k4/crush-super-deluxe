@@ -19,7 +19,7 @@ import main.presentation.common.AbstractScreenPanel;
 import main.presentation.common.image.ImageType;
 import main.presentation.common.image.ImageUtils;
 import main.presentation.common.image.LegacyImageFactory;
-import main.presentation.legacy.teameditor.ScreenCommand;
+import main.presentation.legacy.framework.ScreenCommand;
 
 //This is for stats screens, team screens, and anything else that's not the intro screen or the game
 public abstract class AbstractLegacyImageBasedScreenPanel extends AbstractScreenPanel implements MouseListener

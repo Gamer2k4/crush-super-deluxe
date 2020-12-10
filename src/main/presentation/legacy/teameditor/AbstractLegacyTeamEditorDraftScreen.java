@@ -8,22 +8,29 @@ import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 
 import main.data.entities.Player;
+import main.presentation.common.image.ImageType;
 import main.presentation.legacy.common.FontType;
 import main.presentation.legacy.common.LegacyUiConstants;
+import main.presentation.legacy.framework.ClickableRegion;
+import main.presentation.legacy.framework.KeyCommand;
+import main.presentation.legacy.framework.ScreenCommand;
+import main.presentation.teameditor.common.TeamUpdater;
 
-public abstract class AbstractLegacyTeamEditorDraftScreen extends LegacyTeamEditorScreenDecorator implements ActionListener
-{
-	private static final long serialVersionUID = 6431575558631024084L;
-	
+public abstract class AbstractLegacyTeamEditorDraftScreen extends AbstractLegacyTeamEditorSubScreen
+{	
 	private static final Point coordsHire = new Point(137, 275);
 	private static final Point coordsFire = new Point(137, 296);
 
-	public AbstractLegacyTeamEditorDraftScreen(LegacyTeamEditorScreen screenToPaint)
+	public AbstractLegacyTeamEditorDraftScreen(ImageType foregroundImage, TeamUpdater teamUpdater, ActionListener actionListener)
 	{
-		super(screenToPaint);
-		
-		addClickZone(new Rectangle(coordsHire, buttonDimSmallStats), ScreenCommand.HIRE_PLAYER);
-		addClickZone(new Rectangle(coordsFire, buttonDimSmallStats), ScreenCommand.FIRE_PLAYER);
+		super(foregroundImage, teamUpdater, actionListener);
+	}
+
+	@Override
+	protected void defineClickableRegions()
+	{
+		createClickZone(new Rectangle(coordsHire, buttonDimSmall2), ClickableRegion.smallButton2(coordsHire, ScreenCommand.HIRE_PLAYER));
+		createClickZone(new Rectangle(coordsFire, buttonDimSmall2), ClickableRegion.smallButton2(coordsFire, ScreenCommand.FIRE_PLAYER));
 	}
 	
 	protected void paintPlayer(Graphics2D graphics, Player player)
@@ -42,5 +49,7 @@ public abstract class AbstractLegacyTeamEditorDraftScreen extends LegacyTeamEdit
 		
 		paintTextElement(graphics, 233, 186, new DecimalFormat("000").format(player.getSalary()), FontType.FONT_SMALL, LegacyUiConstants.COLOR_LEGACY_GOLD);
 	}
-
+	
+	@Override
+	protected void handleKeyCommand(KeyCommand command) {}
 }

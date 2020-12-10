@@ -25,7 +25,8 @@ import main.presentation.common.PaddedPanel;
 import main.presentation.common.TeamEditor;
 import main.presentation.game.GameRunnerGUI;
 import main.presentation.game.PresentationMode;
-import main.presentation.legacy.game.GamePanel;
+import main.presentation.legacy.framework.ScreenCommand;
+import main.presentation.legacy.game.OldGamePanel;
 import main.presentation.legacy.stats.gamestats.AbstractLegacyStatsScreenPanel;
 import main.presentation.legacy.stats.gamestats.LegacyStatsScreenCarnage;
 import main.presentation.legacy.stats.gamestats.LegacyStatsScreenChecking;
@@ -34,7 +35,6 @@ import main.presentation.legacy.stats.gamestats.LegacyStatsScreenOverview;
 import main.presentation.legacy.stats.gamestats.LegacyStatsScreenRushing;
 import main.presentation.legacy.stats.gamestats.LegacyStatsScreenSacking;
 import main.presentation.legacy.teameditor.LegacyTeamEditorScreen;
-import main.presentation.legacy.teameditor.ScreenCommand;
 import main.presentation.teamchoicescreen.AbstractTeamSelectionScreen;
 import main.presentation.teamchoicescreen.DraftSetupScreen;
 import main.presentation.teamchoicescreen.ExhibitionTeamSelectionScreen;
@@ -162,7 +162,7 @@ public class FullStartupScreen extends JFrame implements ActionListener
 		swingTeamEditPanel = new TeamEditorPanel(this);
 		exhibPanel = new ExhibitionTeamSelectionScreen(FRAME_WIDTH, FRAME_HEIGHT, this);
 		draftPanel = new DraftSetupScreen(FRAME_WIDTH, FRAME_HEIGHT, this);
-		gamePlayPanel = new GamePanel(FRAME_WIDTH, FRAME_HEIGHT, this);
+		gamePlayPanel = new OldGamePanel(FRAME_WIDTH, FRAME_HEIGHT, this);
 		settingsPanel = new SettingsPanel(FRAME_WIDTH, FRAME_HEIGHT, this);
 
 		legacyTeamEditPanel = new PaddedPanel(FRAME_DIMENSION, new LegacyTeamEditorScreen(this));
@@ -251,7 +251,7 @@ public class FullStartupScreen extends JFrame implements ActionListener
 		client = new Client(host, this, GameSettings.getPresentationMode());
 		
 		gameStartSource.disableControls();
-		contentPane.add(((GameRunnerGUI)client.getGui()).getDisplayPanel(), GAME_TAG);
+		contentPane.add(((GameRunnerGUI)client.getGui()).getDisplayScreen(), GAME_TAG);
 		swapPane(GAME_TAG);
 
 		host.newGame(gameTeams);

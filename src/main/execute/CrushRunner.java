@@ -1,6 +1,7 @@
 package main.execute;
 
 import main.data.entities.Equipment;
+import main.data.factory.LegacyArenaFactory;
 import main.presentation.common.Logger;
 import main.presentation.legacy.framework.GameWindow;
 import main.presentation.startupscreen.FullStartupScreen;
@@ -16,9 +17,11 @@ public class CrushRunner
 	
 	public static void main(String[] args)
 	{
-		Logger.setLogLevel(Logger.DEBUG);
+//		Logger.setLogLevel(Logger.DEBUG);
+		Logger.setLogLevel(Logger.ERROR);
 
 		Equipment.defineEquipment();
+		LegacyArenaFactory.getInstance();
 
 //		FullStartupScreen startupScreen = new FullStartupScreen();
 		gameWindow = new GameWindow();

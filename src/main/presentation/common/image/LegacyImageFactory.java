@@ -168,7 +168,7 @@ public class LegacyImageFactory extends AbstractImageFactory
 		loadImage(ImageType.SCREEN_TEAM_EDITOR_AGILITY, "agility.png", "AGILITY.DVE");
 		loadImage(ImageType.SCREEN_TEAM_EDITOR_PSYCHE, "psyche.png", "PSYCHE.DVE");
 		fillTeamColorDiamonds();
-		// also load screens POPUP2.DVE, possibly LEDITT.DVE, all out-of-game stats screens
+		// also load screens POPUP2.DVE, SEASBTN.DVE, possibly LEDITT.DVE, all out-of-game stats screens
 		
 		loadImage(ImageType.SCREEN_TEAM_EDITOR_ROSTER_GENERAL, "rosterg.png", "ROSTERG.DVE");
 		loadImage(ImageType.SCREEN_TEAM_EDITOR_ROSTER_DETAILED, "rosterd.png", "ROSTERD.DVE");
@@ -181,6 +181,8 @@ public class LegacyImageFactory extends AbstractImageFactory
 		loadImage(ImageType.SCREEN_STATS_OVERVIEW, "stats6.png", "STATS6.DVE");
 		loadImage(ImageType.SCREEN_STATS_MVP, "stats7.png", "STATS7.DVE");
 		extractButtonHighlights();
+		
+		loadedImages.put(ImageType.NO_TYPE, ImageUtils.createBlankBufferedImage(new Dimension(1, 1)));
 
 		Logger.output("Done!");
 
@@ -228,6 +230,7 @@ public class LegacyImageFactory extends AbstractImageFactory
 		Logger.output(" Loading legacy map images...");
 
 		loadImage(ImageType.MAP_LAVA_BG, "lava3.png", "LAVA3.DVE");
+		loadImage(ImageType.MAP_STARS_BG, "stars.png", "STARS.DVE");
 		
 		String path = GameSettings.getRootDirectory() + "\\DATA\\MAPLIST.DAT";
 		int arenaLetter = 1;

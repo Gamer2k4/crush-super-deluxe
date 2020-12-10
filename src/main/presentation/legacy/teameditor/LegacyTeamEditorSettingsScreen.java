@@ -9,9 +9,12 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JFileChooser;
 
@@ -23,16 +26,20 @@ import main.presentation.common.image.InGameColorMap;
 import main.presentation.common.image.LegacyColorReplacer;
 import main.presentation.legacy.common.FontType;
 import main.presentation.legacy.common.LegacyUiConstants;
+import main.presentation.legacy.framework.ClickableRegion;
+import main.presentation.legacy.framework.GuiCommand;
+import main.presentation.legacy.framework.GuiCommandType;
+import main.presentation.legacy.framework.KeyCommand;
+import main.presentation.legacy.framework.RegionTriggerType;
+import main.presentation.legacy.framework.ScreenCommand;
 import main.presentation.teameditor.ArenaDisplayPanel;
 import main.presentation.teameditor.common.TeamFileFilter;
 import main.presentation.teameditor.common.TeamUpdater;
 
-public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecorator implements ActionListener
+public class LegacyTeamEditorSettingsScreen extends AbstractLegacyTeamEditorSubScreen implements ActionListener
 {
 	private static final String TAG_TEAM_NAME = "_TEAM_NAME";
 	private static final String TAG_TEAM_COACH = "_TEAM_COACH";
-
-	private static final long serialVersionUID = 8616234598963655693L;
 
 	private static final Point coordsTeamName = new Point(42, 19);
 	private static final Point coordsCoachName = new Point(42, 73);
@@ -56,7 +63,8 @@ public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecora
 	
 	private static final Dimension buttonDimArenaName = new Dimension(88, 13);
 	private static final Dimension buttonDimTeamColor = new Dimension(13, 13);
-	private static final Dimension textTeamCoachName = new Dimension(152, 18);
+	private static final Dimension textDimTeamCoachName = new Dimension(152, 18);
+	private static final Dimension buttonDimArenaSet = new Dimension(15, 35);
 	
 	private ColorMap colorMap;
 	private ArenaDisplayPanel mapPanel;
@@ -82,9 +90,11 @@ public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecora
 												  {"VAULT", "NEXUS", "DARKSUN", "BADLANDS"},
 												  {"LIGHTWAY", "EYES", "DARKSTAR", "SPACECOM"}};
 	
-	public LegacyTeamEditorSettingsScreen(LegacyTeamEditorScreen screenToPaint)
+	private Map<Integer, ClickableRegion> buttonHighlighted;
+	
+	public LegacyTeamEditorSettingsScreen(TeamUpdater teamUpdater, ActionListener actionListener)
 	{
-		super(screenToPaint);
+		super(ImageType.SCREEN_TEAM_EDITOR_SETTINGS, teamUpdater, actionListener);
 		teamUpdater.addUpdateListener(this);
 
 		colorMap = new InGameColorMap();
@@ -96,25 +106,39 @@ public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecora
 		
 		teamNameField = new LegacyTextField(TAG_TEAM_NAME, 13, FontType.FONT_SMALL_TIGHT, this);
 		teamCoachField = new LegacyTextField(TAG_TEAM_COACH, 13, FontType.FONT_SMALL_TIGHT, this);
+	}
+
+	@Override
+	protected void defineClickableRegions()
+	{
+		createClickZone(new Rectangle(coordsTeamName, textDimTeamCoachName), ClickableRegion.noHighlightButton(coordsTeamName, ScreenCommand.RENAME_TEAM, RegionTriggerType.DOUBLE_CLICK));
+		createClickZone(new Rectangle(coordsCoachName, textDimTeamCoachName), ClickableRegion.noHighlightButton(coordsCoachName, ScreenCommand.RENAME_COACH, RegionTriggerType.DOUBLE_CLICK));
 		
-		addDoubleClickZone(new Rectangle(coordsTeamName, textTeamCoachName), ScreenCommand.RENAME_TEAM);
-		addDoubleClickZone(new Rectangle(coordsCoachName, textTeamCoachName), ScreenCommand.RENAME_COACH);
+		createClickZone(new Rectangle(coordsButtonArena0, buttonDimArenaName), ClickableRegion.noHighlightButton(coordsButtonArena0, ScreenCommand.ARENA_NAME_0));
+		createClickZone(new Rectangle(coordsButtonArena1, buttonDimArenaName), ClickableRegion.noHighlightButton(coordsButtonArena1, ScreenCommand.ARENA_NAME_1));
+		createClickZone(new Rectangle(coordsButtonArena2, buttonDimArenaName), ClickableRegion.noHighlightButton(coordsButtonArena2, ScreenCommand.ARENA_NAME_2));
+		createClickZone(new Rectangle(coordsButtonArena3, buttonDimArenaName), ClickableRegion.noHighlightButton(coordsButtonArena3, ScreenCommand.ARENA_NAME_3));
 		
-		addClickZone(new Rectangle(coordsButtonArena0, buttonDimArenaName), ScreenCommand.ARENA_NAME_0);
-		addClickZone(new Rectangle(coordsButtonArena1, buttonDimArenaName), ScreenCommand.ARENA_NAME_1);
-		addClickZone(new Rectangle(coordsButtonArena2, buttonDimArenaName), ScreenCommand.ARENA_NAME_2);
-		addClickZone(new Rectangle(coordsButtonArena3, buttonDimArenaName), ScreenCommand.ARENA_NAME_3);
+		createClickZone(new Rectangle(coordsButtonArenaSetA, buttonDimArenaSet), createAndMapRegion(0, ClickableRegion.arenaSetButton(coordsButtonArenaSetA, ScreenCommand.ARENA_SET_0)));
+		createClickZone(new Rectangle(coordsButtonArenaSetB, buttonDimArenaSet), createAndMapRegion(1, ClickableRegion.arenaSetButton(coordsButtonArenaSetB, ScreenCommand.ARENA_SET_1)));
+		createClickZone(new Rectangle(coordsButtonArenaSetC, buttonDimArenaSet), createAndMapRegion(2, ClickableRegion.arenaSetButton(coordsButtonArenaSetC, ScreenCommand.ARENA_SET_2)));
+		createClickZone(new Rectangle(coordsButtonArenaSetD, buttonDimArenaSet), createAndMapRegion(3, ClickableRegion.arenaSetButton(coordsButtonArenaSetD, ScreenCommand.ARENA_SET_3)));
+		createClickZone(new Rectangle(coordsButtonArenaSetE, buttonDimArenaSet), createAndMapRegion(4, ClickableRegion.arenaSetButton(coordsButtonArenaSetE, ScreenCommand.ARENA_SET_4)));
 		
-		addClickZone(new Rectangle(coordsButtonArenaSetA, buttonDimArenaSet), ScreenCommand.ARENA_SET_0);
-		addClickZone(new Rectangle(coordsButtonArenaSetB, buttonDimArenaSet), ScreenCommand.ARENA_SET_1);
-		addClickZone(new Rectangle(coordsButtonArenaSetC, buttonDimArenaSet), ScreenCommand.ARENA_SET_2);
-		addClickZone(new Rectangle(coordsButtonArenaSetD, buttonDimArenaSet), ScreenCommand.ARENA_SET_3);
-		addClickZone(new Rectangle(coordsButtonArenaSetE, buttonDimArenaSet), ScreenCommand.ARENA_SET_4);
-		
-		addClickZone(new Rectangle(coordsButtonSave, buttonDimSmallEditor), ScreenCommand.TEAM_SAVE);
-		addClickZone(new Rectangle(coordsButtonLoad, buttonDimSmallEditor), ScreenCommand.TEAM_LOAD);
+		createClickZone(new Rectangle(coordsButtonSave, buttonDimSmall2), ClickableRegion.smallButton2(coordsButtonSave, ScreenCommand.TEAM_SAVE));
+		createClickZone(new Rectangle(coordsButtonLoad, buttonDimSmall2), ClickableRegion.smallButton2(coordsButtonLoad, ScreenCommand.TEAM_LOAD));
 		
 		addPaletteClickZones();
+	}
+
+	private ClickableRegion createAndMapRegion(int set, ClickableRegion region)
+	{
+		//i don't like this, but i think it's necessary because otherwise it doesn't get defined before reaching this, even if i do the "new" in the definition	
+		if (buttonHighlighted == null)
+			buttonHighlighted = new HashMap<Integer, ClickableRegion>();
+		
+		buttonHighlighted.put(set, region);
+		return region;
 	}
 
 	private void addPaletteClickZones()
@@ -127,12 +151,12 @@ public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecora
 			for (int j = 0; j < 6; j++)
 			{
 				Rectangle zoneArea = new Rectangle(startX + (12 * i), startY + (12 * j), 9, 9);
-				addClickZone(zoneArea, ScreenCommand.valueOf("TEAM_COLOR_" + j + "" + i));
+				createClickZone(zoneArea, ClickableRegion.noHighlightButton(new Point(startX + (12 * i), startY + (12 * j)), ScreenCommand.valueOf("TEAM_COLOR_" + j + "" + i)));
 			}
 		}
 		
-		addClickZone(new Rectangle(coordsMainColor, buttonDimTeamColor), ScreenCommand.TEAM_MAIN_COLOR);
-		addClickZone(new Rectangle(coordsTrimColor, buttonDimTeamColor), ScreenCommand.TEAM_TRIM_COLOR);
+		createClickZone(new Rectangle(coordsMainColor, buttonDimTeamColor), ClickableRegion.noHighlightButton(coordsMainColor, ScreenCommand.TEAM_MAIN_COLOR));
+		createClickZone(new Rectangle(coordsTrimColor, buttonDimTeamColor), ClickableRegion.noHighlightButton(coordsTrimColor, ScreenCommand.TEAM_TRIM_COLOR));
 	}
 	
 	public void updateArenaSet(int set)
@@ -160,7 +184,7 @@ public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecora
 	@Override
 	protected void handleCommand(ScreenCommand command)
 	{
-		if (!buttonsEnabled)
+		if (!isActive)
 			return;
 		
 		String commandString = command.name();
@@ -206,6 +230,16 @@ public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecora
 				teamUpdater.setTrimColor(newColor);
 		}
 	}
+	
+	@Override
+	protected void paintComponent(Graphics2D graphics)
+	{
+		super.paintComponent(graphics);
+		paintText(graphics);
+		paintArenaNames(graphics);
+		paintArena(graphics);
+		paintSettingsPalette(graphics);
+	}
 
 	private void paintArenaNames(Graphics2D graphics)
 	{
@@ -221,7 +255,6 @@ public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecora
 		}
 	}
 
-	@Override
 	protected void paintText(Graphics2D graphics)
 	{
 		if (teamNameField.isActive())
@@ -233,27 +266,6 @@ public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecora
 			graphics.drawImage(teamCoachField.getTextImage(), 47, 77, null);
 		else
 			paintTextElement(graphics, 47, 77, teamUpdater.getTeamCoach(), FontType.FONT_SMALL_TIGHT, LegacyUiConstants.COLOR_LEGACY_GREY);
-		
-		paintArenaNames(graphics);
-	}
-
-	@Override
-	protected void paintImages(Graphics2D graphics)
-	{
-		paintArena(graphics);
-		paintSettingsPalette(graphics);
-	}
-
-	@Override
-	protected void paintButtonShading(Graphics2D graphics)
-	{
-		for (int i = 0; i < 5; i++)
-		{
-			if (arenaSet == i)
-				graphics.drawImage(imageFactory.getImage(ImageType.BUTTON_ARENA_SET_CLICKED), 134 + (17 * i), 197, null);
-			else
-				graphics.drawImage(imageFactory.getImage(ImageType.BUTTON_ARENA_SET_NORMAL), 134 + (17 * i), 197, null);
-		}
 	}
 
 	//TODO: this is not properly changing the color of the padded pixels (they're remaining transparent)
@@ -340,7 +352,7 @@ public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecora
 	{
 		//TODO: somehow default to only *.cdst when saving (at least until I can figure out the full legacy format)
 		
-		int returnValue = fileChooser.showSaveDialog(this);
+		int returnValue = fileChooser.showSaveDialog(null);
 
 		if (returnValue == JFileChooser.APPROVE_OPTION)
 		{
@@ -353,7 +365,7 @@ public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecora
 
 	private void loadTeam()
 	{
-		int returnValue = fileChooser.showOpenDialog(this);
+		int returnValue = fileChooser.showOpenDialog(null);
 
 		if (returnValue == JFileChooser.APPROVE_OPTION)
 		{
@@ -388,26 +400,51 @@ public class LegacyTeamEditorSettingsScreen extends LegacyTeamEditorScreenDecora
 	}
 
 	@Override
-	protected void keyAction(ActionEvent keyAction)
+	protected void handleKeyCommand(KeyCommand command)
 	{
 		if (teamNameField.isActive())
-			teamNameField.pressKey(keyAction);
+		{
+			teamNameField.pressKey(command);
+			updateScreenImage();
+		}
 		
 		if (teamCoachField.isActive())
-			teamCoachField.pressKey(keyAction);
+		{
+			teamCoachField.pressKey(command);
+			updateScreenImage();
+		}
 	}
-	
+
 	@Override
-	public void mousePressed(MouseEvent event)
+	public void receiveGuiCommand(GuiCommand command)
 	{
-		teamNameField.deactivate();
-		teamCoachField.deactivate();
-		super.mousePressed(event);
+		if (command.getType() == GuiCommandType.MOUSE_PRESS)
+		{
+			teamNameField.deactivate();
+			teamCoachField.deactivate();
+			updateScreenImage();		//TODO: updates with every mouse click, but shouldn't be a problem
+		}
+		
+		super.receiveGuiCommand(command);
 	}
 
 	@Override
 	public void resetScreen()
 	{
+		updatingPrimaryColor = true;
 		refreshTeam();
+	}
+	
+	@Override
+	protected Set<ClickableRegion> getAlwaysHighlightedRegions()
+	{
+		Set<ClickableRegion> highlightedRegions = new HashSet<ClickableRegion>();
+		
+		ClickableRegion region = buttonHighlighted.get(arenaSet);
+		
+		if (region != null)
+			highlightedRegions.add(region);
+		
+		return highlightedRegions;
 	}
 }

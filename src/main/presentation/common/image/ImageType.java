@@ -3,6 +3,7 @@ package main.presentation.common.image;
 public enum ImageType
 {
 	MAP_LAVA_BG,
+	MAP_STARS_BG,
 	MAP_A1,
 	MAP_A2,
 	MAP_A3,

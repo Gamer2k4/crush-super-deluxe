@@ -62,7 +62,7 @@ public class Client
 			presentationLayer = new ClientCursesGUI(this, gameEndListener);
 			break;
 		case LEGACY:
-			presentationLayer = new LegacyGraphicsGUI(this, gameEndListener);
+			presentationLayer = new LegacyGraphicsGUI(this, host, gameEndListener);
 			break;
 		}
 	}

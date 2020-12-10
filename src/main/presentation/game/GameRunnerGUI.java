@@ -15,6 +15,7 @@ import main.logic.Client;
 import main.logic.Server;
 import main.presentation.common.AbstractScreenPanel;
 import main.presentation.common.Logger;
+import main.presentation.legacy.framework.AbstractLegacyScreen;
 
 public abstract class GameRunnerGUI extends GameGUI
 {
@@ -33,7 +34,7 @@ public abstract class GameRunnerGUI extends GameGUI
 	
 	protected ActionListener gameEndListener;
 	
-	public abstract AbstractScreenPanel getDisplayPanel();
+	public abstract AbstractLegacyScreen getDisplayScreen();
 
 	public GameRunnerGUI(Client theClient, Server theServer, ActionListener gameEndListener)
 	{

@@ -9,7 +9,7 @@ import main.presentation.common.image.ImageType;
 import main.presentation.common.image.LegacyImageFactory;
 import main.presentation.legacy.common.FontType;
 import main.presentation.legacy.common.LegacyUiConstants;
-import main.presentation.legacy.teameditor.ScreenCommand;
+import main.presentation.legacy.framework.ScreenCommand;
 
 public abstract class AbstractLegacyStatsScreenOverview extends AbstractLegacyStatsScreenPanel
 {

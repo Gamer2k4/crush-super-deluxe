@@ -14,8 +14,8 @@ import main.data.entities.Team;
 import main.presentation.common.image.ImageType;
 import main.presentation.common.image.LegacyImageFactory;
 import main.presentation.legacy.common.AbstractLegacyImageBasedScreenPanel;
+import main.presentation.legacy.framework.ScreenCommand;
 import main.presentation.legacy.stats.StatsTable;
-import main.presentation.legacy.teameditor.ScreenCommand;
 
 public abstract class AbstractLegacyStatsScreenPanel extends AbstractLegacyImageBasedScreenPanel
 {

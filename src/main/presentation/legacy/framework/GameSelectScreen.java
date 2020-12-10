@@ -9,7 +9,6 @@ import java.awt.image.BufferedImage;
 
 import main.presentation.common.image.ImageType;
 import main.presentation.common.image.LegacyImageFactory;
-import main.presentation.legacy.teameditor.ScreenCommand;
 
 public class GameSelectScreen extends AbstractLegacyScreen
 {
@@ -23,7 +22,7 @@ public class GameSelectScreen extends AbstractLegacyScreen
 	{
 		BufferedImage allHighlights = LegacyImageFactory.getInstance().getImage(ImageType.MENU);
 		Dimension regionDimension = new Dimension(160, 16);
-		ScreenCommand[] commands = {ScreenCommand.BEGIN_EXHIBITION, ScreenCommand.BEGIN_TOURNAMENT, ScreenCommand.BEGIN_LEAGUE, ScreenCommand.EXIT};
+		ScreenCommand[] commands = {ScreenCommand.EXHIBITION_TEAM_SELECT, ScreenCommand.TOURNAMENT_TEAM_SELECT, ScreenCommand.LEAGUE_TEAM_SELECT, ScreenCommand.EXIT};
 		
 		for (int i = 0; i < 4; i++)
 		{
@@ -47,4 +46,10 @@ public class GameSelectScreen extends AbstractLegacyScreen
 		// TODO Auto-generated method stub
 		System.out.println("Command received: " + command);
 	}
+
+	@Override
+	protected void handleKeyCommand(KeyCommand command) {}
+
+	@Override
+	public void resetScreen() {}
 }

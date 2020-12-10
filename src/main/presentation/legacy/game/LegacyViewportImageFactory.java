@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.awt.image.RasterFormatException;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
@@ -97,32 +98,40 @@ public class LegacyViewportImageFactory extends LegacyUiImageFactory
 	@Override
 	public BufferedImage generateImage(Data gameData, Player gameCurrentPlayer)
 	{
-		return generateMapImage(gameData, gameCurrentPlayer, new Rectangle(LegacyUiConstants.MAP_IMAGE_WIDTH, LegacyUiConstants.MAP_IMAGE_HEIGHT));
+		return generateImage(gameData, gameCurrentPlayer, new Rectangle(LegacyUiConstants.MAP_IMAGE_WIDTH, LegacyUiConstants.MAP_IMAGE_HEIGHT));
 	}
 	
 	//TODO: make use of the viewport argument
-	public BufferedImage generateMapImage(Data gameData, Player gameCurrentPlayer, Rectangle viewport)
+	public BufferedImage generateImage(Data gameData, Player gameCurrentPlayer, Rectangle viewport)
 	{
 		data = gameData;
 		currentPlayer = gameCurrentPlayer;
 		playersInGame.clear();
 		
 		Arena arena = gameData.getArena();
-		ImageBuffer.setBaseImage(getArenaBaseImage(arena));
+		ImageBuffer canvas = new ImageBuffer(getArenaBaseImage(arena));
 		
-		addMapSpritesAndScanPlayers();
-		addCursor();
-		addBall();
-		addPlayersThreadSafe();
-		addHighlightsThreadSafe();
+		addMapSpritesAndScanPlayers(canvas);
+		addCursor(canvas);
+		addBall(canvas);
+		addPlayersThreadSafe(canvas);
+		addHighlightsThreadSafe(canvas);
+		
+		BufferedImage fullMap = canvas.getCompositeImage();
 		
 		//TODO: update this to add only the requested layers
 		//for now, print all the sprites (rather than just the ones within a certain viewport, and just the ones on a certain layer);
 		
-		return ImageBuffer.getCompositeImage();
+		try {
+			return fullMap.getSubimage(viewport.x, viewport.y, viewport.width, viewport.height);
+		} catch (RasterFormatException rfe)
+		{
+			Logger.warn("Invalid viewport rectangle: " + viewport);
+			return fullMap;
+		}
 	}
 
-	private void addMapSpritesAndScanPlayers()
+	private void addMapSpritesAndScanPlayers(ImageBuffer canvas)
 	{
 		Arena arena = data.getArena();
 		if (arena == null)
@@ -136,7 +145,7 @@ public class LegacyViewportImageFactory extends LegacyUiImageFactory
 				Player player = data.getPlayerAtLocation(i, j);
 				
 				if (tileSheetIndex != -1)
-					ImageBuffer.addLayer(getX(j), getY(i), getTileSprite(tileSheetIndex)); //i and j are swapped, since i is row (Y axis), while j is column (X axis)
+					canvas.addLayer(getX(j), getY(i), getTileSprite(tileSheetIndex)); //i and j are swapped, since i is row (Y axis), while j is column (X axis)
 				
 				if (player != null)
 					playersInGame.add(player);
@@ -144,30 +153,30 @@ public class LegacyViewportImageFactory extends LegacyUiImageFactory
 		}
 	}
 
-	private void addCursor()
+	private void addCursor(ImageBuffer canvas)
 	{
 		Point cursorLocation = data.getLocationOfPlayer(currentPlayer);
 		
 		if (cursorLocation != null)
-			ImageBuffer.addLayer(getX(cursorLocation.y), getY(cursorLocation.x), getTileSprite(TileSpriteType.CURSOR)); //swapping from row, column to x, y
+			canvas.addLayer(getX(cursorLocation.y), getY(cursorLocation.x), getTileSprite(TileSpriteType.CURSOR)); //swapping from row, column to x, y
 	}
 	
-	private void addBall()
+	private void addBall(ImageBuffer canvas)
 	{
 		Point ballLocation = data.getBallLocation();
 		
 		if (data.getBallCarrier() != null)
 		{
 			ballLocation = data.getLocationOfPlayer(data.getBallCarrier());
-			ImageBuffer.addLayer(getX(ballLocation.y), getY(ballLocation.x), getTileSprite(TileSpriteType.BALL_HIGHLIGHT)); //swapping from row, column to x, y
+			canvas.addLayer(getX(ballLocation.y), getY(ballLocation.x), getTileSprite(TileSpriteType.BALL_HIGHLIGHT)); //swapping from row, column to x, y
 		}
 		else if (ballLocation.x > -1 && ballLocation.y > -1)
 		{
-			ImageBuffer.addLayer(getX(ballLocation.y), getY(ballLocation.x), getTileSprite(TileSpriteType.BALL)); //swapping from row, column to x, y
+			canvas.addLayer(getX(ballLocation.y), getY(ballLocation.x), getTileSprite(TileSpriteType.BALL)); //swapping from row, column to x, y
 		}
 	}
 	
-	private void addPlayersThreadSafe()
+	private void addPlayersThreadSafe(ImageBuffer canvas)
 	{
 		Iterator<Player> iter = null;
 		
@@ -176,7 +185,7 @@ public class LegacyViewportImageFactory extends LegacyUiImageFactory
 				iter = playersInGame.iterator();
 		
 				while (iter.hasNext()) {
-					addPlayerToMapImage(iter.next());
+					addPlayerToMapImage(canvas, iter.next());
 				}
 			} catch (ConcurrentModificationException cme)
 			{
@@ -185,7 +194,7 @@ public class LegacyViewportImageFactory extends LegacyUiImageFactory
 		} while (iter == null);
 	}
 	
-	private void addPlayerToMapImage(Player player)
+	private void addPlayerToMapImage(ImageBuffer canvas, Player player)
 	{
 		Point playerLocation = data.getLocationOfPlayer(player);
 //		MovingSprite movingSprite = spriteMovementManager.getMovingSprite(player);
@@ -193,13 +202,13 @@ public class LegacyViewportImageFactory extends LegacyUiImageFactory
 		Logger.info("Adding player to map image at point: " + playerLocation);
 		
 		//TODO: null pointer exception when adding injured player
-		ImageBuffer.addLayer(getX(playerLocation.y), getY(playerLocation.x), getPlayerSprite(player)); //swapping from row, column to x, y
+		canvas.addLayer(getX(playerLocation.y), getY(playerLocation.x), getPlayerSprite(player)); //swapping from row, column to x, y
 		
 		if (player.status == Player.STS_STUN)
-			ImageBuffer.addLayer(getX(playerLocation.y), getY(playerLocation.x), getTileSprite(TileSpriteType.STUN_STARS));
+			canvas.addLayer(getX(playerLocation.y), getY(playerLocation.x), getTileSprite(TileSpriteType.STUN_STARS));
 	}
 	
-	private void addHighlightsThreadSafe()
+	private void addHighlightsThreadSafe(ImageBuffer canvas)
 	{
 		Iterator<HighlightIcon> iter = null;
 		int currentMoveLocationIndex = 0;
@@ -209,7 +218,7 @@ public class LegacyViewportImageFactory extends LegacyUiImageFactory
 				iter = highlightsToDisplay.iterator();
 		
 				while (iter.hasNext()) {
-					currentMoveLocationIndex = addHighlightToMapImage(iter.next(), currentMoveLocationIndex);
+					currentMoveLocationIndex = addHighlightToMapImage(canvas, iter.next(), currentMoveLocationIndex);
 				}
 			} catch (ConcurrentModificationException cme)
 			{
@@ -218,7 +227,7 @@ public class LegacyViewportImageFactory extends LegacyUiImageFactory
 		} while (iter == null);
 	}
 	
-	private int addHighlightToMapImage(HighlightIcon icon, int currentMoveLocationIndex)
+	private int addHighlightToMapImage(ImageBuffer canvas, HighlightIcon icon, int currentMoveLocationIndex)
 	{
 		TileSpriteType highlightSprite = TileSpriteType.UNDEFINED_TYPE;
 		
@@ -245,7 +254,7 @@ public class LegacyViewportImageFactory extends LegacyUiImageFactory
 		else if (icon.isJumpTarget())
 			highlightSprite = TileSpriteType.JUMP;
 		
-		ImageBuffer.addLayer(getX(icon.y), getY(icon.x), getTileSprite(highlightSprite));
+		canvas.addLayer(getX(icon.y), getY(icon.x), getTileSprite(highlightSprite));
 		return currentMoveLocationIndex;
 	}
 	
@@ -316,7 +325,12 @@ public class LegacyViewportImageFactory extends LegacyUiImageFactory
 	
 	private BufferedImage getPlayerSprite(Player player, PlayerSpriteType spriteType, int teamIndex)
 	{
-		return SpriteFactory.getInstance().getPlayerSprite(player.getRace(), spriteType, teamIndex).getCurrentFrame();
+		try {
+			return SpriteFactory.getInstance().getPlayerSprite(player.getRace(), spriteType, teamIndex).getCurrentFrame();
+		} catch (Exception e)
+		{
+			return ImageUtils.createBlankBufferedImage(new Dimension(1, 1));
+		}
 	}
 	
 	private BufferedImage getArenaBaseImage(Arena arena)

@@ -2,7 +2,6 @@ package main.presentation.legacy.teameditor;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
@@ -13,6 +12,7 @@ import main.presentation.common.image.ImageUtils;
 import main.presentation.legacy.common.FontType;
 import main.presentation.legacy.common.LegacyFontFactory;
 import main.presentation.legacy.common.LegacyUiConstants;
+import main.presentation.legacy.framework.KeyCommand;
 
 public class LegacyTextField
 {
@@ -20,10 +20,6 @@ public class LegacyTextField
 	public static final String REVERT_ACTION = "REVERT_TEXT_FIELD";
 	
 	private static final Color TEXT_COLOR = LegacyUiConstants.COLOR_LEGACY_GREY;
-	
-	public static final String VALID_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .";
-	public static final String ENTER = "ENTER";
-	public static final String ESCAPE = "ESCAPE";
 	
 	private JButton submitButton = new JButton();
 	private JButton revertButton = new JButton();
@@ -115,18 +111,23 @@ public class LegacyTextField
 		return currentText;
 	}
 	
-	public void pressKey(ActionEvent keyPress)
+	public void pressKey(KeyCommand command)
 	{		
-		String command = keyPress.getActionCommand();
+		String key = command.getKey();
 		int keyCode = -1;
 		
-		if (ENTER.equals(command))
+		if (KeyCommand.ENTER.equals(key))
 			keyCode = KeyEvent.VK_ENTER;
-		if (ESCAPE.equals(command))
+		if (KeyCommand.ESCAPE.equals(key))
 			keyCode = KeyEvent.VK_ESCAPE;
+		if (KeyCommand.BACKSPACE.equals(key))
+			keyCode = KeyEvent.VK_BACK_SPACE;
 		
-		if (VALID_CHARS.contains(command))
-			currentText = currentText + command;
+		if (KeyCommand.VALID_CHARS.contains(key))
+			currentText = currentText + key;
+		
+		if (currentText.length() > 0 && keyCode == KeyEvent.VK_BACK_SPACE)
+			currentText = currentText.substring(0, currentText.length() - 1);
 		
 		if (currentText.length() >= maxLength || keyCode == KeyEvent.VK_ENTER)
 		{

@@ -1,47 +1,62 @@
 package main.presentation.legacy.teameditor;
 
+import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.util.List;
 
 import main.data.entities.Player;
+import main.data.entities.Skill;
+import main.presentation.common.image.ImageType;
+import main.presentation.common.image.ImageUtils;
 import main.presentation.legacy.common.FontType;
 import main.presentation.legacy.common.LegacyPlayerTextFactory;
 import main.presentation.legacy.common.LegacyTextElement;
 import main.presentation.legacy.common.LegacyUiConstants;
+import main.presentation.legacy.framework.KeyCommand;
+import main.presentation.legacy.framework.ScreenCommand;
 import main.presentation.teameditor.common.GUIPlayerAttributes;
+import main.presentation.teameditor.common.TeamUpdater;
 
 public class LegacyTeamEditorDetailedRoster extends AbstractLegacyTeamEditorRosterScreen
 {
-	private static final long serialVersionUID = -3553412591115551360L;
-
-	public LegacyTeamEditorDetailedRoster(LegacyTeamEditorScreen screenToPaint)
+	public LegacyTeamEditorDetailedRoster(TeamUpdater teamUpdater, ActionListener actionListener)
 	{
-		super(screenToPaint);
+		super(ImageType.SCREEN_TEAM_EDITOR_ROSTER_DETAILED, teamUpdater, actionListener);
+	}
+	
+	@Override
+	protected void defineClickableRegions()
+	{
+		super.defineClickableRegions();
 	}
 
 	@Override
+	protected void paintComponent(Graphics2D graphics)
+	{
+		super.paintComponent(graphics);
+		paintImages(graphics);
+		paintText(graphics);
+	}
+
 	protected void paintImages(Graphics2D graphics)
 	{
-		super.paintImages(graphics);
-		
-		Player player = teamUpdater.getPlayer(teamEditorScreen.currentPlayerIndex);
+		Player player = teamUpdater.getPlayer(teamUpdater.getCurrentPlayerIndex());
 		
 		if (player != null)
-			graphics.drawImage(teamUpdater.getPlayerImage(player.getRace()), 400, 92, null);
+			graphics.drawImage(teamUpdater.getPlayerImage(player.getRace()), 17, 82, null);
 	}
 
-	@Override
 	protected void paintText(Graphics2D graphics)
 	{
-		super.paintText(graphics);
+		Player player = teamUpdater.getPlayer(teamUpdater.getCurrentPlayerIndex());
 		
-		Player player = teamUpdater.getPlayer(teamEditorScreen.currentPlayerIndex);
-		
-		String index = PLAYER_LABELS.charAt(teamEditorScreen.currentPlayerIndex) + "";
+		String index = PLAYER_LABELS.charAt(teamUpdater.getCurrentPlayerIndex()) + "";
 		String name = GUIPlayerAttributes.getNameEmpty(player);
 		
-		paintTextElement(graphics, 405, 75, index, FontType.FONT_SMALL, LegacyUiConstants.COLOR_LEGACY_GREY);
-		paintTextElement(graphics, 429, 75, name, FontType.FONT_SMALL, LegacyUiConstants.COLOR_LEGACY_GREY);
+		paintTextElement(graphics, 22, 65, index, FontType.FONT_SMALL, LegacyUiConstants.COLOR_LEGACY_GREY);
+		paintTextElement(graphics, 46, 65, name, FontType.FONT_SMALL, LegacyUiConstants.COLOR_LEGACY_GREY);
 		
 		if (player == null)
 			return;
@@ -49,29 +64,46 @@ public class LegacyTeamEditorDetailedRoster extends AbstractLegacyTeamEditorRost
 		LegacyPlayerTextFactory.setPlayer(player);
 		
 		//work on the text box width and location
-		paintPaddedTextElement(graphics, 498, 122, 41, GUIPlayerAttributes.getSeasons(player), FontType.FONT_SMALL2, LegacyUiConstants.COLOR_LEGACY_GOLD);
-		paintPaddedTextElement(graphics, 498, 139, 41, GUIPlayerAttributes.getRating(player), FontType.FONT_SMALL2, LegacyUiConstants.COLOR_LEGACY_GOLD);
+		paintPaddedTextElement(graphics, 111, 95, 51, GUIPlayerAttributes.getRank(player), FontType.FONT_SMALL2, LegacyUiConstants.COLOR_LEGACY_GOLD);
+		paintPaddedTextElement(graphics, 116, 112, 41, GUIPlayerAttributes.getSeasons(player), FontType.FONT_SMALL2, LegacyUiConstants.COLOR_LEGACY_GOLD);
+		paintPaddedTextElement(graphics, 116, 129, 41, GUIPlayerAttributes.getRating(player), FontType.FONT_SMALL2, LegacyUiConstants.COLOR_LEGACY_GOLD);	//TODO: still a little off-center at times
+		paintPaddedTextElement(graphics, 101, 146, 71, GUIPlayerAttributes.getStatus(player), FontType.FONT_SMALL2, LegacyUiConstants.COLOR_LEGACY_GOLD);	//TODO: this might have a different color based on its value
 		
 		for (int i = 0; i < 8; i++)
 		{
 			LegacyTextElement text = LegacyPlayerTextFactory.getColoredAttributeWithModifiers(i, LegacyUiConstants.COLOR_LEGACY_GOLD, LegacyUiConstants.COLOR_LEGACY_GREEN);
-			graphics.drawImage(fontFactory.generateString(text), 400 + (20 * i), 182, null);
+			graphics.drawImage(fontFactory.generateString(text), 17 + (20 * i), 172, null);
 		}
 		
-		paintSkillsTextBox(player);
+		paintSkillsTextBox(graphics, player);
 	}
 
-	@Override
-	protected void paintButtonShading(Graphics2D graphics)
-	{
-		// nothing to paint
-	}
-
-	private void paintSkillsTextBox(Player player)
+	private void paintSkillsTextBox(Graphics2D graphics, Player player)
 	{
 		// TODO Auto-generated method stub
-//		400, 202 start pixel
-//		200 pixels wide, 59 pixels high (but make it 65 "just in case" there are more skills)
+		BufferedImage skillsTextBox = ImageUtils.createBlankBufferedImage(new Dimension(200, 70));	
+		String currentLine = "";
+		int startY = 0;
+		
+		for (Skill skill : player.getSkills())
+		{
+			String skillText = skill.getName().toUpperCase() + ", ";
+			String newLine = currentLine + skillText;
+			
+			if (newLine.length() > 37)	//TODO: verify this is the right value (may be 1 or 2 more)
+			{
+				LegacyTextElement text = new LegacyTextElement(currentLine, LegacyUiConstants.COLOR_LEGACY_GREY, FontType.FONT_SMALL2);
+				skillsTextBox.getGraphics().drawImage(fontFactory.generateString(text), 0, startY, null);
+				currentLine = skillText;
+				startY += 8;
+			}
+			else
+			{
+				currentLine = newLine;
+			}
+		}
+		
+		graphics.drawImage(skillsTextBox, 17, 192, null);
 		
 		//note that this should be extracted to a helper class, since it needs to take in arbitrary dimensions if the pool draft screen is to make use of it 
 	}
@@ -79,19 +111,13 @@ public class LegacyTeamEditorDetailedRoster extends AbstractLegacyTeamEditorRost
 	@Override
 	protected void handleCommand(ScreenCommand command)
 	{
-		if (!buttonsEnabled)
+		if (!isActive)
 			return;
 		
 		if (ScreenCommand.SCROLL_UP.equals(command))
-			teamEditorScreen.previousPlayer();
+			teamUpdater.selectPreviousPlayer();
 		if (ScreenCommand.SCROLL_DOWN.equals(command))
-			teamEditorScreen.nextPlayer();
-	}
-
-	@Override
-	protected void keyAction(ActionEvent keyAction)
-	{
-		// nothing to do
+			teamUpdater.selectNextPlayer();
 	}
 
 	@Override
@@ -99,4 +125,7 @@ public class LegacyTeamEditorDetailedRoster extends AbstractLegacyTeamEditorRost
 	{
 		topIndex = 0;
 	}
+
+	@Override
+	protected void handleKeyCommand(KeyCommand command) {}
 }

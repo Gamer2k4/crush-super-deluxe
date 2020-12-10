@@ -7,7 +7,6 @@ import java.awt.image.BufferedImage;
 import main.presentation.common.image.ImageType;
 import main.presentation.common.image.ImageUtils;
 import main.presentation.common.image.LegacyImageFactory;
-import main.presentation.legacy.teameditor.ScreenCommand;
 
 public class ClickableRegion
 {
@@ -65,7 +64,7 @@ public class ClickableRegion
 		return commandTrigger == RegionTriggerType.SINGLE_CLICK;
 	}
 
-	public boolean activatetOnDoubleClick()
+	public boolean activateOnDoubleClick()
 	{
 		return commandTrigger == RegionTriggerType.DOUBLE_CLICK;
 	}
@@ -83,5 +82,20 @@ public class ClickableRegion
 	public static ClickableRegion largeButton(Point origin, ScreenCommand command)
 	{
 		return new ClickableRegion(origin, imageFactory.getImage(ImageType.BUTTON_LARGE_CLICKED), RegionTriggerType.SINGLE_CLICK, command, RegionTriggerType.SINGLE_CLICK);
+	}
+	
+	public static ClickableRegion arenaSetButton(Point origin, ScreenCommand command)
+	{
+		return new ClickableRegion(origin, imageFactory.getImage(ImageType.BUTTON_ARENA_SET_CLICKED), RegionTriggerType.SINGLE_CLICK, command, RegionTriggerType.SINGLE_CLICK);
+	}
+	
+	public static ClickableRegion noHighlightButton(Point origin, ScreenCommand command)
+	{
+		return noHighlightButton(origin, command, RegionTriggerType.SINGLE_CLICK);
+	}
+	
+	public static ClickableRegion noHighlightButton(Point origin, ScreenCommand command, RegionTriggerType trigger)
+	{
+		return new ClickableRegion(origin, ImageUtils.createBlankBufferedImage(new Dimension(1, 1)), trigger, command, trigger);
 	}
 }

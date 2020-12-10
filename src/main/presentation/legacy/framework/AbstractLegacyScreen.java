@@ -15,11 +15,16 @@ import java.util.Set;
 
 import javax.swing.JButton;
 
+import main.presentation.audio.CrushAudioManager;
+import main.presentation.audio.SoundClipType;
 import main.presentation.common.Logger;
+import main.presentation.common.image.AbstractColorReplacer;
 import main.presentation.common.image.ImageType;
 import main.presentation.common.image.ImageUtils;
 import main.presentation.common.image.LegacyImageFactory;
-import main.presentation.legacy.teameditor.ScreenCommand;
+import main.presentation.legacy.common.FontType;
+import main.presentation.legacy.common.LegacyFontFactory;
+import main.presentation.legacy.common.LegacyTextElement;
 
 public abstract class AbstractLegacyScreen
 {
@@ -28,10 +33,11 @@ public abstract class AbstractLegacyScreen
 	
 	private Point currentCursorLocation = null;
 	
-	private boolean isActive = false;
-	private boolean updateInRealTime = false;
+	protected boolean isActive = false;
+	protected boolean updateInRealTime = false;
 	
 	protected LegacyImageFactory imageFactory = LegacyImageFactory.getInstance();
+	protected LegacyFontFactory fontFactory = LegacyFontFactory.getInstance();
 	
 	protected BufferedImage buttonClickedSmall = imageFactory.getImage(ImageType.BUTTON_SMALL_CLICKED);
 	protected BufferedImage buttonClickedSmall2 = imageFactory.getImage(ImageType.BUTTON_SMALL2_CLICKED);
@@ -43,10 +49,11 @@ public abstract class AbstractLegacyScreen
 	protected Dimension helmetDim = imageFactory.getImageSize(ImageType.EDITOR_HELMET_S);
 	
 	protected BufferedImage screenImage = null;
+	private BufferedImage tintedBackgroundImage = null;
 	private ImageType backgroundImage = null;
-	private BufferedImage clickMap = ImageUtils.createBlankBufferedImage(LEGACY_SCREEN_DIMENSION);
+	protected BufferedImage clickMap = ImageUtils.createBlankBufferedImage(LEGACY_SCREEN_DIMENSION);
 	
-	private Map<Color, ClickableRegion> clickMappings = new HashMap<Color, ClickableRegion>();
+	protected Map<Color, ClickableRegion> clickMappings = new HashMap<Color, ClickableRegion>();
 	private Set<ClickableRegion> highlightedRegions = new HashSet<ClickableRegion>();
 	private ClickableRegion clickedRegion = null;
 	
@@ -57,6 +64,7 @@ public abstract class AbstractLegacyScreen
 		actionTrigger = new JButton();
 		actionTrigger.addActionListener(listener);
 		this.backgroundImage = backgroundImage;
+		refreshBackground();
 		defineClickableRegions();
 	}
 	
@@ -87,7 +95,17 @@ public abstract class AbstractLegacyScreen
 			if (region == null)
 				clickedRegion = null;
 			else if (region.activateOnClick())
+			{
 				clickedRegion = region;
+				CrushAudioManager.getInstance().playForegroundSound(SoundClipType.BUTTON);
+			}
+		}
+		else if (command.getType() == GuiCommandType.MOUSE_DOUBLE_CLICK)
+		{
+			ClickableRegion region = getRegionAtLocation(command.getArgument1(), command.getArgument2());
+			
+			if (region != null && region.activateOnDoubleClick())
+				fireAction(region.getCommand());
 		}
 		else if (command.getType() == GuiCommandType.MOUSE_RELEASE)
 		{
@@ -103,10 +121,18 @@ public abstract class AbstractLegacyScreen
 	
 	public void receiveScreenCommand(ScreenCommand command)
 	{
-		if (!isActive)
+		if (!isActive || command == null)
 			return;
 		
 		handleCommand(command);
+	}
+	
+	public void receiveKeyCommand(KeyCommand command)
+	{
+		if (!isActive || command == null)
+			return;
+		
+		handleKeyCommand(command);
 	}
 
 	public BufferedImage getScreenImage()
@@ -122,31 +148,63 @@ public abstract class AbstractLegacyScreen
 
 	protected BufferedImage getBackgroundImage()
 	{
+		return tintedBackgroundImage;
+	}
+	
+	//TODO: this isn't ideal, since i don't want to have to call this for every window if the settings change
+	public void refreshBackground()
+	{
 		if (backgroundImage == null)
 		{
-			return ImageUtils.createBlankBufferedImage(new Dimension(1, 1));
+			tintedBackgroundImage = ImageUtils.createBlankBufferedImage(new Dimension(1, 1));
+			return;
 		}
 		
-		return LegacyImageFactory.getInstance().getImage(backgroundImage);
+		BufferedImage bgImage = LegacyImageFactory.getInstance().getImage(backgroundImage);
+		Color bgTint = getBackgroundTint();
+		
+		if (!backgroundImage.name().startsWith("BG_"))
+			bgTint = null;
+		
+		if (bgTint != null)
+			tintedBackgroundImage = AbstractColorReplacer.tintImage(bgImage, bgTint);
+		else
+			tintedBackgroundImage = bgImage;
+	}
+	
+	private Color getBackgroundTint()
+	{
+		return Color.RED;
+//		eventually return something from the static settings file
 	}
 	
 	protected void fireAction(ScreenCommand actionCommand)
 	{
+		if (actionCommand == null)
+		{
+			Logger.warn("Null screen command received!");
+			return;
+		}
+		
 		actionTrigger.setActionCommand(actionCommand.name());
 		actionTrigger.doClick();
 	}
 	
 	public void updateScreenImage()
 	{
-		screenImage = ImageUtils.createBlankBufferedImage(LEGACY_SCREEN_DIMENSION);
+		screenImage = ImageUtils.createBlankBufferedImage(getScreenDimensions());
 		Graphics2D g2 = (Graphics2D) screenImage.getGraphics();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.drawImage(getBackgroundImage(), 0, 0, null);
-//		g2.drawImage(clickMap, 0, 0, null);
 		paintComponent(g2);
 		highlightActiveRegions(g2);
 	}
 	
+	protected Dimension getScreenDimensions()
+	{
+		return LEGACY_SCREEN_DIMENSION;
+	}
+
 	private void highlightActiveRegions(Graphics2D g2)
 	{
 		for (ClickableRegion region : highlightedRegions)
@@ -159,7 +217,10 @@ public abstract class AbstractLegacyScreen
 	private boolean updateHighlightedRegions()
 	{
 		Set<ClickableRegion> newHighlights = new HashSet<ClickableRegion>();
-		ClickableRegion region = getRegionAtLocation(currentCursorLocation.x, currentCursorLocation.y);
+		ClickableRegion region = null;
+		
+		if (currentCursorLocation != null)
+			region = getRegionAtLocation(currentCursorLocation.x, currentCursorLocation.y);
 		
 		if (region != null && region.highlightOnHover())
 			newHighlights.add(region);
@@ -181,8 +242,13 @@ public abstract class AbstractLegacyScreen
 
 	private ClickableRegion getRegionAtLocation(int x, int y)
 	{
-		Color regionColor = new Color(clickMap.getRGB(x, y));
-		return clickMappings.get(regionColor);
+		try {
+			Color regionColor = new Color(clickMap.getRGB(x, y));
+			return clickMappings.get(regionColor);
+		} catch (ArrayIndexOutOfBoundsException aioobe)
+		{
+			return null;
+		}
 	}
 	
 	protected void createClickZone(Rectangle zoneArea, ClickableRegion region)
@@ -220,7 +286,23 @@ public abstract class AbstractLegacyScreen
 		return new HashSet<ClickableRegion>();
 	}
 
+	protected void paintTextElement(Graphics2D graphics, int x, int y, String text, FontType fontType, Color color)
+	{
+		LegacyTextElement element = new LegacyTextElement(text, color, fontType);
+		graphics.drawImage(fontFactory.generateString(element), x, y, null);
+	}
+
+	protected void paintPaddedTextElement(Graphics2D graphics, int x, int y, int width, String text, FontType fontType, Color color)
+	{
+		LegacyTextElement element = new LegacyTextElement(text, color, fontType);
+		BufferedImage textString = fontFactory.generateString(element);
+		textString = ImageUtils.padImage(textString, new Dimension(width, fontType.getSize()));
+		graphics.drawImage(textString, x, y, null);
+	}
+
+	public abstract void resetScreen();
 	protected abstract void handleCommand(ScreenCommand command);
-	protected abstract void paintComponent(Graphics2D g2);	//repaint screen
+	protected abstract void handleKeyCommand(KeyCommand command);
+	protected abstract void paintComponent(Graphics2D graphics);	//repaint screen
 	protected abstract void defineClickableRegions();
 }

@@ -1,34 +1,33 @@
 package main.presentation.legacy.teameditor;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JOptionPane;
 
 import main.data.entities.Team;
 import main.presentation.common.Logger;
 import main.presentation.common.TeamEditor;
-import main.presentation.common.image.ImageBuffer;
 import main.presentation.common.image.ImageType;
-import main.presentation.common.image.ImageUtils;
-import main.presentation.legacy.common.AbstractLegacyImageBasedScreenPanel;
 import main.presentation.legacy.common.FontType;
 import main.presentation.legacy.common.LegacyUiConstants;
+import main.presentation.legacy.framework.AbstractLegacyScreen;
+import main.presentation.legacy.framework.ClickableRegion;
+import main.presentation.legacy.framework.GuiCommand;
+import main.presentation.legacy.framework.KeyCommand;
+import main.presentation.legacy.framework.ScreenCommand;
 import main.presentation.teameditor.common.TeamUpdater;
 
-public class LegacyTeamEditorScreen extends AbstractLegacyImageBasedScreenPanel implements TeamEditor
+public class LegacyTeamEditorScreen extends AbstractLegacyScreen implements TeamEditor
 {
-	private static final long serialVersionUID = 1476475348480823916L;
-	
 	private static final Point coordsButtonBack = new Point(585, 341);
 	private static final Point coordsButtonDone = new Point(585, 362);
 	private static final Point coordsButtonSettings = new Point(85, 340);
@@ -43,7 +42,8 @@ public class LegacyTeamEditorScreen extends AbstractLegacyImageBasedScreenPanel 
 	private DecimalFormat threeDigitFormatter = new DecimalFormat("000");
 	
 	private Map<ImageType, Boolean> screenSelected = new HashMap<ImageType, Boolean>();
-	private Map<ImageType, LegacyTeamEditorScreenDecorator> screenMappings = new HashMap<ImageType, LegacyTeamEditorScreenDecorator>();
+	private Map<ImageType, ClickableRegion> buttonHighlighted;
+	private Map<ImageType, AbstractLegacyTeamEditorSubScreen> screenMappings = new HashMap<ImageType, AbstractLegacyTeamEditorSubScreen>();
 
 	private ImageType currentEditorScreen;
 	private boolean showingDetailedRoster;
@@ -54,28 +54,15 @@ public class LegacyTeamEditorScreen extends AbstractLegacyImageBasedScreenPanel 
 	private LegacyTeamEditorDetailedRoster detailedRoster;
 	
 	protected TeamUpdater teamUpdater;
-	protected int currentPlayerIndex = 0;
 	
 	private Team originalTeam;	//the team as it was before any changes are made (the one reverted to if clicking "Back" instead of "Done")
 	private int maxBudget = 900;
 
 	public LegacyTeamEditorScreen(ActionListener listener)
 	{
-		super(imageFactory.getImage(ImageType.BG_BG4), getCompositeFromImages(ImageType.SCREEN_TEAM_EDITOR_START, ImageType.SCREEN_TEAM_EDITOR_ROSTER_GENERAL));
-		setActionListener(listener);
-
-		addClickZone(new Rectangle(coordsButtonBack, buttonDimSmallStats), ScreenCommand.CANCEL);
-		addClickZone(new Rectangle(coordsButtonDone, buttonDimSmallStats), ScreenCommand.EXIT);
+		super(listener, ImageType.BG_BG4);
 		
-		addClickZone(new Rectangle(coordsButtonSettings, buttonDimLarge), ScreenCommand.SETTINGS_VIEW);
-		addClickZone(new Rectangle(coordsButtonEquipment, buttonDimLarge), ScreenCommand.ACQUIRE_VIEW);
-		addClickZone(new Rectangle(coordsButtonRosters, buttonDimLarge), ScreenCommand.TOGGLE_ROSTER_VIEW);
-		addClickZone(new Rectangle(coordsButtonStats, buttonDimLarge), ScreenCommand.STATS_VIEW);
-		addClickZone(new Rectangle(coordsButtonDraft, buttonDimLarge), ScreenCommand.DRAFT_VIEW);
-		addClickZone(new Rectangle(coordsButtonDocbot, buttonDimLarge), ScreenCommand.DOCBOT_VIEW);
-		addClickZone(new Rectangle(coordsButtonTrainer, buttonDimLarge), ScreenCommand.POWER_VIEW);
-		addClickZone(new Rectangle(coordsButtonSchedule, buttonDimLarge), ScreenCommand.SCHEDULE_VIEW);
-		
+//		super(imageFactory.getImage(ImageType.BG_BG4), getCompositeFromImages(ImageType.SCREEN_TEAM_EDITOR_START, ImageType.SCREEN_TEAM_EDITOR_ROSTER_GENERAL));		
 		screenSelected.put(ImageType.SCREEN_TEAM_EDITOR_START, true);
 		screenSelected.put(ImageType.SCREEN_TEAM_EDITOR_SETTINGS, false);
 		screenSelected.put(ImageType.SCREEN_TEAM_EDITOR_ACQUIRE, false);
@@ -90,8 +77,8 @@ public class LegacyTeamEditorScreen extends AbstractLegacyImageBasedScreenPanel 
 		
 		teamUpdater = new TeamUpdater();
 		
-		screenMappings.put(ImageType.SCREEN_TEAM_EDITOR_SETTINGS, new LegacyTeamEditorSettingsScreen(this));
-		screenMappings.put(ImageType.SCREEN_TEAM_EDITOR_DRAFT, new LegacyTeamEditorStockDraftScreen(this));
+		screenMappings.put(ImageType.SCREEN_TEAM_EDITOR_SETTINGS, new LegacyTeamEditorSettingsScreen(teamUpdater, listener));
+		screenMappings.put(ImageType.SCREEN_TEAM_EDITOR_DRAFT, new LegacyTeamEditorStockDraftScreen(teamUpdater, listener, maxBudget));
 		
 		//TODO: Below was an okay thought, but the object-oriented approach I'm using now is probably better.  Delete the comment once it's completely irrelevant.
 		//To add the click mappings for individual screens, just paint them, copy the screen section over to an image, black it out, then paint the next ones,
@@ -102,8 +89,9 @@ public class LegacyTeamEditorScreen extends AbstractLegacyImageBasedScreenPanel 
 		poolDrafting = false;
 		detailedPool = false;
 		
-		generalRoster = new LegacyTeamEditorGeneralRoster(this);
-		detailedRoster = new LegacyTeamEditorDetailedRoster(this);
+		generalRoster = new LegacyTeamEditorGeneralRoster(teamUpdater, listener);
+		detailedRoster = new LegacyTeamEditorDetailedRoster(teamUpdater, listener);
+		refreshEnabledButtons();
 	}
 	
 	public void beginPoolDraft()
@@ -111,133 +99,43 @@ public class LegacyTeamEditorScreen extends AbstractLegacyImageBasedScreenPanel 
 		poolDrafting = true;
 	}
 
-	private static BufferedImage getCompositeFromImages(ImageType leftSide, ImageType rightSide)
-	{
-		ImageBuffer.setBaseImage(ImageUtils.createBlankBufferedImage(defaultlegacyPanelDims, new Color(0, 0, 0, 0)));
-
-		if (leftSide != null)
-			ImageBuffer.addLayer(0, 0, imageFactory.getImage(leftSide));
-
-		if (rightSide != null)
-			ImageBuffer.addLayer(383, 10, imageFactory.getImage(rightSide));
-
-		return ImageBuffer.getCompositeImage();
-	}
-
-	@Override
-	protected void paintImages(Graphics2D graphics)
-	{
-		if (showingDetailedRoster)
-			detailedRoster.paintElements(graphics);
-		else
-			generalRoster.paintElements(graphics);
-		
-		LegacyTeamEditorScreenDecorator screenToPaint = screenMappings.get(currentEditorScreen);
-		
-		if (screenToPaint == null)
-			return;
-		
-		screenToPaint.paintElements(graphics);
-	}
-
-	@Override
-	protected void paintText(Graphics2D graphics)
-	{
-		int totalCost = teamUpdater.getTeam().getValue();
-		int treasury = getBudget() - totalCost;
-		Color treasuryColor = LegacyUiConstants.COLOR_LEGACY_GOLD;
-		
-		if (treasury < 0)
-		{
-			treasury = -1 * treasury;
-			treasuryColor = LegacyUiConstants.COLOR_LEGACY_RED;
-		}
-		
-		
-		paintTextElement(graphics, 516, 345, threeDigitFormatter.format(totalCost), FontType.FONT_SMALL, LegacyUiConstants.COLOR_LEGACY_GOLD);
-		paintTextElement(graphics, 516, 365, threeDigitFormatter.format(treasury), FontType.FONT_SMALL, treasuryColor);
-	}
-
-	@Override
-	protected void paintButtonShading(Graphics2D graphics)
-	{
-		//clunky, but works; eventually make this a map if it seems better
-		
-		if (screenSelected.get(ImageType.SCREEN_TEAM_EDITOR_SETTINGS))
-			graphics.drawImage(imageFactory.getImage(ImageType.BUTTON_LARGE_CLICKED), coordsButtonSettings.x, coordsButtonSettings.y, null);
-		else
-			graphics.drawImage(imageFactory.getImage(ImageType.BUTTON_LARGE_NORMAL), coordsButtonSettings.x, coordsButtonSettings.y, null);
-		
-		if (screenSelected.get(ImageType.SCREEN_TEAM_EDITOR_DRAFT))
-			graphics.drawImage(imageFactory.getImage(ImageType.BUTTON_LARGE_CLICKED), coordsButtonDraft.x, coordsButtonDraft.y, null);
-		else
-			graphics.drawImage(imageFactory.getImage(ImageType.BUTTON_LARGE_NORMAL), coordsButtonDraft.x, coordsButtonDraft.y, null);
-		
-		if (screenSelected.get(ImageType.SCREEN_TEAM_EDITOR_ACQUIRE) || screenSelected.get(ImageType.SCREEN_TEAM_EDITOR_OUTFIT))
-			graphics.drawImage(imageFactory.getImage(ImageType.BUTTON_LARGE_CLICKED), coordsButtonEquipment.x, coordsButtonEquipment.y, null);
-		else
-			graphics.drawImage(imageFactory.getImage(ImageType.BUTTON_LARGE_NORMAL), coordsButtonEquipment.x, coordsButtonEquipment.y, null);
-		
-		if (screenSelected.get(ImageType.SCREEN_TEAM_EDITOR_POWER) || screenSelected.get(ImageType.SCREEN_TEAM_EDITOR_AGILITY) || screenSelected.get(ImageType.SCREEN_TEAM_EDITOR_PSYCHE))
-			graphics.drawImage(imageFactory.getImage(ImageType.BUTTON_LARGE_CLICKED), coordsButtonTrainer.x, coordsButtonTrainer.y, null);
-		else
-			graphics.drawImage(imageFactory.getImage(ImageType.BUTTON_LARGE_NORMAL), coordsButtonTrainer.x, coordsButtonTrainer.y, null);
-		
-		if (screenSelected.get(ImageType.SCREEN_TEAM_EDITOR_DOCBOT))
-			graphics.drawImage(imageFactory.getImage(ImageType.BUTTON_LARGE_CLICKED), coordsButtonDocbot.x, coordsButtonDocbot.y, null);
-		else
-			graphics.drawImage(imageFactory.getImage(ImageType.BUTTON_LARGE_NORMAL), coordsButtonDocbot.x, coordsButtonDocbot.y, null);
-	}
-
-	@Override
-	public void paintComponent(Graphics g)
-	{
-		screenBaseImage = getCompositeFromImages(getLeftScreen(), getRightScreen());
-		super.paintComponent(g);
-	}
-
-	private ImageType getLeftScreen()
-	{
-		return currentEditorScreen;
-	}
-	
-	private ImageType getRightScreen()
-	{
-		if (showingDetailedRoster)
-			return ImageType.SCREEN_TEAM_EDITOR_ROSTER_DETAILED;
-		
-		return ImageType.SCREEN_TEAM_EDITOR_ROSTER_GENERAL;
-	}
-
 	@Override
 	protected void handleCommand(ScreenCommand command)
 	{
-		Logger.debug("Command received for team editor screen: " + command);
+		Logger.output("Command received for team editor screen: " + command);
 		
 		if (command.isEditorViewChange())
 			screenSelected.put(currentEditorScreen, false);
-		
+//		
 		if (ScreenCommand.SETTINGS_VIEW.equals(command))
 			currentEditorScreen = ImageType.SCREEN_TEAM_EDITOR_SETTINGS;
-		else if (ScreenCommand.ACQUIRE_VIEW.equals(command))
-			currentEditorScreen = ImageType.SCREEN_TEAM_EDITOR_ACQUIRE;
+//		else if (ScreenCommand.ACQUIRE_VIEW.equals(command))
+//			currentEditorScreen = ImageType.SCREEN_TEAM_EDITOR_ACQUIRE;
 		else if (ScreenCommand.TOGGLE_ROSTER_VIEW.equals(command))
 			showingDetailedRoster = !showingDetailedRoster;
 		else if (ScreenCommand.DRAFT_VIEW.equals(command))
 			currentEditorScreen = ImageType.SCREEN_TEAM_EDITOR_DRAFT;
-		else if (ScreenCommand.DOCBOT_VIEW.equals(command))
-			currentEditorScreen = ImageType.SCREEN_TEAM_EDITOR_DOCBOT;
-		else if (ScreenCommand.POWER_VIEW.equals(command))
-			currentEditorScreen = ImageType.SCREEN_TEAM_EDITOR_POWER;
-		else if (ScreenCommand.CANCEL.equals(command))
+//		else if (ScreenCommand.DOCBOT_VIEW.equals(command))
+//			currentEditorScreen = ImageType.SCREEN_TEAM_EDITOR_DOCBOT;
+//		else if (ScreenCommand.POWER_VIEW.equals(command))
+//			currentEditorScreen = ImageType.SCREEN_TEAM_EDITOR_POWER;
+		if (ScreenCommand.EXIT_TEAM_EDITOR_BACK.equals(command))
 			confirmDiscardChanges();
-		else if (ScreenCommand.EXIT.equals(command))
+		else if (ScreenCommand.EXIT_TEAM_EDITOR_DONE.equals(command))
 		{
 			resetScreen();
 			fireAction(command);
 		}
 		else
-			fireAction(command);
+		{
+			AbstractLegacyTeamEditorSubScreen screenToAct = screenMappings.get(currentEditorScreen);
+			if (screenToAct != null)
+				screenToAct.receiveScreenCommand(command);
+			
+			//active/inactive should handle this
+			generalRoster.receiveScreenCommand(command);
+			detailedRoster.receiveScreenCommand(command);
+		}
 		
 		if (command.isEditorViewChange())
 		{
@@ -245,57 +143,76 @@ public class LegacyTeamEditorScreen extends AbstractLegacyImageBasedScreenPanel 
 			refreshEnabledButtons();
 		}
 
-		repaint();
-		
-		//TODO: for button clicks, hold the "click" image as long as the mouse is held down (perhaps move this to the parent class)
-		//for screen changes (except roster toggling), hold the click image as long as the screen is selected
+		updateScreenImage();
 	}
 	
-	protected void keyAction(ActionEvent keyAction)
+	@Override
+	public void receiveGuiCommand(GuiCommand command)
+	{
+		super.receiveGuiCommand(command);
+		
+		if (showingDetailedRoster)
+			detailedRoster.receiveGuiCommand(command);
+		else
+			generalRoster.receiveGuiCommand(command);
+		
+		AbstractLegacyTeamEditorSubScreen currentScreen = screenMappings.get(currentEditorScreen);
+		
+		if (currentScreen != null)
+			currentScreen.receiveGuiCommand(command);
+		
+		updateScreenImage();
+	}
+
+	@Override
+	protected void handleKeyCommand(KeyCommand command)
 	{
 		//can't rename in detailed roster, so no need to fire the event to it
-		generalRoster.keyAction(keyAction);
+		generalRoster.receiveKeyCommand(command);
 		
 		//note that this should really only apply to the settings screen, but this covers all of them, just in case
-		LegacyTeamEditorScreenDecorator currentScreen = screenMappings.get(currentEditorScreen);
-		currentScreen.keyAction(keyAction);
+		AbstractLegacyTeamEditorSubScreen currentScreen = screenMappings.get(currentEditorScreen);
+		currentScreen.receiveKeyCommand(command);
+		
+		updateScreenImage();
 	}
 
 	private void refreshEnabledButtons()
 	{
 		for (ImageType screenTypeToRefresh : screenMappings.keySet())
 		{
-			LegacyTeamEditorScreenDecorator screenToRefresh = screenMappings.get(screenTypeToRefresh);
+			AbstractLegacyTeamEditorSubScreen screenToRefresh = screenMappings.get(screenTypeToRefresh);
 			
 			if (screenTypeToRefresh == currentEditorScreen)
-				screenToRefresh.enableButtons();
+				screenToRefresh.activate();
 			else
-				screenToRefresh.disableButtons();
+				screenToRefresh.deactivate();
 		}
 		
 		if (showingDetailedRoster)
 		{
-			detailedRoster.enableButtons();
-			generalRoster.disableButtons();
+			detailedRoster.activate();
+			generalRoster.deactivate();
 		}
 		else
 		{
-			detailedRoster.disableButtons();
-			generalRoster.enableButtons();
+			detailedRoster.deactivate();
+			generalRoster.activate();
 		}
 	}
 
 	@Override
 	public void resetScreen()
 	{
-		currentPlayerIndex = 0;
+		teamUpdater.setCurrentPlayerIndex(0);
 		currentEditorScreen = ImageType.SCREEN_TEAM_EDITOR_START;
+		showingDetailedRoster = false;
 		
 		for (ImageType key : screenSelected.keySet())
 		{
 			screenSelected.put(key, false);
 			
-			LegacyTeamEditorScreenDecorator screenToReset = screenMappings.get(key);
+			AbstractLegacyTeamEditorSubScreen screenToReset = screenMappings.get(key);
 			if (screenToReset != null)
 				screenToReset.resetScreen();
 		}
@@ -307,14 +224,14 @@ public class LegacyTeamEditorScreen extends AbstractLegacyImageBasedScreenPanel 
 	
 	private void confirmDiscardChanges()
 	{
-		int response = JOptionPane.showConfirmDialog(this, "Your changes will be discarded.  Continue?", "Really Cancel?", JOptionPane.YES_NO_OPTION);
+		int response = JOptionPane.showConfirmDialog(null, "Your changes will be discarded.  Continue?", "Really Cancel?", JOptionPane.YES_NO_OPTION);
 		
 		if (response == JOptionPane.NO_OPTION)
 			return;
 		
 		teamUpdater.loadTeam(originalTeam);
 		resetScreen();
-		fireAction(ScreenCommand.EXIT);
+		fireAction(ScreenCommand.EXIT_TEAM_EDITOR_DONE);
 	}
 
 	@Override
@@ -346,6 +263,9 @@ public class LegacyTeamEditorScreen extends AbstractLegacyImageBasedScreenPanel 
 	public void setBudget(int budget)
 	{
 		maxBudget = budget;
+		
+		LegacyTeamEditorStockDraftScreen draftScreen = (LegacyTeamEditorStockDraftScreen) screenMappings.get(ImageType.SCREEN_TEAM_EDITOR_DRAFT);
+		draftScreen.setBudget(budget);
 	}
 	
 	@Override
@@ -353,16 +273,93 @@ public class LegacyTeamEditorScreen extends AbstractLegacyImageBasedScreenPanel 
 	{
 		return maxBudget;
 	}
-	
-	public void previousPlayer()
+
+	@Override
+	protected void defineClickableRegions()
 	{
-		if (currentPlayerIndex > 0)
-			currentPlayerIndex--;
+		createClickZone(new Rectangle(coordsButtonBack, buttonDimSmall2), ClickableRegion.smallButton2(coordsButtonBack, ScreenCommand.EXIT_TEAM_EDITOR_BACK));
+		createClickZone(new Rectangle(coordsButtonDone, buttonDimSmall2), ClickableRegion.smallButton2(coordsButtonDone, ScreenCommand.EXIT_TEAM_EDITOR_DONE));
+		
+		createClickZone(new Rectangle(coordsButtonSettings, buttonDimLarge), createAndMapRegion(ImageType.SCREEN_TEAM_EDITOR_SETTINGS, ClickableRegion.largeButton(coordsButtonSettings, ScreenCommand.SETTINGS_VIEW)));
+		createClickZone(new Rectangle(coordsButtonEquipment, buttonDimLarge), createAndMapRegion(ImageType.SCREEN_TEAM_EDITOR_ACQUIRE, ClickableRegion.largeButton(coordsButtonEquipment, ScreenCommand.ACQUIRE_VIEW)));
+		createClickZone(new Rectangle(coordsButtonRosters, buttonDimLarge), ClickableRegion.largeButton(coordsButtonRosters, ScreenCommand.TOGGLE_ROSTER_VIEW));
+		createClickZone(new Rectangle(coordsButtonStats, buttonDimLarge), ClickableRegion.largeButton(coordsButtonStats, ScreenCommand.STATS_VIEW));
+		createClickZone(new Rectangle(coordsButtonDraft, buttonDimLarge), createAndMapRegion(ImageType.SCREEN_TEAM_EDITOR_DRAFT, ClickableRegion.largeButton(coordsButtonDraft, ScreenCommand.DRAFT_VIEW)));
+		createClickZone(new Rectangle(coordsButtonDocbot, buttonDimLarge), createAndMapRegion(ImageType.SCREEN_TEAM_EDITOR_DOCBOT, ClickableRegion.largeButton(coordsButtonDocbot, ScreenCommand.DOCBOT_VIEW)));
+		createClickZone(new Rectangle(coordsButtonTrainer, buttonDimLarge), createAndMapRegion(ImageType.SCREEN_TEAM_EDITOR_POWER, ClickableRegion.largeButton(coordsButtonTrainer, ScreenCommand.POWER_VIEW)));
+		createClickZone(new Rectangle(coordsButtonSchedule, buttonDimLarge), ClickableRegion.largeButton(coordsButtonSchedule, ScreenCommand.SCHEDULE_VIEW));
+	}
+
+	private ClickableRegion createAndMapRegion(ImageType screenType, ClickableRegion region)
+	{
+		//i don't like this, but i think it's necessary because otherwise it doesn't get defined before reaching this, even if i do the "new" in the definition	
+		if (buttonHighlighted == null)
+			buttonHighlighted = new HashMap<ImageType, ClickableRegion>();
+		
+		buttonHighlighted.put(screenType, region);
+		return region;
+	}
+
+	@Override
+	protected void paintComponent(Graphics2D graphics)
+	{
+		drawSubScreens(graphics);
+		paintText(graphics);
+	}
+
+	private void drawSubScreens(Graphics2D graphics)
+	{
+		if (showingDetailedRoster)
+		{
+			detailedRoster.updateScreenImage();
+			graphics.drawImage(detailedRoster.getScreenImage(), 383, 10, null);
+		}
+		else
+		{
+			generalRoster.updateScreenImage();
+			graphics.drawImage(generalRoster.getScreenImage(), 383, 10, null);
+		}
+		
+		AbstractLegacyTeamEditorSubScreen screenToPaint = screenMappings.get(currentEditorScreen);
+		
+		if (screenToPaint != null)
+		{
+			screenToPaint.updateScreenImage();
+			graphics.drawImage(screenToPaint.getScreenImage(), 0, 0, null);
+		}
+		else
+		{
+			graphics.drawImage(imageFactory.getImage(ImageType.SCREEN_TEAM_EDITOR_START), 0, 0, null);
+		}
+	}
+
+	private void paintText(Graphics2D graphics)
+	{
+		int totalCost = teamUpdater.getTeam().getValue();
+		int treasury = getBudget() - totalCost;
+		Color treasuryColor = LegacyUiConstants.COLOR_LEGACY_GOLD;
+		
+		if (treasury < 0)
+		{
+			treasury = -1 * treasury;
+			treasuryColor = LegacyUiConstants.COLOR_LEGACY_RED;
+		}
+		
+		
+		paintTextElement(graphics, 516, 345, threeDigitFormatter.format(totalCost), FontType.FONT_SMALL, LegacyUiConstants.COLOR_LEGACY_GOLD);
+		paintTextElement(graphics, 516, 365, threeDigitFormatter.format(treasury), FontType.FONT_SMALL, treasuryColor);
 	}
 	
-	public void nextPlayer()
+	@Override
+	protected Set<ClickableRegion> getAlwaysHighlightedRegions()
 	{
-		if (currentPlayerIndex < Team.MAX_TEAM_SIZE - 1)
-			currentPlayerIndex++;
+		Set<ClickableRegion> highlightedRegions = new HashSet<ClickableRegion>();
+		
+		ClickableRegion region = buttonHighlighted.get(currentEditorScreen);
+		
+		if (region != null)
+			highlightedRegions.add(region);
+		
+		return highlightedRegions;
 	}
 }

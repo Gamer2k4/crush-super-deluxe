@@ -1,30 +1,52 @@
 package main.presentation.startupscreen;
 
-import java.awt.Dimension;
+import java.awt.Graphics2D;
 
-import main.presentation.common.AbstractScreenPanel;
+import main.presentation.legacy.framework.AbstractLegacyScreen;
+import main.presentation.legacy.framework.KeyCommand;
+import main.presentation.legacy.framework.ScreenCommand;
 
 //TODO: this should be the server window
-public class CursesGameInProgressPanel extends AbstractScreenPanel
+public class CursesGameInProgressPanel extends AbstractLegacyScreen
 {
-	private static final long serialVersionUID = 6144658053108720332L;
-
-	public CursesGameInProgressPanel(Dimension dimension)
+	public CursesGameInProgressPanel()
 	{
-		super(dimension);
-	}
-
-	@Override
-	protected String getBgFilename()
-	{
-		// TODO Auto-generated method stub
-		return null;
+		super(null, null);
+		// do nothing
 	}
 
 	@Override
 	public void resetScreen()
 	{
 		// TODO Auto-generated method stub
+	}
+
+	@Override
+	protected void handleCommand(ScreenCommand command)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void handleKeyCommand(KeyCommand command)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void paintComponent(Graphics2D graphics)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void defineClickableRegions()
+	{
+		// TODO Auto-generated method stub
+		
 	}
 
 }

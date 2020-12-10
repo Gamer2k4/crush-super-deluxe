@@ -13,9 +13,9 @@ import main.presentation.common.image.LegacyImageFactory;
 import main.presentation.legacy.common.FontType;
 import main.presentation.legacy.common.LegacyTextElement;
 import main.presentation.legacy.common.LegacyUiConstants;
+import main.presentation.legacy.framework.ScreenCommand;
 import main.presentation.legacy.stats.StatsTable;
 import main.presentation.legacy.stats.StatsTableRow;
-import main.presentation.legacy.teameditor.ScreenCommand;
 
 public class LegacyStatsScreenCarnage extends AbstractLegacyStatsScreenPanel
 {

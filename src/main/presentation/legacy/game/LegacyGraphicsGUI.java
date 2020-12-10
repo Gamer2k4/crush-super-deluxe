@@ -1,6 +1,8 @@
 package main.presentation.legacy.game;
 
+import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -12,19 +14,17 @@ import main.data.entities.Player;
 import main.data.entities.Team;
 import main.logic.Client;
 import main.logic.Server;
-import main.presentation.common.AbstractScreenPanel;
 import main.presentation.common.Logger;
+import main.presentation.common.image.ImageUtils;
 import main.presentation.game.Action;
 import main.presentation.game.GameRunnerGUI;
 import main.presentation.legacy.common.LegacyUiConstants;
+import main.presentation.legacy.framework.AbstractLegacyScreen;
 import main.presentation.legacy.game.sprites.SpriteFactory;
 
 public class LegacyGraphicsGUI extends GameRunnerGUI implements ActionListener
 {
-	public static final int MAX_VIEWPORT_X = LegacyUiConstants.MAP_IMAGE_WIDTH - GamePanel.VIEWPORT_WIDTH;
-	public static final int MAX_VIEWPORT_Y = LegacyUiConstants.MAP_IMAGE_HEIGHT - GamePanel.VIEWPORT_HEIGHT;
-	
-	private GamePanel gamePanel;
+	private LegacyGamePlayScreen gameScreen;
 	
 	private LegacyViewportImageFactory viewportImageFactory;
 	private LegacyButtonBarImageFactory buttonBarImageFactory;
@@ -39,21 +39,25 @@ public class LegacyGraphicsGUI extends GameRunnerGUI implements ActionListener
 	private Point currentViewportOrigin = new Point(0, 0);
 //	private Point scrollTarget = new Point(0, 0);
 	
-	public LegacyGraphicsGUI(Client theClient, ActionListener gameEndListener)
+	public LegacyGraphicsGUI(Client client, ActionListener gameEndListener)
 	{
-		this(theClient, null, gameEndListener);
+		this(client, null, gameEndListener);
 	}
 	
-	public LegacyGraphicsGUI(Client theClient, Server theServer, ActionListener gameEndListener)
+	public LegacyGraphicsGUI(Client client, Server theServer, ActionListener gameEndListener)
 	{
-		super(theClient, theServer, gameEndListener);
+		super(client, theServer, gameEndListener);
 		
 		viewportImageFactory = LegacyViewportImageFactory.getInstance();
 		buttonBarImageFactory = LegacyButtonBarImageFactory.getInstance();
-
-		gamePanel = new GamePanel(GamePanel.GAME_WINDOW_WIDTH, GamePanel.GAME_WINDOW_HEIGHT, this);
 		
 		this.gameEndListener = gameEndListener;
+	}
+	
+	public void setGameScreen(AbstractLegacyScreen screen)
+	{
+		gameScreen = (LegacyGamePlayScreen) screen;
+		gameScreen.setGui(this);
 	}
 
 	@Override
@@ -89,10 +93,10 @@ public class LegacyGraphicsGUI extends GameRunnerGUI implements ActionListener
 	{
 		Logger.debug("zooming to location " + tileCoords);
 		
-		Point snapTarget = getOriginLocationWithTileAtCenter(tileCoords);
+		Point snapTargetXY = getOriginLocationWithTileAtCenter(tileCoords);
 		
 //		initiateScrolling(); 		//TODO: correct scrolling later
-		snapToLocation(snapTarget);
+		snapToLocation(snapTargetXY);
 	}
 	
 	private void snapToBallTile()
@@ -116,11 +120,10 @@ public class LegacyGraphicsGUI extends GameRunnerGUI implements ActionListener
 			currentViewportOrigin.x = 0;
 		if (currentViewportOrigin.y < 0)
 			currentViewportOrigin.y = 0;
-		if (currentViewportOrigin.x > MAX_VIEWPORT_X)
-			currentViewportOrigin.x = MAX_VIEWPORT_X;
-		if (currentViewportOrigin.y > MAX_VIEWPORT_Y)
-			currentViewportOrigin.y = MAX_VIEWPORT_Y;
-		
+		if (currentViewportOrigin.x > getMaxViewPortX())
+			currentViewportOrigin.x = getMaxViewPortX();
+		if (currentViewportOrigin.y > getMaxViewPortY())
+			currentViewportOrigin.y = getMaxViewPortY();
 	}
 
 	@Override
@@ -320,7 +323,7 @@ public class LegacyGraphicsGUI extends GameRunnerGUI implements ActionListener
 		
 		Logger.info("Legacy Graphics GUI - Refreshing.");
 		buttonBarImageFactory.setCurrentAction(currentAction);
-		gamePanel.updateButtonBar(buttonBarImageFactory.generateImage(getData(), currentPlayer));
+//		gameScreen.updateButtonBar(buttonBarImageFactory.generateImage(getData(), currentPlayer));
 		refreshViewportImage();
 		// TODO: also update stats bar if there is one
 		// perhaps update the view panel here, too?
@@ -332,11 +335,27 @@ public class LegacyGraphicsGUI extends GameRunnerGUI implements ActionListener
 		scrollImage = viewportImageFactory.generateImage(getData(), currentPlayer);
 		
 		try {
-			gamePanel.updateViewportImage(scrollImage.getSubimage(currentViewportOrigin.x, currentViewportOrigin.y, GamePanel.VIEWPORT_WIDTH, GamePanel.VIEWPORT_HEIGHT));
+//			gameScreen.updateViewportImage(scrollImage.getSubimage(currentViewportOrigin.x, currentViewportOrigin.y, OldGamePanel.VIEWPORT_WIDTH, OldGamePanel.VIEWPORT_HEIGHT));
 		} catch (RasterFormatException rfe) 
 		{
 			return;
 		}
+	}
+	
+	public BufferedImage getViewportImage(Dimension size)
+	{
+		Rectangle viewport = new Rectangle(currentViewportOrigin, size);
+		
+		viewportImageFactory.setHighlights(highlights);
+		return viewportImageFactory.generateImage(getData(), currentPlayer, viewport);
+	}
+	
+	public BufferedImage getButtonBarImage()
+	{
+		BufferedImage image = buttonBarImageFactory.generateImage(getData(), currentPlayer);
+		if (image == null)
+			image = ImageUtils.createBlankBufferedImage(new Dimension(1, 1));
+		return image;
 	}
 
 	@Override
@@ -347,9 +366,9 @@ public class LegacyGraphicsGUI extends GameRunnerGUI implements ActionListener
 	}
 
 	@Override
-	public AbstractScreenPanel getDisplayPanel()
+	public AbstractLegacyScreen getDisplayScreen()
 	{
-		return gamePanel;
+		return gameScreen;
 	}
 
 	@Override
@@ -414,6 +433,11 @@ public class LegacyGraphicsGUI extends GameRunnerGUI implements ActionListener
 		int mouseX = Integer.parseInt(command.substring(14, 16));
 		int mouseY = Integer.parseInt(command.substring(17, 19));
 		snapToTile(new Point(mouseY, mouseX));	//row, column
+	}
+	
+	public void handleMinimapClick(Point clickRowCol)
+	{
+		snapToTile(clickRowCol);
 	}
 
 	private void clickArenaLocation(Point flippedCoords)
@@ -534,21 +558,30 @@ public class LegacyGraphicsGUI extends GameRunnerGUI implements ActionListener
 	
 	private Point getOriginLocationWithTileAtCenter(Point tileMapCoords)
 	{
-		int centerX = 0 + 36 * tileMapCoords.y;	//getting y because it represents the column (so the X axis)		//TODO: not sure why this is 0 + 36, but okay
+		System.out.println("Tile map coords: " + tileMapCoords);
+		int centerX = 36 + 36 * tileMapCoords.y;	//getting y because it represents the column (so the X axis)
 		int centerY = 30 + 30 * tileMapCoords.x;	//getting x because it represents the row (so the Y axis)
 		
+		//TODO: will need to account for sidebars
 		//upper left corner of center tile should be at 302, 145
-		int originX = centerX - 302 + 115;	//need to account for the sidebar, which is width 115		//TODO: the column zoom is close, but off by 1
+		
+		//302 is 640 (width) / 2 (because we're centering) - 18 (half a tile)
+		//same deal with 145: 320 (height) / 2 (centering; this makes it 160) - 15 (half a tile)
+//		int originX = centerX - 302;
+		int originX = centerX - (gameScreen.getViewportWidth() / 2) - 18;
 		int originY = centerY - 145;
+		
+		System.out.println("Calculated origin before correction: " + new Point(originX, originY));
 		
 		if (originX < 0)
 			originX = 0;
 		if (originY < 0)
 			originY = 0;
-		if (originX > MAX_VIEWPORT_X)
-			originX = MAX_VIEWPORT_X;
-		if (originY > MAX_VIEWPORT_Y)
-			originY = MAX_VIEWPORT_Y;
+		if (originX > getMaxViewPortX())
+			originX = getMaxViewPortX();
+		if (originY > getMaxViewPortY())
+			originY = getMaxViewPortY();
+		System.out.println("Calculated origin after correction: " + new Point(originX, originY));
 		
 		return new Point(originX, originY);
 	}
@@ -579,6 +612,16 @@ public class LegacyGraphicsGUI extends GameRunnerGUI implements ActionListener
 			return "N";
 		
 		return facing;
+	}
+	
+	private int getMaxViewPortX()
+	{
+		return LegacyUiConstants.MAP_IMAGE_WIDTH - gameScreen.getViewportWidth();
+	}
+	
+	private int getMaxViewPortY()
+	{
+		return LegacyUiConstants.MAP_IMAGE_HEIGHT - LegacyGamePlayScreen.VIEWPORT_HEIGHT;
 	}
 	
 	//TODO: reimplement scrolling later; the current way doesn't work well 

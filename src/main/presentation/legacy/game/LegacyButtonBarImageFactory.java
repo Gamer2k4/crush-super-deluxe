@@ -32,7 +32,7 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 	
 	private Action currentAction = Action.ACTION_NONE;
 
-	private BufferedImage minimapBaseImage = null;
+//	private BufferedImage minimapBaseImage = null;
 	private BufferedImage arenaName = null;
 	private BufferedImage[] teamNames = {null, null, null};
 	
@@ -57,6 +57,10 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 	@Override
 	public BufferedImage generateImage(Data gameData, Player gameCurrentPlayer)
 	{
+		//TODO: probably should be a method in dataImpl for isGameStarted() that returns true once all important attributes are set, but this is fine for now
+		if (gameData.getArena() == null)
+			return ImageUtils.createBlankBufferedImage(new Dimension(1, 1));
+		
 		data = gameData;
 		currentPlayer = gameCurrentPlayer;
 		generateNames();
@@ -66,30 +70,30 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 		BufferedImage minimap = generateMinimap();
 
 		// be sure to generate all the sub-images before this part, since they'll each use the image buffer
-		ImageBuffer.setBaseImage(imageFactory.getImage(ImageType.GAME_BUTTONBAR));
-		depressActionButtons();
+		ImageBuffer canvas = new ImageBuffer(imageFactory.getImage(ImageType.GAME_BUTTONBAR));
+		depressActionButtons(canvas);
 
 		// add active player information
-		ImageBuffer.addLayer(LegacyUiConstants.PLAYER_ATTRIBUTE_X_START, LegacyUiConstants.PLAYER_ATTRIBUTE_Y_START, playerAttributes);
-		ImageBuffer.addLayer(LegacyUiConstants.PLAYER_STATUS_X_START, LegacyUiConstants.PLAYER_STATUS_Y_START, playerStatuses);
+		canvas.addLayer(LegacyUiConstants.PLAYER_ATTRIBUTE_X_START, LegacyUiConstants.PLAYER_ATTRIBUTE_Y_START, playerAttributes);
+		canvas.addLayer(LegacyUiConstants.PLAYER_STATUS_X_START, LegacyUiConstants.PLAYER_STATUS_Y_START, playerStatuses);
 
 		// add a grey border around the map, as in the original game
-		ImageBuffer.addLayer(LegacyUiConstants.MINIMAP_X_START - 2, LegacyUiConstants.MINIMAP_Y_START - 2,
+		canvas.addLayer(LegacyUiConstants.MINIMAP_X_START - 2, LegacyUiConstants.MINIMAP_Y_START - 2,
 				ImageUtils.createBlankBufferedImage(new Dimension(64, 64), LegacyUiConstants.COLOR_LEGACY_BLUE_GREY));
 		if (minimap != null)
 		{
-			ImageBuffer.addLayer(LegacyUiConstants.MINIMAP_X_START, LegacyUiConstants.MINIMAP_Y_START, minimap);
-			ImageBuffer.addLayer(LegacyUiConstants.MINIMAP_X_START - 9, LegacyUiConstants.MAPNAME_Y_START, arenaName);
+			canvas.addLayer(LegacyUiConstants.MINIMAP_X_START, LegacyUiConstants.MINIMAP_Y_START, minimap);
+			canvas.addLayer(LegacyUiConstants.MINIMAP_X_START - 9, LegacyUiConstants.MAPNAME_Y_START, arenaName);
 			//the map name isn't always centered true to the original game, but it is centered correctly
 		}
 		
-		ImageBuffer.addLayer(LegacyUiConstants.TEAM_NAME_X_START, LegacyUiConstants.TEAM_NAME_Y_START, teamNames[data.getCurrentTeam()]);
+		canvas.addLayer(LegacyUiConstants.TEAM_NAME_X_START, LegacyUiConstants.TEAM_NAME_Y_START, teamNames[data.getCurrentTeam()]);
 
-		addTeamBanners();
-		addSelectedTeamAndPlayerIndicators();
-		addYardLineOrPads();
+		addTeamBanners(canvas);
+		addSelectedTeamAndPlayerIndicators(canvas);
+		addYardLineOrPads(canvas);
 
-		return ImageBuffer.getCompositeImage();
+		return canvas.getCompositeImage();
 	}
 
 	//longest team name and map name is 13 characters (jackal's lair)
@@ -105,28 +109,29 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 		}
 	}
 
-	private void depressActionButtons()
+	//TODO: this should be handled by the LegacyGamePlayScreen class
+	private void depressActionButtons(ImageBuffer canvas)
 	{
 		switch (currentAction)
 		{
 		case ACTION_CHECK:
-			ImageBuffer.addLayer(290, 7, imageFactory.getImage(ImageType.DEPRESSED_CHECK_BUTTON));
+			canvas.addLayer(290, 7, imageFactory.getImage(ImageType.DEPRESSED_CHECK_BUTTON));
 			break;
 		case ACTION_HANDOFF:
-			ImageBuffer.addLayer(281, 27, imageFactory.getImage(ImageType.DEPRESSED_HANDOFF_BUTTON));
+			canvas.addLayer(281, 27, imageFactory.getImage(ImageType.DEPRESSED_HANDOFF_BUTTON));
 			break;
 		case ACTION_JUMP:
-			ImageBuffer.addLayer(342, 7, imageFactory.getImage(ImageType.DEPRESSED_JUMP_BUTTON));
+			canvas.addLayer(342, 7, imageFactory.getImage(ImageType.DEPRESSED_JUMP_BUTTON));
 			break;
 		case ACTION_MOVE:
-			ImageBuffer.addLayer(261, 7, imageFactory.getImage(ImageType.DEPRESSED_MOVE_BUTTON));
+			canvas.addLayer(261, 7, imageFactory.getImage(ImageType.DEPRESSED_MOVE_BUTTON));
 			break;
 		}
 	}
 
 	private BufferedImage generatePlayerStatuses()
 	{
-		ImageBuffer.setBaseImage(ImageUtils.createBlankBufferedImage(new Dimension(244, 8), LegacyUiConstants.COLOR_LEGACY_TRANSPARENT));
+		ImageBuffer canvas = new ImageBuffer(ImageUtils.createBlankBufferedImage(new Dimension(244, 8), LegacyUiConstants.COLOR_LEGACY_TRANSPARENT));
 
 		int startingIndex = data.getCurrentTeam() * 9;
 
@@ -149,7 +154,7 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 				{
 					statusImage = fontFactory.generateString(String.valueOf(currentAP), LegacyUiConstants.COLOR_LEGACY_GREEN,
 							FontType.FONT_SMALL2);
-					ImageBuffer.addLayer(28 * i + 3, 1, statusImage);
+					canvas.addLayer(28 * i + 3, 1, statusImage);
 					continue;
 				} else if (status == Player.STS_LATE)
 					statusImage = imageFactory.getImage(ImageType.GAME_MASK_LATESTATUS);
@@ -164,11 +169,11 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 				else if (status == Player.STS_DECK)
 					statusImage = imageFactory.getImage(ImageType.GAME_MASK_DECKSTATUS);
 
-				ImageBuffer.addLayer(28 * i, 0, statusImage);
+				canvas.addLayer(28 * i, 0, statusImage);
 			}
 		}
 
-		return ImageBuffer.getCompositeImage();
+		return canvas.getCompositeImage();
 	}
 	
 	private BufferedImage generateCurrentPlayerAttributes()
@@ -178,55 +183,56 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 		
 		LegacyPlayerTextFactory.setPlayer(currentPlayer);
 		
-		ImageBuffer.setBaseImage(ImageUtils.createBlankBufferedImage(new Dimension(209, 23), LegacyUiConstants.COLOR_LEGACY_TRANSPARENT));
+		ImageBuffer canvas = new ImageBuffer(ImageUtils.createBlankBufferedImage(new Dimension(209, 23), LegacyUiConstants.COLOR_LEGACY_TRANSPARENT));
 		
 		int playerNumber = data.getNumberOfPlayer(currentPlayer);
-		ImageBuffer.addLayer(1, 0, fontFactory.generateString(String.valueOf(playerNumber), LegacyUiConstants.COLOR_LEGACY_WHITE, FontType.FONT_SMALL));
-		ImageBuffer.addLayer(15, 0, fontFactory.generateString(currentPlayer.name, LegacyUiConstants.COLOR_LEGACY_WHITE));
+		canvas.addLayer(1, 0, fontFactory.generateString(String.valueOf(playerNumber), LegacyUiConstants.COLOR_LEGACY_WHITE, FontType.FONT_SMALL));
+		canvas.addLayer(15, 0, fontFactory.generateString(currentPlayer.name, LegacyUiConstants.COLOR_LEGACY_WHITE));
 		
 		LegacyTextElement apText = LegacyPlayerTextFactory.getColoredAttributeWithModifiers(Player.ATT_AP, LegacyUiConstants.COLOR_LEGACY_BLUE, LegacyUiConstants.COLOR_LEGACY_GOLD);
-		ImageBuffer.addLayer(7, 15, fontFactory.generateString(apText));
-		ImageBuffer.addLayer(50, 13, fontFactory.generateString(String.valueOf(currentPlayer.currentAP), LegacyUiConstants.COLOR_LEGACY_GREEN, FontType.FONT_BIG));
+		canvas.addLayer(7, 15, fontFactory.generateString(apText));
+		canvas.addLayer(50, 13, fontFactory.generateString(String.valueOf(currentPlayer.currentAP), LegacyUiConstants.COLOR_LEGACY_GREEN, FontType.FONT_BIG));
 		
 		for (int i = 1; i < 8; i++)
 		{
 			LegacyTextElement text = LegacyPlayerTextFactory.getColoredAttributeWithModifiers(i, LegacyUiConstants.COLOR_LEGACY_BLUE, LegacyUiConstants.COLOR_LEGACY_GOLD);
-			ImageBuffer.addLayer(65 + (19 * i), 17, fontFactory.generateString(text));
+			canvas.addLayer(65 + (19 * i), 17, fontFactory.generateString(text));
 		}
 		
-		return ImageBuffer.getCompositeImage();
+		return canvas.getCompositeImage();
 	}
 
 	private BufferedImage generateMinimap()
 	{
-		if (minimapBaseImage == null)
-			generateMinimapBaseImage();
+		BufferedImage minimapBaseImage = generateMinimapBaseImage();
+		
+//		if (minimapBaseImage == null)
+//			generateMinimapBaseImage();
 
 		if (minimapBaseImage == null) // TODO: I really don't like this code repetition, but it will work for now
 			return null;
 
-		ImageBuffer.setBaseImage(minimapBaseImage);
+		ImageBuffer canvas = new ImageBuffer(minimapBaseImage);
 
-		darkenPadsAndGoals();
-		addPlayerMinimapPoints();
-		return ImageBuffer.getCompositeImage();
+		darkenPadsAndGoals(canvas);
+		addPlayerMinimapPoints(canvas);
+		return canvas.getCompositeImage();
 	}
 
-	private void generateMinimapBaseImage()
+	private BufferedImage generateMinimapBaseImage()
 	{
 		Arena arena = data.getArena();
 
 		if (arena == null)
 		{
 			Logger.warn("LegacyButtonBarImageFactory - Minimap cannot be generated; no arena defined.");
-			minimapBaseImage = null;
-			return;
+			return null;
 		}
 
-		minimapBaseImage = ArenaImageGenerator.getArenaImage(arena, ARENA_SIDE_LENGTH, TILE_SIZE);
+		return ArenaImageGenerator.getArenaImage(arena, ARENA_SIDE_LENGTH, TILE_SIZE);
 	}
 
-	private void addPlayerMinimapPoints()
+	private void addPlayerMinimapPoints(ImageBuffer canvas)
 	{
 		BufferedImage playerPointsImage = ImageUtils.createBlankBufferedImage(new Dimension(ARENA_SIDE_LENGTH * TILE_SIZE, ARENA_SIDE_LENGTH * TILE_SIZE));
 		populatePlayersInGame();
@@ -245,7 +251,7 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 			}
 		} while (iter == null);
 		
-		ImageBuffer.addLayer(0, 0, playerPointsImage);
+		canvas.addLayer(0, 0, playerPointsImage);
 	}
 	
 	private void addPlayerToMapImage(BufferedImage playerPointsImage, Player player)
@@ -262,7 +268,7 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 		ArenaImageGenerator.drawTile(playerPointsImage.createGraphics(), location.y, location.x, pointColor, TILE_SIZE);
 	}
 	
-	private void darkenPadsAndGoals()
+	private void darkenPadsAndGoals(ImageBuffer canvas)
 	{
 		BufferedImage darkenedTilesOverlay = ImageUtils.createBlankBufferedImage(new Dimension(ARENA_SIDE_LENGTH * TILE_SIZE, ARENA_SIDE_LENGTH * TILE_SIZE));
 		
@@ -280,10 +286,10 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 			ArenaImageGenerator.drawTile(darkenedTilesOverlay.createGraphics(), padCoords.y, padCoords.x, ArenaImageGenerator.DIM_GOAL_COLOR, TILE_SIZE);
 		}
 		
-		ImageBuffer.addLayer(0, 0, darkenedTilesOverlay);
+		canvas.addLayer(0, 0, darkenedTilesOverlay);
 	}
 
-	private void addTeamBanners()
+	private void addTeamBanners(ImageBuffer canvas)
 	{
 		if (data.getTeams().isEmpty())
 			return;
@@ -314,22 +320,22 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 		currentTeamBanner = colorReplacer.setColors(currentTeamBanner, bannerColors[currentTeamIndex][0], bannerColors[currentTeamIndex][1],
 				LegacyUiConstants.COLOR_LEGACY_TRANSPARENT);
 
-		ImageBuffer.addLayer(541, 23, team1Banner);
-		ImageBuffer.addLayer(541, 33, team2Banner);
-		ImageBuffer.addLayer(541, 43, team3Banner);
-		ImageBuffer.addLayer(398, 4, currentTeamBanner);
+		canvas.addLayer(541, 23, team1Banner);
+		canvas.addLayer(541, 33, team2Banner);
+		canvas.addLayer(541, 43, team3Banner);
+		canvas.addLayer(398, 4, currentTeamBanner);
 	}
 
-	private void addSelectedTeamAndPlayerIndicators()
+	private void addSelectedTeamAndPlayerIndicators(ImageBuffer canvas)
 	{
 		int currentTeamIndex = data.getCurrentTeam();
 		int currentPlayerIndex = data.getIndexOfPlayer(currentPlayer) - (9 * currentTeamIndex);
 
-		ImageBuffer.addLayer(12 + (28 * currentPlayerIndex), 68, imageFactory.getImage(ImageType.GAME_OVERLAY_SELECTEDPLAYER));
-		ImageBuffer.addLayer(535, 24 + (10 * currentTeamIndex), imageFactory.getImage(ImageType.GAME_OVERLAY_CURRENTTEAM));
+		canvas.addLayer(12 + (28 * currentPlayerIndex), 68, imageFactory.getImage(ImageType.GAME_OVERLAY_SELECTEDPLAYER));
+		canvas.addLayer(535, 24 + (10 * currentTeamIndex), imageFactory.getImage(ImageType.GAME_OVERLAY_CURRENTTEAM));
 	}
 	
-	private void addYardLineOrPads()
+	private void addYardLineOrPads(ImageBuffer canvas)
 	{
 		Arena arena = data.getArena();
 		BufferedImage text = null;
@@ -337,7 +343,7 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 		if (!arena.isBallFound())
 		{
 			text = ImageUtils.padImage(fontFactory.generateString(String.valueOf(arena.getUntriedBinCount()), LegacyUiConstants.COLOR_LEGACY_BLUE), new Dimension(15, 5));
-			ImageBuffer.addLayer(489, 63, imageFactory.getImage(ImageType.GAME_OVERLAY_PADSLEFT));
+			canvas.addLayer(489, 63, imageFactory.getImage(ImageType.GAME_OVERLAY_PADSLEFT));
 		} else
 		{
 			Point goalLine = arena.getGoalLine();
@@ -357,7 +363,7 @@ public class LegacyButtonBarImageFactory extends LegacyUiImageFactory
 			}
 		}
 			
-		ImageBuffer.addLayer(494, 53, text);
+		canvas.addLayer(494, 53, text);
 	}
 
 	private void populatePlayersInGame()
