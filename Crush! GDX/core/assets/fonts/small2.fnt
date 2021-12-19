@@ -1,0 +1,59 @@
+info face="Crush Small2" size=5 bold=0 italic=0 charset="" unicode=0 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1
+common lineHeight=5 base=6 scaleW=256 scaleH=128 pages=1 packed=0
+page id=0 file="font_small2.png"
+chars count=56
+char id=65   x=0     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=A
+char id=66   x=6     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=B
+char id=67   x=12     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=C
+char id=68   x=18     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=D
+char id=69   x=24     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=E
+char id=70   x=30     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=F
+char id=71   x=36     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=G
+char id=72   x=42     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=H
+char id=73   x=48     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=I
+char id=74   x=54     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=J
+char id=75   x=60     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=K
+char id=76   x=66     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=L
+char id=77   x=72     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=M
+char id=78   x=78     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=N
+char id=79   x=84     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=O
+char id=80   x=90     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=P
+char id=81   x=96     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0		letter=Q
+char id=82   x=102     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=R
+char id=83   x=108     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=S
+char id=84   x=114     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=T
+char id=85   x=120     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=U
+char id=86   x=126     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=V
+char id=87   x=132     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=W
+char id=88   x=138     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=X
+char id=89   x=144     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=Y
+char id=90   x=150     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=Z
+char id=48   x=156     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=0
+char id=49   x=162     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=1
+char id=50   x=168     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=2
+char id=51   x=174     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=3
+char id=52   x=180     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=4
+char id=53   x=186     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=5
+char id=54   x=192     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=6
+char id=55   x=198     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=7
+char id=56   x=204     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=8
+char id=57   x=210     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=9
+char id=33   x=216     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=!
+char id=34   x=222     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter="
+char id=35   x=228     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=#
+char id=63   x=234     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=?
+char id=37   x=240     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=%
+char id=38   x=246     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=&
+char id=39   x=252     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter='
+char id=40   x=258     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=(
+char id=41   x=264     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=)
+char id=43   x=276     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=+
+char id=44   x=282     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=,
+char id=45   x=288     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=-
+char id=46   x=294     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=.
+char id=47   x=300     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=/
+char id=58   x=306     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=:
+char id=60   x=312     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=6     page=0  chnl=0	letter=<
+char id=32   x=324     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=3     page=0  chnl=0	letter=
+char id=95   x=324     y=0     width=5     height=5     xoffset=0     yoffset=6    xadvance=3     page=0  chnl=0	letter=_ 
+kernings count=-1
