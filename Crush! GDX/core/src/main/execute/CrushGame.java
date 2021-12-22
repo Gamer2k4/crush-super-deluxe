@@ -11,7 +11,6 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 import main.data.entities.Team;
 import main.data.factory.CpuTeamFactory;
@@ -19,10 +18,10 @@ import main.logic.Client;
 import main.logic.Server;
 import main.presentation.CursorManager;
 import main.presentation.ImageFactory;
-import main.presentation.ImageType;
 import main.presentation.TeamColorsManager;
 import main.presentation.audio.AudioManager;
 import main.presentation.common.ScreenCommand;
+import main.presentation.game.ArenaImageGenerator;
 import main.presentation.game.GameText;
 import main.presentation.game.GdxGUI;
 import main.presentation.game.StaticImage;
@@ -30,7 +29,6 @@ import main.presentation.game.sprite.CrushAnimatedTile;
 import main.presentation.game.sprite.CrushSprite;
 import main.presentation.screens.GameScreen;
 import main.presentation.screens.GameScreenManager;
-import main.presentation.screens.GameSelectScreen;
 import main.presentation.screens.ScreenType;
 import main.presentation.screens.teamselect.AbstractTeamSelectScreen;
 
@@ -51,7 +49,7 @@ public class CrushGame extends Game implements ActionListener
 	{
 		spriteBatch = new SpriteBatch();
 		fixedCamera = new OrthographicCamera();
-		fixedCamera.setToOrtho(true, 600, 400);
+		fixedCamera.setToOrtho(true, 640, 400);
 		
 		GameScreenManager.getInstance().initializeScreens(this);
 		setScreen(GameScreenManager.getInstance().getScreen(ScreenType.GAME_SELECT));
@@ -164,6 +162,7 @@ public class CrushGame extends Game implements ActionListener
 		ImageFactory.getInstance().dispose();
 		AudioManager.getInstance().dispose();
 		CursorManager.getInstance().dispose();
+		ArenaImageGenerator.dispose();
 		GameText.dispose();
 		spriteBatch.dispose();
 	}

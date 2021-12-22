@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 import main.data.entities.Race;
 import main.data.entities.Team;
@@ -63,10 +64,22 @@ public class TeamColorsManager
 		return teamImageSource.getPlayerImage(race);
 	}
 	
-	public Texture getEquipmentImage(Team team, int equipment)
+	public Drawable getEquipmentImage(Team team, int equipment)
 	{
 		TeamImages teamImageSource = getTeamImages(team);
 		return teamImageSource.getEquipmentImage(equipment);
+	}
+	
+	public Drawable getSmallTeamBanner(Team team)
+	{
+		TeamImages teamImageSource = getTeamImages(team);
+		return teamImageSource.getSmallTeamBanner();
+	}
+	
+	public Drawable getLargeTeamBanner(Team team)
+	{
+		TeamImages teamImageSource = getTeamImages(team);
+		return teamImageSource.getLargeTeamBanner();
 	}
 	
 	public Texture getHelmetImage(Team team)

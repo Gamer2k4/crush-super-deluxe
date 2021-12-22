@@ -7,6 +7,7 @@ import java.io.File;
 import javax.swing.JButton;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 import main.data.TeamLoader;
 import main.data.entities.Player;
@@ -207,7 +208,7 @@ public class TeamUpdater
 		return teamColorsManager.getPlayerImage(team, race);
 	}
 
-	public Texture getEquipmentImage(int equipment)
+	public Drawable getEquipmentImage(int equipment)
 	{
 		return teamColorsManager.getEquipmentImage(team, equipment);
 	}

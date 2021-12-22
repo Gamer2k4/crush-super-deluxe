@@ -1,0 +1,58 @@
+info face="Crush Small" size=10 bold=0 italic=0 charset="" unicode=0 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1
+common lineHeight=10 base=11 scaleW=256 scaleH=128 pages=1 packed=0
+page id=0 file="gdx_small.png"
+chars count=56
+char id=65   x=0     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0		letter=A
+char id=66   x=11     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0		letter=B
+char id=67   x=22     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0		letter=C
+char id=68   x=33     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0		letter=D
+char id=69   x=44     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0		letter=E
+char id=70   x=55     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0		letter=F
+char id=71   x=66     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0		letter=G
+char id=72   x=77     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0		letter=H
+char id=73   x=88     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0		letter=I
+char id=74   x=99     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0		letter=J
+char id=75   x=110     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=K
+char id=76   x=121     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=L
+char id=77   x=132     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=M
+char id=78   x=143     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=N
+char id=79   x=154     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=O
+char id=80   x=165     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=P
+char id=81   x=176     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=Q
+char id=82   x=187     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=R
+char id=83   x=198     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=S
+char id=84   x=209     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=T
+char id=85   x=220     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=U
+char id=86   x=231     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=V
+char id=87   x=242     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=W
+char id=88   x=253     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=X
+char id=89   x=264     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=Y
+char id=90   x=275     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=Z
+char id=48   x=286     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=0
+char id=49   x=297     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=1
+char id=50   x=308     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=2
+char id=51   x=319     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=3
+char id=52   x=330     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=4
+char id=53   x=341     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=5
+char id=54   x=352     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=6
+char id=55   x=363     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=7
+char id=56   x=374     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=8
+char id=57   x=385     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=9
+char id=33   x=396     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=!
+char id=34   x=407     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter="
+char id=35   x=418     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=#
+char id=37   x=440     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=%
+char id=38   x=451     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=&
+char id=39   x=462     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter='
+char id=40   x=473     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=(
+char id=41   x=484     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=)
+char id=43   x=495     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=+
+char id=44   x=506     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter='
+char id=45   x=517     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=,
+char id=46   x=528     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=.
+char id=47   x=539     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=/
+char id=58   x=550     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=;
+char id=60   x=561     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=11     page=0  chnl=0	letter=<
+char id=32   x=572     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=3     page=0  chnl=0		letter= 
+char id=95   x=583     y=0     width=10     height=10     xoffset=0     yoffset=11    xadvance=3     page=0  chnl=0		letter=_ 
+kernings count=-1

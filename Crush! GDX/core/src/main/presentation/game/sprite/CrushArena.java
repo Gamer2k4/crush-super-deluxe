@@ -96,6 +96,10 @@ public class CrushArena extends CrushSprite
 			throw new IllegalArgumentException("No map image defined for arena " + index);
 		}
 		
+		//otherwise will throw a null pointer exception when the game is closed
+		if (arenaTexture == null)
+			return null;
+		
 		TextureRegion region = new TextureRegion(arenaTexture);
 		return new CrushArena(region);
 	}

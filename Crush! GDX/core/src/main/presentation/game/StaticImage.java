@@ -3,6 +3,7 @@ package main.presentation.game;
 import java.awt.Point;
 
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 import main.presentation.ImageFactory;
 import main.presentation.ImageType;
@@ -14,6 +15,12 @@ public class StaticImage
 	public StaticImage(ImageType imageType, Point coords)
 	{
 		image = new Image(ImageFactory.getInstance().getDrawable(imageType));
+		setPosition(coords);
+	}
+	
+	public StaticImage(Drawable drawable, Point coords)
+	{
+		image = new Image(drawable);
 		setPosition(coords);
 	}
 	

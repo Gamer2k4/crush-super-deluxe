@@ -44,9 +44,11 @@ public class AudioManager
 			background.loop();
 	}
 	
-	public void playSound(SoundType soundType)
+	public void playSound(SoundType soundType)	//TODO: siren for successful bin, horn for unsuccessful one
 	{
-		sounds.get(soundType).play();
+		Sound sound = sounds.get(soundType);
+		if (sound != null)
+			sound.play();
 	}
 	
 	public void dispose()

@@ -25,15 +25,17 @@ public abstract class AbstractColorReplacer
 		}
 		
 		TextureData textureData = originalImage.getTextureData();
-	    textureData.prepare();
+	    if (!textureData.isPrepared())
+	    	textureData.prepare();
 	    
-	    Pixmap pixmap = textureData.consumePixmap();
+	    Pixmap originalPixmap = textureData.consumePixmap();
+	    Pixmap targetPixmap = new Pixmap(originalPixmap.getWidth(), originalPixmap.getHeight(), originalPixmap.getFormat());
 
-		for (int i = 0; i < pixmap.getWidth(); i++)
+		for (int i = 0; i < originalPixmap.getWidth(); i++)
 		{
-			for (int j = 0; j < pixmap.getHeight(); j++)
+			for (int j = 0; j < originalPixmap.getHeight(); j++)
 			{
-				Color pixelColor = getColorFromPixmapPixel(pixmap, i, j);
+				Color pixelColor = getColorFromPixmapPixel(originalPixmap, i, j);
 
 				if (ImageUtils.rgbEquals(pixelColor, getBackgroundBase()))
 				{
@@ -83,13 +85,13 @@ public abstract class AbstractColorReplacer
 					pixelColor = darkenColor(fgColor2, 6);
 				}
 				
-				pixmap.drawPixel(i, j, ImageUtils.getRGBAfromColor(pixelColor));
+				targetPixmap.drawPixel(i, j, ImageUtils.getRGBAfromColor(pixelColor));
 			}
 		}
 		
-		Texture newTexture = new Texture(pixmap);
-		textureData.disposePixmap();
-	    pixmap.dispose();
+		Texture newTexture = new Texture(targetPixmap);
+		textureData.disposePixmap();		//I think this might be unnecessary
+//	    originalPixmap.dispose();
 
 		return newTexture;
 	}

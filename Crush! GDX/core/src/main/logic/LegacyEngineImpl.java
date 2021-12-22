@@ -211,7 +211,9 @@ public class LegacyEngineImpl implements Engine
 				//TODO: when going through a list of destinations, the list keeps going even if a player is hurt
 				if (curArena.getTile(playerMoveCoords.x, playerMoveCoords.y) == Arena.TILE_SHOCK  && !playerResistsShock(activePlayer) && !knockdownBool)
 				{
+					
 					Event shockTileInjuryEvent = generateCheckResultEvent(null, activePlayer, 60 + Randomizer.getRandomInt(1, RANDOMNESS), curTG + Randomizer.getRandomInt(1, RANDOMNESS));		//shock tiles attack with 60 strength (TODO: confirm this)
+					toRet.add(Event.shock(localData.getIndexOfPlayer(activePlayer)));
 					processAndOfferEvent(toRet, shockTileInjuryEvent);
 					
 					if (localData.getBallCarrier() == activePlayer)
@@ -297,7 +299,10 @@ public class LegacyEngineImpl implements Engine
 						toRet.offer(Event.tryBallBin(theCommand.flags[0], binIndex, 0));
 						
 						if (!playerResistsShock(activePlayer))					//no effect if player has insulated boots
+						{
+							toRet.add(Event.shock(localData.getIndexOfPlayer(activePlayer)));
 							toRet.offer(generateCheckResultEvent(null, activePlayer, 20 + Randomizer.getRandomInt(1, RANDOMNESS), curTG + Randomizer.getRandomInt(1, RANDOMNESS)));		//ball bins attack with 20 strength
+						}
 						
 						//don't need to worry about dropping the ball, since there's no way you can have the ball and be shocked by a bin
 					}
@@ -334,7 +339,7 @@ public class LegacyEngineImpl implements Engine
 				if (toTele != null)
 				{					
 					// 2) If so, generate a teleport event for him.
-					Event teleEvent = Event.teleport(localData.getIndexOfPlayer(toTele), theCommand.flags[3], Randomizer.getRandomInt(0, 7));
+					Event teleEvent = Event.teleport(localData.getIndexOfPlayer(toTele), theCommand.flags[3], Randomizer.getRandomInt(0, curArena.getPortalCount() - 1));
 					
 					System.out.println("DISPLACEMENT! Player " + theCommand.flags[0] + " is displacing Player " + teleEvent.flags[0]);
 					

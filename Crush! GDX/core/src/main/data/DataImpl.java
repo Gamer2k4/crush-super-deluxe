@@ -14,7 +14,6 @@ import main.data.entities.Stats;
 import main.data.entities.Team;
 import main.data.factory.LegacyArenaFactory;
 import main.data.factory.SimpleArenaFactory;
-import main.logic.RandomGeneratorSingletonImpl;
 import main.presentation.common.GameSettings;
 import main.presentation.common.Logger;
 import main.presentation.game.PresentationMode;
@@ -207,8 +206,10 @@ public class DataImpl implements Data
 		if (fieldNum != null)								// but there is no such thing in the playoffs 
 			fieldIndex = fieldNum;
 		
-		fieldIndex = Arena.ARENA_SAVANNA;		//TODO: currently always savannah for testing
+//		fieldIndex = Arena.ARENA_SAVANNA;		//TODO: currently always savannah for testing
+//		fieldIndex = Arena.ARENA_ABYSS;
 //		fieldIndex = Arena.ARENA_THE_VOID;
+		fieldIndex = Arena.ARENA_JACKALS_LAIR;
 		
 //		fieldIndex = RandomGeneratorSingletonImpl.getInstance().getRandomInt(0, 19);
 		
@@ -369,8 +370,6 @@ public class DataImpl implements Data
 			processTeleport(theEvent);
 		} else if (theEvent.getType() == Event.EVENT_BIN)
 		{
-			System.out.println("BIN EVENT");
-
 			Player player = getPlayer(theEvent.flags[0]);
 			int binIndex = theEvent.flags[2];
 			int result = theEvent.flags[3];
@@ -424,7 +423,7 @@ public class DataImpl implements Data
 				player.currentAP -= AP_HURL_COST;
 			else
 				player.currentAP -= AP_HANDOFF_COST;
-
+			
 			ballCarrier = getPlayer(theEvent.flags[1]); // we're going to get a BALLMOVE event after this if it was a hurl, so this doesn't hurt
 			statsOfPlayer.get(ballCarrier).getBall();
 		} else if (theEvent.getType() == Event.EVENT_CHECK)

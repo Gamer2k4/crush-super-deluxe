@@ -3,10 +3,11 @@ package main.presentation.game.sprite;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.Timer;
 
-import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 import main.data.Event;
@@ -17,20 +18,22 @@ import main.presentation.audio.SoundType;
 
 public class CrushPlayerSprite extends CrushSprite implements ActionListener
 {
-	public static final float PLAYER_ANIMATION_FRAME_DURATION = .080f;
-	private static final int X_MOVE_INCREMENT = 6;
-	private static final int Y_MOVE_INCREMENT = 5;
-	
 	private PlayerState state;
 	private Facing facing;
 	private final Team team;
 	private final Race race;
+	private boolean hasBall = false;
 	
 	private Point targetCoords;
-	private int animationFramesRemaining = 0;
-	private float animationElapsedTime = 0f;
 	
-	private static Timer playerAnimationTimer = new Timer((int)(1000 * PLAYER_ANIMATION_FRAME_DURATION), null);
+	private Timer playerAnimationTimer = new Timer(0, null);
+	private TextureRegion currentSpriteImage = null;
+	private PlayerAnimation currentAnimation = null;
+	private int currentAnimationFrame = 0;
+	private List<PlayerState> queuedAnimationStates = new ArrayList<PlayerState>();
+	
+	private double yMoveFraction = 0;
+	private static final double FRACTION_TOLERANCE = .01;
 	
 	public CrushPlayerSprite(Team team, Race race)
 	{
@@ -42,9 +45,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		this.race = race;
 		targetCoords = new Point(coords.x, coords.y);
 		
-		if (!playerAnimationTimer.isRunning())
-			playerAnimationTimer.start();
-		
+		playerAnimationTimer.stop();
 		playerAnimationTimer.addActionListener(this);
 		
 		//note that while the data will have to track a player's tile for engine purposes, the sprites themselves shouldn't be
@@ -61,19 +62,36 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	@Override
 	public TextureRegion getImage()
 	{
-		Animation<TextureRegion> animation = PlayerAnimationManager.getInstance().getAnimation(team, race, PlayerSpriteType.getPlayerSpriteType(state, facing));
-		return animation.getKeyFrame(animationElapsedTime, true);
+		if (currentSpriteImage == null)
+			refreshSpriteImage();
+		
+		return currentSpriteImage;
+	}
+	
+	private void refreshSpriteImage()
+	{
+		currentSpriteImage = PlayerAnimationManager.getInstance().getSprite(team, race, PlayerSpriteType.getPlayerSpriteType(state, facing));
 	}
 	
 	public boolean isActive()
 	{
-		if (animationFramesRemaining > 0)
+		if (isAnimating())
 			return true;
 		
 		if (targetCoords.x != coords.x || targetCoords.y != coords.y)
 			return true;
 		
 		return false;
+	}
+	
+	private boolean isAnimating()
+	{
+		return (currentAnimation != null);
+	}
+	
+	public void setHasBall(boolean hasBall)
+	{
+		this.hasBall = hasBall;
 	}
 	
 	public void rotateClockwise()
@@ -86,42 +104,59 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		facing = facing.rotateCounterclockwise();
 	}
 	
+	public void shock()
+	{
+		hasBall = false;
+		beginAnimation(PlayerState.SHOCK);
+	}
+	
 	public void walk(Event event)
 	{
-		System.out.println("\tA sprite is walking: event is " + event);
 		int targetRow = event.flags[2];
 		int targetCol = event.flags[3];
-		moveToArenaPosition(targetRow, targetCol);
-	}
-	
-	public void moveToArenaPosition(Point position)
-	{
-		moveToArenaPosition(position.x, position.y);
-	}
-	
-	public void moveToArenaPosition(int row, int column)
-	{
-		targetCoords.x = getXValueForColumn(column);
-		targetCoords.y = getYValueForRow(row);
+		targetCoords.x = getXValueForColumn(targetCol);
+		targetCoords.y = getYValueForRow(targetRow);
+		turnTowardPixelCoords(targetCoords);
 		
+		if (hasBall)
+			beginAnimation(PlayerState.WALK_BALL);
+		else
+			beginAnimation(PlayerState.WALK);
+	}
+	
+	public void receiveBall(Event event)
+	{
+		//TODO: probably do all this if it's a handoff event
+//		int targetRow = event.flags[2];
+//		int targetCol = event.flags[3];
+//		targetCoords.x = getXValueForColumn(targetCol);
+//		targetCoords.y = getYValueForRow(targetRow);
+//		turnTowardPixelCoords(targetCoords);
+		
+		//otherwise assume facing is correct already
+		beginAnimation(PlayerState.RECEIVE_BALL);
+	}
+	
+	public void turnTowardArenaLocation(Point location)
+	{
+		turnTowardPixelCoords(new Point(getXValueForColumn(location.y), getYValueForRow(location.x)));
+	}
+	
+	public void turnTowardPixelCoords(Point location)
+	{
 		String facingString = "";
 		
-		if (targetCoords.y < coords.y)
+		if (location.y < coords.y)
 			facingString = "S";
-		if (targetCoords.y > coords.y)
+		if (location.y > coords.y)
 			facingString = "N";
-		if (targetCoords.x < coords.x)
+		if (location.x < coords.x)
 			facingString = facingString + "W";
-		if (targetCoords.x > coords.x)
+		if (location.x > coords.x)
 			facingString = facingString + "E";
 		
 		facing = Facing.valueOf(facingString);
-		state = PlayerState.WALK;
-		
-		int xMoveDist = Math.abs(targetCoords.x - coords.x); 
-		int yMoveDist = Math.abs(targetCoords.y - coords.y);
-		animationFramesRemaining = Math.max(xMoveDist, yMoveDist) / X_MOVE_INCREMENT;	//TODO: not quite correct anymore, with two increments
-		animationElapsedTime = 0f;
+		refreshSpriteImage();
 	}
 	
 	@Override
@@ -133,37 +168,110 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e)
+	public void actionPerformed(ActionEvent e)	//the current animation frame has hit its display duration, so advance to the next one
 	{
-//		System.out.println("Timer firing received for player sprite: " + this);
-		
-		if (animationFramesRemaining > 0)
+		advanceAnimationFrame();
+	}
+	
+	private void beginAnimation(PlayerState animation)
+	{
+		if (isAnimating())
 		{
-			animationFramesRemaining--;
-			animationElapsedTime += PLAYER_ANIMATION_FRAME_DURATION;
-			
-			if (state == PlayerState.WALK && animationFramesRemaining % 2 == 0)
-				playWalkSound();
+			queuedAnimationStates.add(animation);
+			return;
 		}
 		
-		//TODO: if the move increment is too large, this can overshoot, then overcorrect, and it never hits
-		if (targetCoords.x < coords.x)
-			coords.x -= X_MOVE_INCREMENT;
-		if (targetCoords.x > coords.x)
-			coords.x += X_MOVE_INCREMENT;
-		if (targetCoords.y < coords.y)
-			coords.y -= Y_MOVE_INCREMENT;
-		if (targetCoords.y > coords.y)
-			coords.y += Y_MOVE_INCREMENT;
+		state = animation;
+		currentAnimation = PlayerAnimation.getAnimation(animation, facing);
+		currentAnimationFrame = -1;
+		advanceAnimationFrame();
+	}
+	
+	private void advanceAnimationFrame()
+	{
+		currentAnimationFrame++;
+		PlayerAnimationFrame currentFrame = currentAnimation.getFrame(currentAnimationFrame);
 		
-		if (isActive())
+		if (currentFrame == null)
+		{
+			endAnimation();
 			return;
+		}
 		
-		//reset everything if the sprite isn't active
-		animationElapsedTime = 0f;
+		currentSpriteImage = PlayerAnimationManager.getInstance().getSprite(team, race, currentFrame.getFrame());
+		advanceSprite(currentFrame.getPositionPixelChange());
+		playAnimationFrameSound();
+		playerAnimationTimer.setInitialDelay(currentFrame.getFrameDuration());
+		playerAnimationTimer.restart();
+	}
+
+	private void endAnimation()
+	{
+		playerAnimationTimer.stop();
+		currentAnimation = null;
 		
-		if (state == PlayerState.WALK)
-			state = PlayerState.PASSIVE;
+		if (queuedAnimationStates.isEmpty())
+		{
+			setState(PlayerState.PASSIVE);
+			currentSpriteImage = PlayerAnimationManager.getInstance().getSprite(team, race, PlayerSpriteType.getPlayerSpriteType(state, facing));
+			return;
+		}
+		
+		PlayerState nextAnimation = queuedAnimationStates.remove(0);
+		beginAnimation(nextAnimation);
+	}
+
+	private void advanceSprite(int positionPixelChange)
+	{
+		double xChange = positionPixelChange;
+		double yChange = positionPixelChange * (5.0 / 6.0);
+		
+		yChange = adjustYChangeForFraction(yChange);
+		
+		if (facing == Facing.SW || facing == Facing.S || facing == Facing.SE)
+			yChange *= -1;
+		if (facing == Facing.NW || facing == Facing.W || facing == Facing.SW)
+			xChange *= -1;
+		if (facing == Facing.E || facing == Facing.W)
+			yChange = 0;
+		if (facing == Facing.N || facing == Facing.S)
+			xChange = 0;
+		
+		coords.x += xChange;
+		coords.y += yChange;
+	}
+
+	private int adjustYChangeForFraction(double yChange)
+	{
+		double fractionalAmount = yChange - (int)yChange;
+		
+		if (fractionalAmount < FRACTION_TOLERANCE)
+			return (int)yChange;
+		
+		yMoveFraction += fractionalAmount;
+		
+		if (yMoveFraction + FRACTION_TOLERANCE < 1)
+			return ((int)yChange);
+		
+		yMoveFraction = 0;
+		return (int)yChange + 1;
+	}
+
+	@SuppressWarnings("incomplete-switch")
+	private void playAnimationFrameSound()
+	{
+		switch(state)
+		{
+		case WALK:
+		case WALK_BALL:
+			if (currentAnimationFrame % 2 == 0)
+				playWalkSound();
+			break;
+		case SHOCK:
+			if (currentAnimationFrame == 0)
+				AudioManager.getInstance().playSound(SoundType.ZAP);
+			break;
+		}
 	}
 
 	private void playWalkSound()
@@ -180,5 +288,15 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 			walkSound = SoundType.LOWWALK;
 			
 		AudioManager.getInstance().playSound(walkSound);
+	}
+
+	private void setState(PlayerState newState)
+	{
+		if (!hasBall)
+			state = newState;
+		else if (newState == PlayerState.CHECK_WEAK || newState == PlayerState.CHECK_STRONG || newState == PlayerState.PASSIVE || newState == PlayerState.WALK)
+			state = PlayerState.valueOf(newState.name() + "_BALL");
+		else
+			state = newState;
 	}
 }

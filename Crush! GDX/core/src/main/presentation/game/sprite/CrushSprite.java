@@ -55,12 +55,8 @@ public abstract class CrushSprite
 	
 	public Point getArenaPosition()
 	{
-		System.out.println("Getting arena position for coords[" + coords + "]");
-		
 		int col = (coords.x / 36) - 1;
 		int row = 30 - (coords.y / 30);
-		
-		System.out.println("Row, Column is (" + row + ", " + col + ")");
 		
 		return new Point(row, col);
 	}

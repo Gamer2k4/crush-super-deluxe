@@ -11,10 +11,14 @@ import main.data.Event;
 import main.data.entities.Player;
 import main.logic.Client;
 import main.logic.Server;
+import main.presentation.ImageType;
 import main.presentation.audio.AudioManager;
 import main.presentation.audio.SoundType;
 import main.presentation.common.Logger;
+import main.presentation.common.PlayerTextFactory;
 import main.presentation.common.ScreenCommand;
+import main.presentation.game.ejectionalert.EjectionAlert;
+import main.presentation.game.ejectionalert.MutationEjectionAlert;
 import main.presentation.game.sprite.CrushAnimatedTile;
 import main.presentation.game.sprite.CrushPlayerSprite;
 import main.presentation.game.sprite.CrushSprite;
@@ -29,11 +33,18 @@ public class GdxGUI extends GameRunnerGUI
 	
 	private EventTextureFactory eventTextureFactory = EventTextureFactory.getInstance();
 	private EventButtonBarFactory eventButtonBarFactory = EventButtonBarFactory.getInstance();
+	private AudioManager audioManager = AudioManager.getInstance();
 	
 	private Timer eventPoller;
+	private Timer delayTimer;
+	
+	private boolean delayTimerRunning = false;
 	
 	private List<CrushAnimatedTile> activeOverlayAnimations = new ArrayList<CrushAnimatedTile>();
 	private List<CrushPlayerSprite> activeSpriteAnimations = new ArrayList<CrushPlayerSprite>();
+	
+	private EjectionAlert activeEjectionAlert = null;
+	private Event activeEjectEvent = null;
 	
 	public GdxGUI(Client client, ActionListener gameEndListener)
 	{
@@ -43,8 +54,14 @@ public class GdxGUI extends GameRunnerGUI
 	public GdxGUI(Client theClient, Server theServer, ActionListener gameEndListener)
 	{
 		super(theClient, theServer, gameEndListener);
+		PlayerTextFactory.setGameDataImpl(getData());
 		
 		resumeEventPoller();
+	}
+
+	public void handleMinimapClick(Point minimapRowCol)
+	{
+		snapToTile(minimapRowCol);
 	}
 	
 	@SuppressWarnings("incomplete-switch")
@@ -140,10 +157,7 @@ public class GdxGUI extends GameRunnerGUI
 	@Override
 	public void receiveEvent(Event event)
 	{
-		// TODO Auto-generated method stub
 		System.out.println("\tGUI received event: " + event);
-		
-		activeSpriteAnimations.addAll(eventTextureFactory.animateEvent(event));
 		
 		if (event.getType() == Event.EVENT_TELE)
 		{
@@ -152,42 +166,112 @@ public class GdxGUI extends GameRunnerGUI
 		else if (event.getType() == Event.EVENT_TURN)
 		{
 			currentAction = Action.ACTION_MOVE;
+			curPlayerIndex = getFirstEligiblePlayer();
+			snapToPlayer(getData().getPlayer(curPlayerIndex));
 		}
-		
+		else if (event.getType() == Event.EVENT_EJECT)
+		{
+			showEjectionAlert(event);
+		}
+		else if (event.getType() == Event.EVENT_BIN)
+		{
+			handleBinEvent(event);
+		}
+		else if (event.getType() == Event.EVENT_MOVE)
+		{
+			handleMoveEvent(event);
+		}
+		else if (event.getType() == Event.EVENT_SHOCK)
+		{
+			handleShockEvent(event);
+		}
 		
 		checkForNextEvents();
 		gameScreen.refreshTextures();
 	}
 	
+	private void handleShockEvent(Event event)
+	{
+		if (event.getType() != Event.EVENT_SHOCK)
+			return;
+		
+		Player player = getData().getPlayer(event.flags[0]);
+		
+		CrushPlayerSprite playerSprite = eventTextureFactory.getPlayerSprite(player);
+		playerSprite.shock();
+		activeSpriteAnimations.add(playerSprite);
+	}
+
+	private void handleMoveEvent(Event event)
+	{
+		if (event.getType() != Event.EVENT_MOVE)
+			return;
+		
+		Player player = getData().getPlayer(event.flags[0]);
+		
+		CrushPlayerSprite playerSprite = eventTextureFactory.getPlayerSprite(player);
+		playerSprite.walk(event);
+		activeSpriteAnimations.add(playerSprite);
+	}
+
 	@Override
 	protected void handleTeleportEvent(Event event)
 	{
-		//actually, this might work out alright, and maybe it's even the reason why there are always two warp effect
-		//animations.  do the first animation, move any sprite that's there to off-screen, move the warp animation off-screen,
-		//move the player sprite warping in to that portal, move the warping animation back onscreen
-		//also, if receiving an event where the source and destination portals are the same, pop up the mutation alert
-		//and call it a day
-
-		//TODO: don't call this for blob events, since there's no snap for them
-		super.handleTeleportEvent(event);	//updates the current player and snaps to the tile
+		if (event.getType() != Event.EVENT_TELE)
+			return;
 		
-		//TODO: show the player departing their old portal (if this isn't their first entry into the game)
-		//TODO: move warping out player offscreen; move warping in player to the portal
+		boolean isBlobEvent = (event.flags[2] == event.flags[3]);
 		
 		//maybe for each teleport event, check if the sprite is on-screen.  if so, show the "teleport out" animation there and move it offscreen
 		//the sprite WOULDN'T be on-screen if the player is warping in for the first time, or if they've been displaced
 		
 		Player playerWarpingHere = getData().getPlayer(event.flags[0]);
-		Point portalCoords = getData().getArena().getPortal(event.flags[3]);
-		teleportPlayerOutFromPortalTile(portalCoords);
+		Point newPortalCoords = getData().getArena().getPortal(event.flags[3]);
+		Point oldPortalCoords = new Point(-1, -1);
+		
+		if (event.flags[2] != -1)
+			oldPortalCoords = getData().getArena().getPortal(event.flags[2]);
+		
+		
+		System.out.println(playerWarpingHere.name + " is warping.  Current player at original portal is " + getData().getPlayerAtLocation(oldPortalCoords) + ", current player at new portal is " + getData().getPlayerAtLocation(newPortalCoords));
+		System.out.println("\tCurrent sprite at original portal is " + eventTextureFactory.getPlayerSpriteAtCoords(oldPortalCoords) + ", current sprite at new portal is " + eventTextureFactory.getPlayerSpriteAtCoords(newPortalCoords));
+		
+		//if a player wasn't displaced but was teleporting normally, show a leaving animation from his original portal
+		if (playerWarpingHere == getData().getPlayerAtLocation(oldPortalCoords))
+			teleportPlayerOutFromTile(oldPortalCoords);
+		
+		if (!isBlobEvent)
+			super.handleTeleportEvent(event);	//updates the current player and snaps to the tile
+			
+		teleportPlayerOutFromTile(newPortalCoords);
+		
+		
 			//I believe this is where we pop up the mutation alert for leaving players
 			//however, this is tricky, because a player can also get blobbed if they're not being displaced, so somehow
 			//check if the alert has already been shown
-		teleportPlayerInToPortalTile(portalCoords, playerWarpingHere);
+			//	maybe track the event that generates the alert as well?
+		if (!isBlobEvent)	//this is not a blob teleport
+			teleportPlayerInToTile(newPortalCoords, playerWarpingHere);
+		else
+		{
+			eventTextureFactory.updatePlayerSpriteCoords(playerWarpingHere, EventTextureFactory.OFFSCREEN_COORDS);
+			Player playerWhoDisplacedTheBlobbingPlayer = getData().getPlayerAtLocation(oldPortalCoords);
+			
+			if (playerWhoDisplacedTheBlobbingPlayer != null && playerWhoDisplacedTheBlobbingPlayer != playerWarpingHere)
+				eventTextureFactory.updatePlayerSpriteCoords(playerWhoDisplacedTheBlobbingPlayer, oldPortalCoords);
+			//we need the second line because if the blob came as the result of a displacement, the displacing player's sprite
+			//(the one who didn't blob, but forced the blob) is off in the ether someplace, so we need to relocate it to the arena
+		}
+		
 		//if the player warping in doesn't have a source portal (first entry into the game), check for equipment, and, if necessary, display the alert, then warp them back out
+		//note that warping them out should be a generic "ejection" portal animation, because it happens for injuries too
+		
+		
+		if (isBlobEvent)	//OR the player was ejected; basically if the player teleporting isn't eligible
+			setActivePlayer(getFirstEligiblePlayer());
 	}
 	
-	private void teleportPlayerOutFromPortalTile(Point portalCoords)
+	private void teleportPlayerOutFromTile(Point portalCoords)
 	{
 		CrushPlayerSprite spriteToDisplace = eventTextureFactory.getPlayerSpriteAtCoords(portalCoords);
 		
@@ -199,7 +283,7 @@ public class GdxGUI extends GameRunnerGUI
 		eventTextureFactory.updatePlayerSpriteCoords(spriteToDisplace, EventTextureFactory.OFFSCREEN_COORDS);
 	}
 	
-	private void teleportPlayerInToPortalTile(Point portalCoords, Player playerWarpingHere)
+	private void teleportPlayerInToTile(Point portalCoords, Player playerWarpingHere)
 	{
 		showWarpAnimation(portalCoords);
 		waitForAnimationsToConclude();
@@ -211,8 +295,53 @@ public class GdxGUI extends GameRunnerGUI
 		CrushAnimatedTile warpAnimation = CrushAnimatedTile.warpAnimation();
 		warpAnimation.setArenaPosition(portalCoords);
 		activeOverlayAnimations.add(warpAnimation);
-		AudioManager.getInstance().playSound(SoundType.TP);
+		audioManager.playSound(SoundType.TP);
 		refreshInterface();
+	}
+	
+	private void handleBinEvent(Event event)
+	{
+		if (event.getType() != Event.EVENT_BIN)
+			return;
+		
+		Player player = getData().getPlayer(event.flags[0]);
+		int binIndex = event.flags[2];
+		int result = event.flags[3];
+		
+		Point playerLocation = getData().getLocationOfPlayer(player);
+		Point binLocation = getData().getArena().getBinLocation(binIndex);
+		
+		CrushPlayerSprite playerSprite = eventTextureFactory.getPlayerSpriteAtCoords(playerLocation);
+		playerSprite.turnTowardArenaLocation(binLocation);
+		
+		//TODO: animate flashing bin
+		
+		if (result == 1)
+		{
+			audioManager.playSound(SoundType.SIREN);
+			playerSprite.receiveBall(event);
+		}
+		else
+		{
+			audioManager.playSound(SoundType.HORN);
+			delay(1500);
+		}
+	}
+
+	private void showEjectionAlert(Event event)
+	{
+		if (event.getType() != Event.EVENT_EJECT)
+			return;
+		
+		activeEjectEvent = event;
+		
+		if (event.flags[2] == Event.EJECT_BLOB)
+		{
+			audioManager.playSound(SoundType.MUTATE);
+			activeEjectionAlert = new MutationEjectionAlert(getData(), event);
+		}
+		
+		//TODO: track the event that caused the alert, so the player can be teleported out once it's done (if it's not a blob event)
 	}
 
 	@Override
@@ -246,8 +375,10 @@ public class GdxGUI extends GameRunnerGUI
 		List<CrushSprite> sprites = new ArrayList<CrushSprite>();
 		sprites.addAll(eventTextureFactory.getArenaSprite());
 		sprites.addAll(eventTextureFactory.getTileSprites());
+		sprites.addAll(eventTextureFactory.getBallSprite());
 		sprites.addAll(eventTextureFactory.getCursorSprite(currentPlayer));
 		sprites.addAll(eventTextureFactory.getPlayerSprites());
+		sprites.addAll(eventTextureFactory.getBallCarrierIndicator());
 		sprites.addAll(eventTextureFactory.getTileHighlightSprites());
 		sprites.addAll(activeOverlayAnimations);
 		sprites.addAll(eventTextureFactory.getElevatedSprites());
@@ -257,7 +388,16 @@ public class GdxGUI extends GameRunnerGUI
 
 	public List<GameText> getGameText()
 	{
-		return eventButtonBarFactory.getPlayerAndTeamName(currentPlayer);
+		List<GameText> texts = new ArrayList<GameText>();
+		
+		texts.addAll(eventButtonBarFactory.getPlayerTextInfo(currentPlayer));
+		texts.addAll(eventButtonBarFactory.getPlayerAttributes(currentPlayer));
+		texts.addAll(eventButtonBarFactory.getPlayerApStatuses(getData().getCurrentTeam()));
+		
+		if (showingEjectionAlert())
+			texts.addAll(activeEjectionAlert.getInfoText());
+		
+		return texts;
 	}
 
 	public List<StaticImage> getStaticImages()
@@ -265,8 +405,17 @@ public class GdxGUI extends GameRunnerGUI
 		List<StaticImage> images = new ArrayList<StaticImage>();
 		
 		images.addAll(eventButtonBarFactory.getSelectedButton(currentAction));
+		images.addAll(eventButtonBarFactory.getMinimap());
+		images.addAll(eventButtonBarFactory.getTeamBanners());
 		images.addAll(eventButtonBarFactory.getSelectedTeamAndPlayerIndicators(currentPlayer));
 		images.addAll(eventButtonBarFactory.getPlayerStatuses());
+		
+		if (showingEjectionAlert())
+		{
+			images.add(activeEjectionAlert.getImage());
+			images.add(activeEjectionAlert.getTextBox());
+		}
+			
 		
 		return images;
 	}
@@ -299,6 +448,10 @@ public class GdxGUI extends GameRunnerGUI
 		waitForAnimationsToConclude();
 		
 		myClient.processNextEvent();
+		
+		eventTextureFactory.refreshTileSprites();
+		refreshInterface();
+		
 		Event nextEvent = myClient.getNextEvent();
 		
 		if (nextEvent == null)
@@ -314,7 +467,7 @@ public class GdxGUI extends GameRunnerGUI
 	
 	private void waitForAnimationsToConclude()
 	{
-		while (!activeOverlayAnimations.isEmpty() || !activeSpriteAnimations.isEmpty())
+		while (!activeOverlayAnimations.isEmpty() || !activeSpriteAnimations.isEmpty() || showingEjectionAlert() || delayTimerRunning)
 		{
 			removeFinishedAnimations();
 			refreshInterface();
@@ -327,9 +480,15 @@ public class GdxGUI extends GameRunnerGUI
 		{
 			CrushAnimatedTile animation = activeOverlayAnimations.get(i);
 			
-			if (!animation.isActive() && !activeOverlayAnimations.isEmpty())
+			if (!animation.isActive())
 			{
-				activeOverlayAnimations.remove(i);
+				try {
+					activeOverlayAnimations.remove(i);
+				} catch (IndexOutOfBoundsException ioobe)
+				{
+					Logger.warn("Index out of bounds exception when removing overlay animation!");
+				}
+				
 				i--;
 			}
 		}
@@ -338,10 +497,17 @@ public class GdxGUI extends GameRunnerGUI
 		{
 			CrushPlayerSprite animation = activeSpriteAnimations.get(i);
 			
-			if (!animation.isActive() && !activeSpriteAnimations.isEmpty())
+			if (!animation.isActive())
 			{
 				eventTextureFactory.refreshPlayerSpriteCoords(animation);
-				activeSpriteAnimations.remove(i);
+				
+				try {
+					activeSpriteAnimations.remove(i);
+				} catch (IndexOutOfBoundsException ioobe)
+				{
+					Logger.warn("Index out of bounds exception when removing player animation!");
+				}
+				
 				i--;
 			}
 		}
@@ -466,6 +632,9 @@ public class GdxGUI extends GameRunnerGUI
 	
 	private void snapToPlayer(Player player)
 	{
+		if (player == null)
+			return;
+		
 		snapToTile(getData().getLocationOfPlayer(player));
 	}
 	
@@ -492,6 +661,29 @@ public class GdxGUI extends GameRunnerGUI
 		super.beginGame();
 	}
 	
+	public void confirmEjectionAlert()
+	{
+		int ejectType = activeEjectEvent.flags[2];
+		activeEjectionAlert = null;
+		activeEjectEvent = null;
+		
+		//don't need to teleport out a blobbed player, since he's already one with the void
+		if (ejectType == Event.EJECT_BLOB)
+			return;
+		
+		Player player = getData().getPlayer(activeEjectEvent.flags[0]);
+		Point playerCoords = getData().getLocationOfPlayer(player);
+		teleportPlayerOutFromTile(playerCoords);
+	}
+	
+	public boolean showingEjectionAlert()
+	{
+		if (activeEjectionAlert != null)
+			return true;
+		
+		return false;
+	}
+	
 	public boolean inputOkay()
 	{
 		removeFinishedAnimations();
@@ -502,5 +694,19 @@ public class GdxGUI extends GameRunnerGUI
 		return false;
 		
 //		return inputOkay;
+	}
+	
+	private void delay(int durationInMs)
+	{
+		TimerTask task = new TimerTask() {
+	        @Override
+			public void run() {
+	        	delayTimerRunning = false;
+	        }
+	    };
+	    
+		delayTimer = new Timer();
+		delayTimer.schedule(task, durationInMs);
+		delayTimerRunning = true;
 	}
 }

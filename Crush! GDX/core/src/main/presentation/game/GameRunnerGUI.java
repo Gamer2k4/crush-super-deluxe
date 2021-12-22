@@ -51,6 +51,9 @@ public abstract class GameRunnerGUI extends GameGUI
 		Player plyr = getData().getPlayer(curPlayerIndex);
 		Point origin = getData().getLocationOfPlayer(plyr);
 		
+		if (origin == null)
+			return;
+		
 		int x = origin.x;
 		int y = origin.y;
 		

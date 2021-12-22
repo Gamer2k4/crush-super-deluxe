@@ -10,6 +10,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
+import main.presentation.common.image.ImageUtils;
+
 public class ImageFactory
 {
 	private static ImageFactory instance = null;
@@ -60,9 +62,11 @@ public class ImageFactory
 		addEventBarsAndButtons();
 		extractStatusLabels();
 		extractButtonBarIndicators();
+		addEjectionImages();
 		addSprites();
 		addProfiles();
-		addGearImages();
+		
+		addImage(ImageType.GEAR_ALLGEAR, "general/gear.png");
 	}
 
 	private void addScreens()
@@ -152,6 +156,15 @@ public class ImageFactory
 		images.put(ImageType.DEPRESSED_HELP_BUTTON, new TextureRegionDrawable(new TextureRegion(allButtons, 431, 132, 44, 28)));
 	}
 
+	private void addEjectionImages()
+	{
+		addImage(ImageType.EJECT_INJURY, "eventoverlays/death.png");
+		addImage(ImageType.EJECT_KILL, "eventoverlays/doctor.png");
+		addImage(ImageType.EJECT_BLOB, "eventoverlays/mutation.png");
+		addImage(ImageType.EJECT_REF, "eventoverlays/ref.png");
+		addImage(ImageType.EJECT_TEXTBOX, "eventoverlays/ejection_textbox.png");
+	}
+
 	private void extractStatusLabels()
 	{
 		Texture allButtons = textures.get(ImageType.GAME_ALLBUTTONS);
@@ -173,11 +186,13 @@ public class ImageFactory
 		
 		images.put(ImageType.GAME_OVERLAY_SELECTEDPLAYER, new TextureRegionDrawable(new TextureRegion(allButtons, 71, 137, 12, 4)));
 		images.put(ImageType.GAME_OVERLAY_CURRENTTEAM, new TextureRegionDrawable(new TextureRegion(allButtons, 131, 134, 4, 7)));
-		images.put(ImageType.GAME_OVERLAY_TEAM1BANNER, new TextureRegionDrawable(new TextureRegion(allButtons, 138, 133, 8, 8)));
-		images.put(ImageType.GAME_OVERLAY_TEAM2BANNER, new TextureRegionDrawable(new TextureRegion(allButtons, 138, 143, 8, 8)));
-		images.put(ImageType.GAME_OVERLAY_TEAM3BANNER, new TextureRegionDrawable(new TextureRegion(allButtons, 138, 153, 8, 8)));
-		images.put(ImageType.GAME_OVERLAY_CURRENTTEAMBANNER, new TextureRegionDrawable(new TextureRegion(allButtons, 156, 133, 55, 28)));
 		images.put(ImageType.GAME_OVERLAY_PADSLEFT, new TextureRegionDrawable(new TextureRegion(allButtons, 133, 113, 23, 9)));
+		
+		Pixmap smallTeamBanner = ImageUtils.extractPixmapFromTextureRegion(new TextureRegion(allButtons, 138, 133, 8, 8));
+		textures.put(ImageType.GAME_OVERLAY_TEAM1BANNER, new Texture(smallTeamBanner));
+		
+		Pixmap currentTeamBanner = ImageUtils.extractPixmapFromTextureRegion(new TextureRegion(allButtons, 156, 133, 55, 28));
+		textures.put(ImageType.GAME_OVERLAY_CURRENTTEAMBANNER, new Texture(currentTeamBanner));
 	}
 
 	private void addSprites()
@@ -205,40 +220,6 @@ public class ImageFactory
 		addImage(ImageType.PROFILE_XJS9000, "profiles/xjs9000.png");
 	}
 
-	private void addGearImages()
-	{
-		addImage(ImageType.GEAR_ALLGEAR, "general/gear.png");
-		Texture allGear = textures.get(ImageType.GEAR_ALLGEAR);
-		
-		//TODO: pulling these out might be done in TeamImages instead of here
-//		images.put(ImageType.GEAR_HEAVY_PADS, new TextureRegionDrawable(new TextureRegion(allGear, 0, 0, 100, 50)));
-//		images.put(ImageType.GEAR_REINFORCED_PADS, new TextureRegionDrawable(new TextureRegion(allGear, 100, 0, 100, 50)));
-//		images.put(ImageType.GEAR_REPULSOR_PADS, new TextureRegionDrawable(new TextureRegion(allGear, 200, 0, 100, 50)));
-//		images.put(ImageType.GEAR_SPIKED_PADS, new TextureRegionDrawable(new TextureRegion(allGear, 300, 0, 100, 50)));
-//		images.put(ImageType.GEAR_SURGE_PADS, new TextureRegionDrawable(new TextureRegion(allGear, 400, 0, 100, 50)));
-//		images.put(ImageType.GEAR_VORTEX_PADS, new TextureRegionDrawable(new TextureRegion(allGear, 500, 0, 100, 50)));
-//		
-//		images.put(ImageType.GEAR_BACKFIRE_BELT, new TextureRegionDrawable(new TextureRegion(allGear, 0, 53, 48, 24)));
-//		images.put(ImageType.GEAR_BOOSTER_BELT, new TextureRegionDrawable(new TextureRegion(allGear, 48, 53, 48, 24)));
-//		images.put(ImageType.GEAR_CLOAKING_BELT, new TextureRegionDrawable(new TextureRegion(allGear, 96, 53, 48, 24)));
-//		images.put(ImageType.GEAR_HOLOGRAM_BELT, new TextureRegionDrawable(new TextureRegion(allGear, 144, 53, 48, 24)));
-//		images.put(ImageType.GEAR_INTEGRITY_BELT, new TextureRegionDrawable(new TextureRegion(allGear, 192, 53, 48, 24)));
-//		images.put(ImageType.GEAR_MEDICAL_BELT, new TextureRegionDrawable(new TextureRegion(allGear, 240, 53, 48, 24)));
-//		images.put(ImageType.GEAR_SCRAMBLER_BELT, new TextureRegionDrawable(new TextureRegion(allGear, 288, 53, 48, 24)));
-//		
-//		images.put(ImageType.GEAR_SPIKED_BOOTS, new TextureRegionDrawable(new TextureRegion(allGear, 1, 81, 84, 34)));
-//		images.put(ImageType.GEAR_BOUNDER_BOOTS, new TextureRegionDrawable(new TextureRegion(allGear, 85, 81, 84, 34)));
-//		images.put(ImageType.GEAR_INSULATED_BOOTS, new TextureRegionDrawable(new TextureRegion(allGear, 169, 81, 84, 34)));
-//		images.put(ImageType.GEAR_MAGNETIC_BOOTS, new TextureRegionDrawable(new TextureRegion(allGear, 253, 81, 84, 34)));
-//		images.put(ImageType.GEAR_SAAI_BOOTS, new TextureRegionDrawable(new TextureRegion(allGear, 337, 81, 84, 34)));
-//		
-//		images.put(ImageType.GEAR_MAGNETIC_GLOVES, new TextureRegionDrawable(new TextureRegion(allGear, 1, 117, 98, 24)));
-//		images.put(ImageType.GEAR_REPULSOR_GLOVES, new TextureRegionDrawable(new TextureRegion(allGear, 99, 117, 98, 24)));
-//		images.put(ImageType.GEAR_SAAI_GLOVES, new TextureRegionDrawable(new TextureRegion(allGear, 197, 117, 98, 24)));
-//		images.put(ImageType.GEAR_SPIKED_GLOVES, new TextureRegionDrawable(new TextureRegion(allGear, 295, 117, 98, 24)));
-//		images.put(ImageType.GEAR_SURGE_GLOVES, new TextureRegionDrawable(new TextureRegion(allGear, 393, 117, 98, 24)));
-	}
-
 	private void generateCursorPixmap(ImageType imageType, String path)
 	{
 		Pixmap originalImage = new Pixmap(Gdx.files.internal(path));
@@ -263,7 +244,7 @@ public class ImageFactory
 	
 	public void dispose()
 	{
-		for (ImageType imageType : ImageType.values())
+		for (ImageType imageType : textures.keySet())
 		{
 			Texture texture = textures.get(imageType);
 			

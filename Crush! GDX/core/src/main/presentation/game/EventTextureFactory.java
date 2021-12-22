@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 import main.data.Data;
-import main.data.Event;
 import main.data.entities.Arena;
 import main.data.entities.Player;
 import main.presentation.common.Logger;
 import main.presentation.game.sprite.CrushArena;
+import main.presentation.game.sprite.CrushBallSprite;
 import main.presentation.game.sprite.CrushPlayerSprite;
 import main.presentation.game.sprite.CrushSprite;
 import main.presentation.game.sprite.CrushTile;
@@ -34,6 +34,8 @@ public class EventTextureFactory
 	private List<Point> moveTrack = new ArrayList<Point>();
 	
 	private CrushSprite cursorSprite = CrushTile.createTile(OFFSCREEN_COORDS, TileSpriteType.CURSOR);
+	private CrushSprite ballHighlight = CrushTile.createTile(OFFSCREEN_COORDS, TileSpriteType.BALL_HIGHLIGHT);
+	private CrushBallSprite ballOnField = new CrushBallSprite();
 
 	private EventTextureFactory() {}
 	
@@ -48,33 +50,8 @@ public class EventTextureFactory
 	public void beginGame(Data clientData)
 	{
 		data = clientData;
-		generateTileSprites();
+		refreshTileSprites();
 		generatePlayerSprites();
-	}
-	
-	//TODO: I wonder if I can pop up ejection alerts from here as well?
-	//		This is for sliding camera textures, not static ones, but maybe I can call another factory for them.
-	public List<CrushPlayerSprite> animateEvent(Event event)
-	{
-		Player player = data.getPlayer(event.flags[0]);
-		CrushPlayerSprite playerSprite = null;
-		
-		List<CrushPlayerSprite> activeSprites = new ArrayList<CrushPlayerSprite>();
-		
-		if (player != null)
-			playerSprite = playerSpriteMap.get(player);
-		
-		if (event.getType() == Event.EVENT_MOVE)
-		{
-			playerSprite.walk(event);
-			activeSprites.add(playerSprite);
-			//TODO: somehow we need to update the sprite location map once this concludes, because i think they're still
-			//		treated as their origin location (so they can be teleported away after moving from the portal)
-			//TODO: also, the cursor needs to follow the player as he moves
-//			updatePlayerSpriteCoords(playerSprite, new Point(event.flags[2], event.flags[3]));
-		}
-		
-		return activeSprites;
 	}
 
 	public void setMoveTrack(List<Point> movePossibilities)
@@ -111,8 +88,10 @@ public class EventTextureFactory
 		return arenaSprites;
 	}
 	
-	public void generateTileSprites()
+	public void refreshTileSprites()
 	{
+		tileSprites.clear();
+		
 		Arena arena = data.getArena();
 		if (arena == null)
 			return;
@@ -145,15 +124,34 @@ public class EventTextureFactory
 		
 		return tileSpriteList;
 	}
+
+	public List<CrushSprite> getBallSprite()
+	{
+		List<CrushSprite> ballSprite = new ArrayList<CrushSprite>();
+		
+		Point ballArenaLocation = data.getBallLocation();
+		
+		//if it's not on the field, it just never gets added to the list to return
+		//TODO:	it's not this simple for when the BALL is scurrying around, but this is good for now
+		if (ballArenaLocation.x != -1 && ballArenaLocation.y != -1)
+		{
+			refreshPlayerBallStatus(null);
+			ballOnField.setArenaPosition(ballArenaLocation);
+			ballSprite.add(ballOnField);
+		}
+		
+		return ballSprite;
+	}
 	
 	public List<CrushSprite> getCursorSprite(Player currentPlayer)
 	{
 		List<CrushSprite> cursorSpriteList = new ArrayList<CrushSprite>();
 		
-		if (currentPlayer == null)
+		CrushPlayerSprite currentSprite = playerSpriteMap.get(currentPlayer);
+		
+		if (currentSprite == null)
 			return cursorSpriteList;
 		
-		CrushPlayerSprite currentSprite = playerSpriteMap.get(currentPlayer); 
 		Point cursorLocation = new Point(currentSprite.getX(), currentSprite.getY());
 		
 		cursorSprite.setCoords(cursorLocation);
@@ -162,6 +160,38 @@ public class EventTextureFactory
 		return cursorSpriteList;
 	}
 	
+	public List<CrushSprite> getBallCarrierIndicator()
+	{
+		List<CrushSprite> ballSprite = new ArrayList<CrushSprite>();
+		
+		Player ballCarrier = data.getBallCarrier();
+		
+		if (ballCarrier == null)
+			return ballSprite;
+		
+		Point ballCarrierCoords = getSpriteCoordsOfPlayer(ballCarrier);
+		CrushPlayerSprite ballCarrierSprite = getPlayerSpriteAtCoords(ballCarrierCoords);
+		Point ballCoords = new Point(ballCarrierSprite.getX(), ballCarrierSprite.getY());
+		ballHighlight.setCoords(ballCoords);
+		ballSprite.add(ballHighlight);
+		
+		refreshPlayerBallStatus(ballCarrier);
+			
+		return ballSprite; 
+	}
+	
+	private void refreshPlayerBallStatus(Player ballCarrier)
+	{
+		for (Player player : playerSpriteMap.keySet())
+		{
+			CrushPlayerSprite sprite = playerSpriteMap.get(player);
+			sprite.setHasBall(false);
+			
+			if (player == ballCarrier)
+				sprite.setHasBall(true);
+		}
+	}
+
 	public void generatePlayerSprites()
 	{
 		List<Player> players = data.getAllPlayers();
@@ -326,6 +356,11 @@ public class EventTextureFactory
 		return playerSprites.get(arenaCoords);
 	}
 	
+	public CrushPlayerSprite getPlayerSprite(Player player)
+	{
+		return playerSpriteMap.get(player);
+	}
+	
 	public void updatePlayerSpriteCoords(CrushPlayerSprite player, Point newArenaCoords)
 	{
 		for (Player key : playerSpriteMap.keySet())
@@ -353,6 +388,7 @@ public class EventTextureFactory
 		if (playerSprite == null)
 			throw new IllegalArgumentException("Could not update sprite arena coordinates for player [" + player + "]; no sprite was found");
 		
+		//TODO: will need to prevent concurrent modification with this
 		//the player sprite may not be in the coordinations map if it's offscreen; however, it if is there, remove it so it can be re-added.
 		for (Point key : playerSprites.keySet())
 		{

@@ -18,6 +18,7 @@ public class Event implements Serializable
 	public static final int EVENT_VICTORY = 9;
 	public static final int EVENT_CHECK = 10;
 	public static final int EVENT_EJECT = 11;
+	public static final int EVENT_SHOCK = 12;
 
 	public static final int HANDOFF_FALL = -1;
 	public static final int HANDOFF_PASS = 0;
@@ -82,6 +83,8 @@ public class Event implements Serializable
 			toRet = "EVENT_CHECK";
 		else if (type == 11)
 			toRet = "EVENT_EJECT";
+		else if (type == 12)
+			toRet = "EVENT_SHOCK";
 		
 		
 		for (int i = 0; i < TOTAL_FLAGS; i++)
@@ -171,6 +174,15 @@ public class Event implements Serializable
 	public static Event recover(int player)
 	{
 		Event e = new Event(EVENT_RECVR);
+		e.flags[0] = player;
+		
+		return e;
+	}
+	
+	//no changes to stats or status, literally nothing except telling the GUI to display a shock animation
+	public static Event shock(int player)
+	{
+		Event e = new Event(EVENT_SHOCK);
 		e.flags[0] = player;
 		
 		return e;
@@ -324,4 +336,7 @@ public class Event implements Serializable
  * 4 - first stat penalty
  * 5 - second stat index
  * 6 - second stat penalty
+ * 
+ * EVENT_SHOCK
+ * 0 - p1 index
  */

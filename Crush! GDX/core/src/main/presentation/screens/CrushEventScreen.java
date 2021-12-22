@@ -20,6 +20,7 @@ import main.presentation.ImageFactory;
 import main.presentation.ImageType;
 import main.presentation.common.Logger;
 import main.presentation.common.ScreenCommand;
+import main.presentation.game.EventButtonBarFactory;
 import main.presentation.game.GameText;
 import main.presentation.game.GdxGUI;
 import main.presentation.game.StaticImage;
@@ -133,6 +134,12 @@ public class CrushEventScreen extends GameScreen
 			if (touchRegistered)
 				return;
 			
+			if (gui.showingEjectionAlert())
+			{
+				gui.confirmEjectionAlert();
+				return;
+			}
+			
 			touchRegistered = true;
 			
 			Point cursorCoords = convertMouseCoordinates(Gdx.input.getX(), Gdx.input.getY());
@@ -160,11 +167,26 @@ public class CrushEventScreen extends GameScreen
 		
 		Logger.debug("Arena clicked at " + mapCoordsFromCursorLocation);
 	}
+	
+	private boolean miniMapClicked(int x, int y)
+	{
+		return (x > 570 && x < 628 && y > 8 && y < 65);
+	}
 
 	private void clickButtonBar(int x, int y)
 	{
-		System.out.println("Button bar clicked at (" + x + ", " + y + ")");
-		System.out.println("\tColor there is " + clickMap.getPixel(x, y + 167));
+		if (miniMapClicked(x, y))
+		{
+			int row = 3 + (y - EventButtonBarFactory.MINIMAP_Y_START) / 2;	//these are divided by 2 because the minimap uses 2x2 pixels for each map tile
+			int col = (x - EventButtonBarFactory.MINIMAP_X_START) / 2;
+			Point minimapRowCol = new Point(row, col);
+			Logger.debug("Minimap clicked at " + minimapRowCol);
+			gui.handleMinimapClick(minimapRowCol);
+			return;
+		}
+		
+		Logger.debug("Button bar clicked at (" + x + ", " + y + ")");
+		Logger.debug("\tColor there is " + clickMap.getPixel(x, y + 167));
 		
 		int clickColor = clickMap.getPixel(x, y + 167);
 		
@@ -214,7 +236,7 @@ public class CrushEventScreen extends GameScreen
 		if (command != null)
 			gui.handleCommand(command);
 	}
-	
+
 	private Point convertMouseCoordinates(int x, int y)
 	{
 		int curWidth = Gdx.graphics.getWidth();
@@ -264,8 +286,8 @@ public class CrushEventScreen extends GameScreen
 	@Override
 	public Texture getBackgroundImage()
 	{
-//		return ImageFactory.getInstance().getTexture(ImageType.MAP_LAVA_BG);
-		return ImageFactory.getInstance().getTexture(ImageType.MAP_STARS_BG);
+		return ImageFactory.getInstance().getTexture(ImageType.MAP_LAVA_BG);
+//		return ImageFactory.getInstance().getTexture(ImageType.MAP_STARS_BG);
 	}
 
 	@Override

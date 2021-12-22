@@ -14,6 +14,8 @@ import main.presentation.TeamColorsManager;
 
 public class PlayerAnimationManager
 {
+	public static final float PLAYER_ANIMATION_FRAME_DURATION = .080f;
+	
 	private Map<CompositeSpriteKey, Animation<TextureRegion>> playerSpriteMappings;
 	
 	private static PlayerAnimationManager instance = null;
@@ -60,7 +62,6 @@ public class PlayerAnimationManager
 		}
 	}
 	
-	
 	private TextureRegion getPlayerSpriteFrame(Texture spriteSheet, int index)
 	{
 		return new TextureRegion(spriteSheet, 0, 30 * index, 35, 30);
@@ -81,7 +82,14 @@ public class PlayerAnimationManager
 		for (int i = 0; i < spriteType.getFrames(); i++)
 			keyFrames[i] = getPlayerSpriteFrame(spriteSheet, spriteIndex + i);
 		
-		return new Animation<TextureRegion>(CrushPlayerSprite.PLAYER_ANIMATION_FRAME_DURATION, keyFrames);
+		return new Animation<TextureRegion>(PLAYER_ANIMATION_FRAME_DURATION, keyFrames);
+	}
+
+	public TextureRegion getSprite(Team team, Race race, PlayerSpriteType spriteType)
+	{
+		ColorPairKey colorPairKey = new ColorPairKey(team);
+		Texture spriteSheet = TeamColorsManager.getInstance().getSpriteSheet(colorPairKey, race);
+		return getPlayerSpriteFrame(spriteSheet, spriteType.getIndex());
 	}
 	
 	public Animation<TextureRegion> getAnimation(Team team, Race race, PlayerSpriteType type)
