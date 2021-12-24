@@ -39,6 +39,10 @@ public class Event implements Serializable
 	public static final int EJECT_SERIOUS = 3;
 	public static final int EJECT_DEATH = 4;
 	
+	public static final int EJECT_CAUSE_ELECTROCUTION = -1;
+	public static final int EJECT_CAUSE_GROUND = -2;
+	public static final int EJECT_CAUSE_BACKFIRE = -3;
+	
 	private int type;
 	private final int TOTAL_FLAGS = 8;
 	
@@ -330,12 +334,13 @@ public class Event implements Serializable
  * 
  * EVENT_EJECT
  * 0 - p1 index
- * 1 - weeks on bench
+ * 1 - p2 index (for injury/death, -1 is electrocution, -2 is hitting the ground, -3 is backfire belt)
  * 2 - ejection type (0 for equipment, 1 for blob, 2 for trivial injury, 3 for non-trivial injury, 4 for death)
  * 3 - first stat index
  * 4 - first stat penalty
  * 5 - second stat index
  * 6 - second stat penalty
+ * 7 - weeks on bench
  * 
  * EVENT_SHOCK
  * 0 - p1 index

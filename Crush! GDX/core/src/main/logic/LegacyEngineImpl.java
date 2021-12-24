@@ -11,6 +11,7 @@ import main.data.Event;
 import main.data.entities.Arena;
 import main.data.entities.Equipment;
 import main.data.entities.Player;
+import main.data.entities.Race;
 import main.data.entities.Skill;
 import main.presentation.common.Logger;
 /**
@@ -32,6 +33,12 @@ public class LegacyEngineImpl implements Engine
 	
 	private static final int RANDOMNESS = 100;
 	private static final int MAX_PERCENT = 100;
+	
+	private static final Player ELECTROCUTION = new Player(Race.XJS9000, "ELECTROCUTION");
+	private static final Player HITTING_THE_GROUND = new Player(Race.XJS9000, "HITTING THE GROUND");
+	private static final Player BACKFIRE_BELT = new Player(Race.XJS9000, "BACKFIRE BELT");
+	
+	private static final int SHOCK_TILE_STRENGTH = 60;
 	
 	public LegacyEngineImpl(Data dataImplSource)
 	{
@@ -189,7 +196,7 @@ public class LegacyEngineImpl implements Engine
 					{
 						curAP = 0;
 						
-						Event failedJumpInjuryEvent = generateCheckResultEvent(null, activePlayer, 20 + Randomizer.getRandomInt(1, RANDOMNESS), curTG + Randomizer.getRandomInt(1, RANDOMNESS));		//failed jumps attack with 20 strength (TODO: confirm this)
+						Event failedJumpInjuryEvent = generateCheckResultEvent(HITTING_THE_GROUND, activePlayer, 20 + Randomizer.getRandomInt(1, RANDOMNESS), curTG + Randomizer.getRandomInt(1, RANDOMNESS));		//failed jumps attack with 20 strength (TODO: confirm this)
 						processAndOfferEvent(toRet, failedJumpInjuryEvent);
 						
 						//can't pick up the ball if you're on your butt
@@ -211,8 +218,7 @@ public class LegacyEngineImpl implements Engine
 				//TODO: when going through a list of destinations, the list keeps going even if a player is hurt
 				if (curArena.getTile(playerMoveCoords.x, playerMoveCoords.y) == Arena.TILE_SHOCK  && !playerResistsShock(activePlayer) && !knockdownBool)
 				{
-					
-					Event shockTileInjuryEvent = generateCheckResultEvent(null, activePlayer, 60 + Randomizer.getRandomInt(1, RANDOMNESS), curTG + Randomizer.getRandomInt(1, RANDOMNESS));		//shock tiles attack with 60 strength (TODO: confirm this)
+					Event shockTileInjuryEvent = generateCheckResultEvent(ELECTROCUTION, activePlayer, SHOCK_TILE_STRENGTH + Randomizer.getRandomInt(1, RANDOMNESS), curTG + Randomizer.getRandomInt(1, RANDOMNESS));		//shock tiles attack with 60 strength (TODO: confirm this)
 					toRet.add(Event.shock(localData.getIndexOfPlayer(activePlayer)));
 					processAndOfferEvent(toRet, shockTileInjuryEvent);
 					
@@ -301,7 +307,7 @@ public class LegacyEngineImpl implements Engine
 						if (!playerResistsShock(activePlayer))					//no effect if player has insulated boots
 						{
 							toRet.add(Event.shock(localData.getIndexOfPlayer(activePlayer)));
-							toRet.offer(generateCheckResultEvent(null, activePlayer, 20 + Randomizer.getRandomInt(1, RANDOMNESS), curTG + Randomizer.getRandomInt(1, RANDOMNESS)));		//ball bins attack with 20 strength
+							toRet.offer(generateCheckResultEvent(ELECTROCUTION, activePlayer, 20 + Randomizer.getRandomInt(1, RANDOMNESS), curTG + Randomizer.getRandomInt(1, RANDOMNESS)));		//ball bins attack with 20 strength
 						}
 						
 						//don't need to worry about dropping the ball, since there's no way you can have the ball and be shocked by a bin
@@ -649,6 +655,9 @@ public class LegacyEngineImpl implements Engine
 		boolean isCheck = (attacker != null);	//we'll pass a null var here for shock effects (including equipment), backfire, falling damage...
 												//really anything besides actual checks
 		
+		if (attacker == ELECTROCUTION || attacker == HITTING_THE_GROUND || attacker == BACKFIRE_BELT)	//predefined static "players" that will hopefully never be created coincidentally
+			isCheck = false;
+		
 		Event toRet = null;
 		
 		if (result < 20)
@@ -710,7 +719,7 @@ public class LegacyEngineImpl implements Engine
 		else if (injLevel <= Player.INJURY_KNOCKDOWN)
 			toRet = Event.setStatus(pIndex, Player.STS_DOWN);
 		else if (injLevel == Player.INJURY_STUN)
-			toRet = Event.setStatus(pIndex, Player.STS_STUN);
+			toRet = Event.setStatus(pIndex, Player.STS_STUN_DOWN);
 		else
 			toRet = generateInjuryEvent(defender, injLevel, attacker);
 		
@@ -723,8 +732,16 @@ public class LegacyEngineImpl implements Engine
 	// TODO Modify all of these with docbot stuff
 	private Event generateInjuryEvent(Player injuredPlayer, int injLevel, Player causingPlayer)
 	{
-		int pIndex = localData.getIndexOfPlayer(injuredPlayer);
 		int causeIndex = localData.getIndexOfPlayer(causingPlayer);
+		
+		if (causingPlayer == ELECTROCUTION)
+			causeIndex = Event.EJECT_CAUSE_ELECTROCUTION;
+		if (causingPlayer == HITTING_THE_GROUND)
+			causeIndex = Event.EJECT_CAUSE_GROUND;
+		if (causingPlayer == BACKFIRE_BELT)
+			causeIndex = Event.EJECT_CAUSE_BACKFIRE;
+		
+		int pIndex = localData.getIndexOfPlayer(injuredPlayer);
 		int weeksOut = Randomizer.getRandomInt(1, 6);
 		int type = Event.EJECT_SERIOUS;
 		int stat1 = 4 + Randomizer.getRandomInt(0, 3);

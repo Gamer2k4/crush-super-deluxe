@@ -2,7 +2,9 @@ package main.presentation.game;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -10,11 +12,12 @@ import main.data.Data;
 import main.data.entities.Arena;
 import main.data.entities.Player;
 import main.presentation.common.Logger;
-import main.presentation.game.sprite.CrushArena;
+import main.presentation.game.sprite.CrushArenaImageManager;
 import main.presentation.game.sprite.CrushBallSprite;
 import main.presentation.game.sprite.CrushPlayerSprite;
 import main.presentation.game.sprite.CrushSprite;
 import main.presentation.game.sprite.CrushTile;
+import main.presentation.game.sprite.Facing;
 import main.presentation.game.sprite.TileSpriteType;
 
 public class EventTextureFactory
@@ -50,6 +53,7 @@ public class EventTextureFactory
 	public void beginGame(Data clientData)
 	{
 		data = clientData;
+		CrushTile.setHomeTeam(data.getTeam(0));
 		refreshTileSprites();
 		generatePlayerSprites();
 	}
@@ -80,7 +84,8 @@ public class EventTextureFactory
 	{
 		List<CrushSprite> arenaSprites = new ArrayList<CrushSprite>();
 		
-		CrushSprite arenaSprite = CrushArena.createArena(data.getArena());
+//		CrushSprite arenaSprite = CrushArenaImageManager.getInstance().createArena(data.getArena());		//saves loading time by not updating field colors
+		CrushSprite arenaSprite = CrushArenaImageManager.getInstance().getArenaForHomeTeam(data.getArena().getIndex(), data.getTeam(0));
 		
 		if (arenaSprite != null)
 			arenaSprites.add(arenaSprite);
@@ -92,28 +97,38 @@ public class EventTextureFactory
 	{
 		tileSprites.clear();
 		
+		if (data == null)
+			return;
+		
 		Arena arena = data.getArena();
 		if (arena == null)
 			return;
 		
-		for (int i = 0; i < 30; i++)
+		for (int i = -1; i < 31; i++)
 		{
-			for (int j = 0; j < 30; j++)
+			for (int j = -1; j < 31; j++)
 			{
-				int tileSheetIndex = convertLegacyTileValueToTileSheetIndex(arena.getLegacyTile(i, j));
+				int tileSheetIndex = -1;
 				
-				if (tileSheetIndex != -1)
-				{
-					CrushTile tileSprite = CrushTile.createTile(OFFSCREEN_COORDS, tileSheetIndex);
-					Point coords = new Point(i, j);
-					tileSprite.setArenaPosition(coords);
-					tileSprites.put(coords, tileSprite);
-				}
+				if (i == -1 || j == -1 || i == 30 || j == 30)
+					tileSheetIndex = getBorderTile(i, j);
+				else
+					tileSheetIndex = convertLegacyTileValueToTileSheetIndex(arena.getLegacyTile(i, j));
+
+				if (tileSheetIndex == -1)
+					continue;
+
+				CrushTile tileSprite = CrushTile.createTile(OFFSCREEN_COORDS, tileSheetIndex);
+				Point coords = new Point(i, j);
+				tileSprite.setArenaPosition(coords);
+				tileSprites.put(coords, tileSprite);
 			}
 		}	
 	}
-	
-	public List<CrushSprite> getTileSprites()
+
+	//TODO: make this safe for concurrent modification
+	@Deprecated
+	public List<CrushSprite> getTileSprites_notConcurrentSafe()
 	{
 		List<CrushSprite> tileSpriteList = new ArrayList<CrushSprite>();
 		
@@ -121,6 +136,28 @@ public class EventTextureFactory
 		{
 			tileSpriteList.add(sprite);
 		}
+		
+		return tileSpriteList;
+	}
+	
+	public List<CrushSprite> getTileSprites()
+	{	
+		List<CrushSprite> tileSpriteList = new ArrayList<CrushSprite>();
+		
+		Iterator<CrushSprite> iter = null;
+		
+		do {
+			try {
+				iter = tileSprites.values().iterator();
+		
+				while (iter.hasNext()) {
+					tileSpriteList.add(iter.next());
+				}
+			} catch (ConcurrentModificationException cme)
+			{
+				iter = null;
+			}
+		} while (iter == null);
 		
 		return tileSpriteList;
 	}
@@ -302,12 +339,22 @@ public class EventTextureFactory
 		return TileSpriteType.valueOf("WALK_" + direction + "_" + color);
 	}
 	
-	//TODO: this might be managed by GdxGui and its activeOverlayAnimations list
 	public List<CrushSprite> getHoveringSprites()
 	{
+		//TODO: this is stun stars, vortex/repulsor, terror, backfire, etc.
+		
 		List<CrushSprite> hoveringSprites = new ArrayList<CrushSprite>();
 		
-		//TODO: this is stun stars, vortex/repulsor, terror, backfire, etc.
+		for (Player player : data.getAllPlayers())
+		{
+			if (player.status == Player.STS_STUN_DOWN || player.status == Player.STS_STUN_SIT)
+			{
+				CrushTile stunStars = CrushTile.createTile(OFFSCREEN_COORDS, TileSpriteType.STUN_STARS);
+				Point coords = data.getLocationOfPlayer(player);
+				stunStars.setArenaPosition(coords);
+				hoveringSprites.add(stunStars);
+			}
+		}
 		
 		return hoveringSprites;
 	}
@@ -405,6 +452,17 @@ public class EventTextureFactory
 		playerSprites.put(newArenaCoords, playerSprite);
 	}
 	
+	public Facing getBinSpriteFacing(Point coords)
+	{
+		int tileSheetIndex = convertLegacyTileValueToTileSheetIndex(data.getArena().getLegacyTile(coords.x, coords.y));
+		String tileSpriteTypeName = TileSpriteType.getTileSpriteType(tileSheetIndex).name();
+		
+		if (tileSpriteTypeName.startsWith("BIN_"))
+			return Facing.valueOf(tileSpriteTypeName.substring(4, 5));
+		
+		return null;
+	}
+	
 	public void refreshPlayerSpriteCoords(CrushPlayerSprite player)
 	{
 		updatePlayerSpriteCoords(player, player.getArenaPosition());
@@ -412,9 +470,34 @@ public class EventTextureFactory
 	
 	private int convertLegacyTileValueToTileSheetIndex(int legacyTileValue)
 	{
-		if (legacyTileValue == 00 || legacyTileValue == 40)
+		//													  red NW arrow			   red SW arrow			    red W arrow
+		if (legacyTileValue == 00 || legacyTileValue == 40 || legacyTileValue == 20 || legacyTileValue == 26 || legacyTileValue == 27)
 			return -1;
 		
 		return legacyTileValue - 1;
+	}
+	
+	//TODO: note that these are untinted, so they'll look off for green arenas
+	private int getBorderTile(int row, int col)
+	{
+		if (row == -1 && col == -1)
+			return TileSpriteType.BORDER_NW.getIndex();
+		if (row == 30 && col == -1)
+			return TileSpriteType.BORDER_SW.getIndex();
+		if (row == -1 && col == 30)
+			return TileSpriteType.BORDER_NE.getIndex();
+		if (row == 30 && col == 30)
+			return TileSpriteType.BORDER_SE.getIndex();
+
+		if (row == -1)
+			return TileSpriteType.BORDER_N.getIndex();
+		if (row == 30)
+			return TileSpriteType.BORDER_S.getIndex();
+		if (col == -1)
+			return TileSpriteType.BORDER_W.getIndex();
+		if (col == 30)
+			return TileSpriteType.BORDER_E.getIndex();
+		
+		return TileSpriteType.UNDEFINED_TYPE.getIndex();
 	}
 }

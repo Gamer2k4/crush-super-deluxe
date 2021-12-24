@@ -17,6 +17,7 @@ public class ColorReplacer extends AbstractColorReplacer
 											new Color(0, 0, 199),
 											new Color(0, 0, 168),
 											new Color(0, 0, 143),
+											new Color(0, 0, 112),
 											new Color(0, 0, 87),
 											new Color(0, 0, 56),
 											new Color(0, 0, 31)};
@@ -25,6 +26,7 @@ public class ColorReplacer extends AbstractColorReplacer
 											new Color(199, 87, 0),
 											new Color(168, 72, 0),
 											new Color(143, 63, 0),
+											new Color(112, 48, 0),
 											new Color(87, 39, 0),
 											new Color(56, 24, 0),
 											new Color(31, 16, 0)};
@@ -67,13 +69,13 @@ public class ColorReplacer extends AbstractColorReplacer
 	@Override
 	protected Color darkenColor(Color color, int level)
 	{
-		if (level < 0 || level > 6)
-			throw new IllegalArgumentException("Level must be between 0 and 4, inclusive.");
+		if (level < 0 || level > MAX_DARKEN_LEVEL)
+			throw new IllegalArgumentException("Level must be between 0 and " + MAX_DARKEN_LEVEL + ", inclusive.");
 		
-		int darken = 6 - level;
+		int darken = 7 - level;
 		
 		if (level < 4)
-			darken = 7 - level;
+			darken = 8 - level;
 		
 		if (!TeamColorType.isValidLegacyTeamColor(color))
 			return super.darkenColor(color, level);		//darken mathematically, rather than using specific replacement colors

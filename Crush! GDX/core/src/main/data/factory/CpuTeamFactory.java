@@ -8,6 +8,7 @@ import java.util.Random;
 import main.data.entities.Team;
 import main.data.load.NameLoader;
 import main.logic.Randomizer;
+import main.presentation.common.image.TeamColorType;
 
 public class CpuTeamFactory
 {
@@ -51,6 +52,9 @@ public class CpuTeamFactory
 		
 		teamColors[0] = new Color(Randomizer.getRandomInt(0, 255), Randomizer.getRandomInt(0, 255), Randomizer.getRandomInt(0, 255));
 		teamColors[1] = new Color(Randomizer.getRandomInt(0, 255), Randomizer.getRandomInt(0, 255), Randomizer.getRandomInt(0, 255));
+		
+//		teamColors[0] = TeamColorType.GOLD.getColor();		//TODO: for debugging only
+//		teamColors[1] = TeamColorType.RED.getColor();		//TODO: for debugging only
 		
 		return teamColors;
 	}

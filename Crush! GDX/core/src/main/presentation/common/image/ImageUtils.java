@@ -12,6 +12,10 @@ public class ImageUtils
 	{
 		return (c1.getRed() == c2.getRed() && c1.getGreen() == c2.getGreen() && c1.getBlue() == c2.getBlue());
 	}
+	public static boolean rgbaEquals(Color c1, Color c2)
+	{
+		return (c1.getRed() == c2.getRed() && c1.getGreen() == c2.getGreen() && c1.getBlue() == c2.getBlue() && c1.getAlpha() == c2.getAlpha());
+	}
 	
 	public static int getRGBAfromColor(Color color)
 	{

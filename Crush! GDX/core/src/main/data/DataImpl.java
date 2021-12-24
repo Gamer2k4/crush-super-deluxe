@@ -208,8 +208,11 @@ public class DataImpl implements Data
 		
 //		fieldIndex = Arena.ARENA_SAVANNA;		//TODO: currently always savannah for testing
 //		fieldIndex = Arena.ARENA_ABYSS;
-//		fieldIndex = Arena.ARENA_THE_VOID;
-		fieldIndex = Arena.ARENA_JACKALS_LAIR;
+		fieldIndex = Arena.ARENA_THE_VOID;
+//		fieldIndex = Arena.ARENA_JACKALS_LAIR;
+//		fieldIndex = Arena.ARENA_FULCRUM;
+//		fieldIndex = Arena.ARENA_SPACECOM;
+//		fieldIndex = Arena.ARENA_EYES;
 		
 //		fieldIndex = RandomGeneratorSingletonImpl.getInstance().getRandomInt(0, 19);
 		
@@ -223,7 +226,7 @@ public class DataImpl implements Data
 		if (player == null)
 			return null;
 		
-		if (player.getStatus() == Player.STS_OKAY || player.getStatus() == Player.STS_DOWN || player.getStatus() == Player.STS_STUN)
+		if (player.getStatus() == Player.STS_OKAY || player.getStatus() == Player.STS_DOWN || player.getStatus() == Player.STS_STUN_DOWN)
 			player.status = Player.STS_DECK;
 		
 		return player;
@@ -280,6 +283,20 @@ public class DataImpl implements Data
 		
 		gameWinner = winningTeam;
 	}
+	
+	@Override
+	public int getNextStateForRecoveringPlayer(Player player)
+	{
+		if (player == null)
+			throw new IllegalArgumentException("Failed retrieval of next state for recovering player; player cannot be null.");
+		
+		if (player.status == Player.STS_STUN_DOWN)
+			return Player.STS_STUN_SIT;
+		if (player.status == Player.STS_DOWN || player.status == Player.STS_STUN_SIT)
+			return Player.STS_OKAY;
+			
+		return player.status;
+	}
 
 	@Override
 	public void processEvent(Event theEvent)
@@ -293,7 +310,7 @@ public class DataImpl implements Data
 		// dumbly execute events as they come in; the Engine should've sanitized them so nothing illegal can happen
 		// only do one at a time, since by this point everything is resolved and distinct
 		
-		System.out.println("Data " + name + " received event: " + theEvent);
+		Logger.debug("Data " + name + " received event: " + theEvent);
 
 		if (theEvent.getType() == Event.EVENT_TURN)
 		{
@@ -312,18 +329,15 @@ public class DataImpl implements Data
 				if (player.status == Player.STS_OKAY)
 				{
 					player.currentAP = player.getAttributeWithModifiers(Player.ATT_AP);
-				} else if (player.status == Player.STS_STUN)
+				} else if (player.status == Player.STS_DOWN || player.status == Player.STS_STUN_SIT)
 				{
-					player.status = Player.STS_DOWN;
-				} else if (player.status == Player.STS_DOWN)
-				{
-					player.status = Player.STS_OKAY;
-
 					if (player.hasSkill(Skill.POP_UP))
 						player.currentAP = player.getAttributeWithModifiers(Player.ATT_AP) - AP_POPUP_COST;
 					else
 						player.currentAP = halfAttribute(player.getAttributeWithModifiers(Player.ATT_AP));
 				}
+				
+				player.status = getNextStateForRecoveringPlayer(player);
 			}
 		} else if (theEvent.getType() == Event.EVENT_STS)
 		{

@@ -68,6 +68,15 @@ public enum PlayerSpriteType
 	CHECK_WEAK_W(62),
 	CHECK_STRONG_W(63),
 	
+	SIT_NW(96),
+	SIT_N(100),
+	SIT_NE(104),
+	SIT_E(108),
+	SIT_SE(112),
+	SIT_S(116),
+	SIT_SW(120),
+	SIT_W(124),
+	
 	SHOCK_ON_NW(99),
 	SHOCK_ON_N(103),
 	SHOCK_ON_NE(107),

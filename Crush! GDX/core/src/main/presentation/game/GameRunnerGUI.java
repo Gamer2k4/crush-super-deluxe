@@ -130,7 +130,7 @@ public abstract class GameRunnerGUI extends GameGUI
 					int playerStatus = playerToJump.getStatus();
 
 					// if the player in the way is down, stunned, or if the jumper is a curmian (which can jump standing players), there's nothing in the way
-					if (playerStatus == Player.STS_DOWN || playerStatus == Player.STS_STUN || plyr.getRace() == Race.CURMIAN)
+					if (playerStatus == Player.STS_DOWN || playerStatus == Player.STS_STUN_DOWN || plyr.getRace() == Race.CURMIAN)
 					{
 						playerInWay = false;
 					} else
@@ -324,7 +324,7 @@ public abstract class GameRunnerGUI extends GameGUI
 			if (p == null)
 				continue;
 
-			if (p.status == Player.STS_OKAY || p.status == Player.STS_STUN || p.status == Player.STS_DOWN)
+			if (p.status == Player.STS_OKAY || p.status == Player.STS_STUN_DOWN || p.status == Player.STS_DOWN)
 			{
 				System.out.println("SETTING CURRENT PLAYER");
 				currentPlayer = p;

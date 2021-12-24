@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
+import main.data.GameDataPreloader;
 import main.data.entities.Team;
 import main.data.factory.CpuTeamFactory;
 import main.logic.Client;
@@ -26,6 +27,7 @@ import main.presentation.game.GameText;
 import main.presentation.game.GdxGUI;
 import main.presentation.game.StaticImage;
 import main.presentation.game.sprite.CrushAnimatedTile;
+import main.presentation.game.sprite.CrushArenaImageManager;
 import main.presentation.game.sprite.CrushSprite;
 import main.presentation.screens.GameScreen;
 import main.presentation.screens.GameScreenManager;
@@ -158,6 +160,7 @@ public class CrushGame extends Game implements ActionListener
 	@Override
 	public void dispose()
 	{
+		CrushArenaImageManager.getInstance().dispose();
 		TeamColorsManager.getInstance().dispose();
 		ImageFactory.getInstance().dispose();
 		AudioManager.getInstance().dispose();
@@ -182,6 +185,8 @@ public class CrushGame extends Game implements ActionListener
 		
 		List<Team> gameTeams = getTeamsForGameStart(rawTeams, 900);
 
+		GameDataPreloader.preloadGameData(gameTeams);
+		
 		client = new Client(host, this);
 
 		setScreen(GameScreenManager.getInstance().getScreen(ScreenType.GAME_PLAY));
@@ -190,7 +195,7 @@ public class CrushGame extends Game implements ActionListener
 		GdxGUI gui = (GdxGUI) client.getGui();
 		gui.setGameScreen(activeScreen);
 
-		host.newGame(gameTeams);
+		host.newGame(gameTeams, gameTeams.get(0).homeField);		//TODO: update this for playoffs
 		client.getGui().beginGame();
 	}
 

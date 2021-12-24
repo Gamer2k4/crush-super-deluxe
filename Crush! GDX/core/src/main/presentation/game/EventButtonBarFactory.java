@@ -1,6 +1,7 @@
 package main.presentation.game;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.Map;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 import main.data.Data;
+import main.data.entities.Arena;
 import main.data.entities.Player;
 import main.data.entities.Team;
 import main.presentation.ImageType;
@@ -53,6 +55,10 @@ public class EventButtonBarFactory
 	public static final int PLAYER_ATTRIBUTE_Y_START = 10;
 	public static final int PLAYER_STATUS_X_START = 10;
 	public static final int PLAYER_STATUS_Y_START = 58;
+	
+	private static final int PADS_LEFT_BALL_ON_X_START = 494;
+	private static final int PADS_LEFT_BALL_ON_Y_START = 368;
+	private static final int PADS_LEFT_BALL_ON_MAX_WIDTH = 15;
 	
 	private static final int ARENA_SIDE_LENGTH = 30;
 	private static final int TILE_SIZE = 2;
@@ -173,11 +179,42 @@ public class EventButtonBarFactory
 		names.add(playerNumbers[playerIndex - 1]);
 		names.add(teamNames[teamIndex]);
 		names.add(arenaName);
+		names.add(getPadsLeftOrBallOnValue());
 		
 //		if (currentPlayer.isInGame())			//apparently the way the original game worked was to display the stats anyway
 			names.add(playerNames[teamIndex][playerIndex - 1]);
 		
 		return names;
+	}
+
+	private GameText getPadsLeftOrBallOnValue()
+	{
+		Arena arena = data.getArena();
+		
+		if (!arena.isBallFound())
+		{
+			String padsLeft = String.valueOf(arena.getUntriedBinCount());
+			int startX = getStringStartX(PADS_LEFT_BALL_ON_X_START, PADS_LEFT_BALL_ON_MAX_WIDTH, padsLeft); 
+			return GameText.small2(new Point(startX, PADS_LEFT_BALL_ON_Y_START), LegacyUiConstants.COLOR_LEGACY_BLUE, padsLeft);
+		}
+		
+		Point goalLine = arena.getGoalLine();
+		Point ballLocation = data.getBallLocation();
+		
+		if (ballLocation.x == -1 && ballLocation.y == -1)
+			ballLocation = data.getLocationOfPlayer(data.getBallCarrier());
+		
+		try {
+			int xDist = Math.abs(ballLocation.x - goalLine.x);
+			int yDist = Math.abs(ballLocation.y - goalLine.y);
+			String ballOn = String.valueOf(Math.max(xDist, yDist));		//TODO: not quite accurate; the "goal line" is the innermost corner of the goal, so any other goal tile
+			int startX = getStringStartX(PADS_LEFT_BALL_ON_X_START, PADS_LEFT_BALL_ON_MAX_WIDTH, ballOn);							//will have a non-zero value
+			return GameText.small2(new Point(startX, PADS_LEFT_BALL_ON_Y_START), LegacyUiConstants.COLOR_LEGACY_BLUE, ballOn);
+		} catch (NullPointerException npe)	//could happen if data hasn't quite updated by the time we're here
+		{
+			int startX = getStringStartX(PADS_LEFT_BALL_ON_X_START, PADS_LEFT_BALL_ON_MAX_WIDTH, "0");
+			return GameText.small2(new Point(startX, PADS_LEFT_BALL_ON_Y_START), LegacyUiConstants.COLOR_LEGACY_BLUE, "0");
+		}
 	}
 
 	public List<StaticImage> getMinimap()
@@ -273,6 +310,12 @@ public class EventButtonBarFactory
 		currentTeamIndicator.setPosition(new Point(535, 49 - (10 * data.getCurrentTeam())));
 		images.add(currentTeamIndicator);
 		
+		if (!data.getArena().isBallFound())
+		{
+			StaticImage padsLeft = new StaticImage(ImageType.GAME_OVERLAY_PADSLEFT, new Point(489, 8));
+			images.add(padsLeft);
+		}
+		
 		return images;
 	}
 	
@@ -298,7 +341,7 @@ public class EventButtonBarFactory
 			
 			if (status == Player.STS_LATE)
 				statusImage = ImageType.GAME_MASK_LATESTATUS;
-			else if (status == Player.STS_STUN)
+			else if (status == Player.STS_STUN_DOWN || status == Player.STS_STUN_SIT)
 				statusImage = ImageType.GAME_MASK_STUNSTATUS;
 			else if (status == Player.STS_HURT)
 				statusImage = ImageType.GAME_MASK_HURTSTATUS;

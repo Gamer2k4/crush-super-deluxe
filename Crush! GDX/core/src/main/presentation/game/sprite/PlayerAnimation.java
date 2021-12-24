@@ -56,7 +56,9 @@ public class PlayerAnimation
 			break;
 		case JUMP:
 			break;
-		case KNOCKDOWN:
+		case DOWN:
+			break;
+		case SIT:
 			break;
 		case RECEIVE_BALL:
 			return createReceiveBallAnimation();
@@ -140,7 +142,7 @@ public class PlayerAnimation
 	private static Map<Facing, PlayerAnimation> createReceiveBallAnimation()
 	{
 		Map<Facing, PlayerAnimation> createdAnimations = new HashMap<Facing, PlayerAnimation>();
-		int frameDurationInMs = 250;
+		int frameDurationInMs = 300;
 		
 		for (Facing facing : Facing.values())
 		{

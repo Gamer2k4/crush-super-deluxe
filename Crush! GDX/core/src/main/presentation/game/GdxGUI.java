@@ -9,19 +9,23 @@ import java.util.TimerTask;
 
 import main.data.Event;
 import main.data.entities.Player;
+import main.data.entities.Race;
 import main.logic.Client;
 import main.logic.Server;
-import main.presentation.ImageType;
 import main.presentation.audio.AudioManager;
 import main.presentation.audio.SoundType;
 import main.presentation.common.Logger;
 import main.presentation.common.PlayerTextFactory;
 import main.presentation.common.ScreenCommand;
 import main.presentation.game.ejectionalert.EjectionAlert;
+import main.presentation.game.ejectionalert.EquipmentEjectionAlert;
+import main.presentation.game.ejectionalert.FatalityEjectionAlert;
+import main.presentation.game.ejectionalert.InjuryEjectionAlert;
 import main.presentation.game.ejectionalert.MutationEjectionAlert;
 import main.presentation.game.sprite.CrushAnimatedTile;
 import main.presentation.game.sprite.CrushPlayerSprite;
 import main.presentation.game.sprite.CrushSprite;
+import main.presentation.game.sprite.Facing;
 import main.presentation.screens.CrushEventScreen;
 import main.presentation.screens.GameScreen;
 
@@ -67,7 +71,7 @@ public class GdxGUI extends GameRunnerGUI
 	@SuppressWarnings("incomplete-switch")
 	public void handleCommand(ScreenCommand command)
 	{
-		System.out.println("GUI - command received: " + command);
+		Logger.debug("GUI - command received: " + command);
 
 		switch (command)
 		{
@@ -160,36 +164,67 @@ public class GdxGUI extends GameRunnerGUI
 		System.out.println("\tGUI received event: " + event);
 		
 		if (event.getType() == Event.EVENT_TELE)
-		{
 			handleTeleportEvent(event);
-		}
 		else if (event.getType() == Event.EVENT_TURN)
-		{
-			currentAction = Action.ACTION_MOVE;
-			curPlayerIndex = getFirstEligiblePlayer();
-			snapToPlayer(getData().getPlayer(curPlayerIndex));
-		}
+			handleTurnEvent(event);
 		else if (event.getType() == Event.EVENT_EJECT)
-		{
-			showEjectionAlert(event);
-		}
+			handleEjectionEvent(event);
 		else if (event.getType() == Event.EVENT_BIN)
-		{
 			handleBinEvent(event);
-		}
 		else if (event.getType() == Event.EVENT_MOVE)
-		{
 			handleMoveEvent(event);
-		}
 		else if (event.getType() == Event.EVENT_SHOCK)
-		{
 			handleShockEvent(event);
-		}
+		else if (event.getType() == Event.EVENT_STS)
+			handleStatusEvent(event);
+		else if (event.getType() == Event.EVENT_RECVR)
+			handleRecoverEvent(event);
 		
 		checkForNextEvents();
 		gameScreen.refreshTextures();
 	}
+
+	private void handleTurnEvent(Event event)
+	{
+		if (event.getType() != Event.EVENT_TURN)
+			return;
+		
+		currentAction = Action.ACTION_MOVE;
+		curPlayerIndex = getFirstEligiblePlayer();
+		snapToPlayer(getData().getPlayer(curPlayerIndex));
+	}
 	
+	private void handleRecoverEvent(Event event)
+	{
+		if (event.getType() != Event.EVENT_RECVR)
+			return;
+		
+		Player player = getData().getPlayer(event.flags[0]);
+		int nextStatus = getData().getNextStateForRecoveringPlayer(player);
+		
+		if (player.status != nextStatus)
+		{
+			snapToPlayer(player);
+			delay(500);
+		}
+		
+		handleStatusEvent(Event.setStatus(event.flags[0], nextStatus));
+		
+		if (player.status != nextStatus)
+			delay(500);
+	}
+	
+	private void handleStatusEvent(Event event)
+	{
+		if (event.getType() != Event.EVENT_STS)
+			return;
+		
+		Player player = getData().getPlayer(event.flags[0]);
+		
+		CrushPlayerSprite playerSprite = eventTextureFactory.getPlayerSprite(player);
+		playerSprite.changeStatus(event);
+	}
+
 	private void handleShockEvent(Event event)
 	{
 		if (event.getType() != Event.EVENT_SHOCK)
@@ -213,6 +248,47 @@ public class GdxGUI extends GameRunnerGUI
 		playerSprite.walk(event);
 		activeSpriteAnimations.add(playerSprite);
 	}
+	
+	private void handleEjectionEvent(Event event)
+	{
+		if (event.getType() != Event.EVENT_EJECT)
+			return;
+		
+		Player player = getData().getPlayer(event.flags[0]);
+		CrushPlayerSprite playerSprite = eventTextureFactory.getPlayerSprite(player);
+		
+		if (event.flags[2] != Event.EJECT_BLOB && event.flags[2] != Event.EJECT_REF)
+		{
+			playerSprite.hurt();
+			waitForDeathSoundToFinish(player.getRace());
+		}
+		
+		showEjectionAlert(event);
+	}
+
+	private void waitForDeathSoundToFinish(Race race)
+	{
+		int delayMs = 0;
+		
+		if (race == Race.CURMIAN)
+			delayMs = 450;
+		else if (race == Race.DRAGORAN)
+			delayMs = 1800;
+		else if (race == Race.GRONK)
+			delayMs = 1650;
+		else if (race == Race.HUMAN)
+			delayMs = 650;
+		else if (race == Race.KURGAN)
+			delayMs = 3350;
+		else if (race == Race.NYNAX)
+			delayMs = 800;
+		else if (race == Race.SLITH)
+			delayMs = 570;
+		else if (race == Race.XJS9000)
+			delayMs = 1350;
+		
+		delay(delayMs);
+	}
 
 	@Override
 	protected void handleTeleportEvent(Event event)
@@ -221,9 +297,6 @@ public class GdxGUI extends GameRunnerGUI
 			return;
 		
 		boolean isBlobEvent = (event.flags[2] == event.flags[3]);
-		
-		//maybe for each teleport event, check if the sprite is on-screen.  if so, show the "teleport out" animation there and move it offscreen
-		//the sprite WOULDN'T be on-screen if the player is warping in for the first time, or if they've been displaced
 		
 		Player playerWarpingHere = getData().getPlayer(event.flags[0]);
 		Point newPortalCoords = getData().getArena().getPortal(event.flags[3]);
@@ -244,12 +317,7 @@ public class GdxGUI extends GameRunnerGUI
 			super.handleTeleportEvent(event);	//updates the current player and snaps to the tile
 			
 		teleportPlayerOutFromTile(newPortalCoords);
-		
-		
-			//I believe this is where we pop up the mutation alert for leaving players
-			//however, this is tricky, because a player can also get blobbed if they're not being displaced, so somehow
-			//check if the alert has already been shown
-			//	maybe track the event that generates the alert as well?
+
 		if (!isBlobEvent)	//this is not a blob teleport
 			teleportPlayerInToTile(newPortalCoords, playerWarpingHere);
 		else
@@ -263,8 +331,8 @@ public class GdxGUI extends GameRunnerGUI
 			//(the one who didn't blob, but forced the blob) is off in the ether someplace, so we need to relocate it to the arena
 		}
 		
-		//if the player warping in doesn't have a source portal (first entry into the game), check for equipment, and, if necessary, display the alert, then warp them back out
-		//note that warping them out should be a generic "ejection" portal animation, because it happens for injuries too
+		//TODO: if the player warping in doesn't have a source portal (first entry into the game), check for equipment, and, if necessary, display the alert, then warp them back out
+		//	note that warping them out should be a generic "ejection" portal animation, because it happens for injuries too
 		
 		
 		if (isBlobEvent)	//OR the player was ejected; basically if the player teleporting isn't eligible
@@ -314,11 +382,16 @@ public class GdxGUI extends GameRunnerGUI
 		CrushPlayerSprite playerSprite = eventTextureFactory.getPlayerSpriteAtCoords(playerLocation);
 		playerSprite.turnTowardArenaLocation(binLocation);
 		
-		//TODO: animate flashing bin
+		//TODO: this is such an easy way to avoid the grey bin at the end of the animation cycle, but DON'T MODIFY DATA DIRECTLY!!!
+		getData().getArena().setBinStatus(binIndex, result + 1);
+		eventTextureFactory.refreshTileSprites();
+		
+		animateBin(binLocation);
 		
 		if (result == 1)
 		{
 			audioManager.playSound(SoundType.SIREN);
+			delay(250);
 			playerSprite.receiveBall(event);
 		}
 		else
@@ -326,6 +399,51 @@ public class GdxGUI extends GameRunnerGUI
 			audioManager.playSound(SoundType.HORN);
 			delay(1500);
 		}
+	}
+
+	private void animateBin(Point binLocation)
+	{
+		Facing binFacing = eventTextureFactory.getBinSpriteFacing(binLocation);
+		
+		if (binFacing == null)
+			return;
+		
+		animateBinPhase(binLocation, binFacing, 1);
+		animateBinPhase(binLocation, binFacing, 2);
+		animateBinPhase(binLocation, binFacing, 3);
+	}
+	
+	private void animateBinPhase(Point binLocation, Facing facing, int phase)
+	{
+		CrushAnimatedTile binAnimation = CrushAnimatedTile.binAnimation(facing, phase);
+		binAnimation.setArenaPosition(binLocation);
+		activeOverlayAnimations.add(binAnimation);
+		playBinDings(phase);
+		refreshInterface();
+		waitForAnimationsToConclude();
+	}
+	
+	private void playBinDings(int phase)
+	{
+		final int frames = 12 / phase;
+		final long frameDuration = (long)(1000 / frames);
+		
+		final Timer dingTimer = new Timer();
+		
+		TimerTask task = new TimerTask() {
+	        int dingSoundsPlayed = 0;
+			
+			@Override
+			public void run() {
+	        	audioManager.playSound(SoundType.DING);
+	        	dingSoundsPlayed++;
+	        	
+	        	if (dingSoundsPlayed >= frames)
+	        		dingTimer.cancel();
+	        }
+	    };
+	    
+		dingTimer.scheduleAtFixedRate(task, 0, frameDuration);
 	}
 
 	private void showEjectionAlert(Event event)
@@ -340,8 +458,21 @@ public class GdxGUI extends GameRunnerGUI
 			audioManager.playSound(SoundType.MUTATE);
 			activeEjectionAlert = new MutationEjectionAlert(getData(), event);
 		}
-		
-		//TODO: track the event that caused the alert, so the player can be teleported out once it's done (if it's not a blob event)
+		else if (event.flags[2] == Event.EJECT_DEATH)
+		{
+			audioManager.playSound(SoundType.FATAL);
+			activeEjectionAlert = new FatalityEjectionAlert(getData(), event);
+		}
+		else if (event.flags[2] == Event.EJECT_SERIOUS || event.flags[2] == Event.EJECT_TRIVIAL)
+		{
+			audioManager.playSound(SoundType.INJVOC);
+			activeEjectionAlert = new InjuryEjectionAlert(getData(), event);
+		}
+		else if (event.flags[2] == Event.EJECT_REF)
+		{
+			audioManager.playSound(SoundType.WHISTLE);
+			activeEjectionAlert = new EquipmentEjectionAlert(getData(), event);
+		}
 	}
 
 	@Override
@@ -379,6 +510,7 @@ public class GdxGUI extends GameRunnerGUI
 		sprites.addAll(eventTextureFactory.getCursorSprite(currentPlayer));
 		sprites.addAll(eventTextureFactory.getPlayerSprites());
 		sprites.addAll(eventTextureFactory.getBallCarrierIndicator());
+		sprites.addAll(eventTextureFactory.getHoveringSprites());
 		sprites.addAll(eventTextureFactory.getTileHighlightSprites());
 		sprites.addAll(activeOverlayAnimations);
 		sprites.addAll(eventTextureFactory.getElevatedSprites());
@@ -612,6 +744,9 @@ public class GdxGUI extends GameRunnerGUI
 	@Override
 	protected void snapToTile(Point tileCoords)
 	{
+		if (tileCoords == null)
+			return;
+		
 		Logger.debug("zooming to location " + tileCoords);
 		Point snapTargetXY = getOriginLocationWithTileAtCenter(tileCoords);
 		gameScreen.setCameraPosition(snapTargetXY);
@@ -663,6 +798,7 @@ public class GdxGUI extends GameRunnerGUI
 	
 	public void confirmEjectionAlert()
 	{
+		int playerIndex = activeEjectEvent.flags[0];
 		int ejectType = activeEjectEvent.flags[2];
 		activeEjectionAlert = null;
 		activeEjectEvent = null;
@@ -671,9 +807,12 @@ public class GdxGUI extends GameRunnerGUI
 		if (ejectType == Event.EJECT_BLOB)
 			return;
 		
-		Player player = getData().getPlayer(activeEjectEvent.flags[0]);
-		Point playerCoords = getData().getLocationOfPlayer(player);
-		teleportPlayerOutFromTile(playerCoords);
+		Player player = getData().getPlayer(playerIndex);
+		CrushPlayerSprite spriteToEject = eventTextureFactory.getPlayerSprite(player);
+		//TODO: the proper thing is to teleport the player out, but I think the animation gets screwy because the screen is already hung up waiting for the input to confirm the ejection
+//		Point playerCoords = spriteToEject.getArenaPosition();
+//		teleportPlayerOutFromTile(playerCoords);
+		eventTextureFactory.updatePlayerSpriteCoords(spriteToEject, EventTextureFactory.OFFSCREEN_COORDS);
 	}
 	
 	public boolean showingEjectionAlert()
@@ -688,7 +827,7 @@ public class GdxGUI extends GameRunnerGUI
 	{
 		removeFinishedAnimations();
 		
-		if (activeOverlayAnimations.isEmpty() && activeSpriteAnimations.isEmpty())
+		if (activeOverlayAnimations.isEmpty() && activeSpriteAnimations.isEmpty() && !delayTimerRunning)
 			return true;
 		
 		return false;
@@ -708,5 +847,8 @@ public class GdxGUI extends GameRunnerGUI
 		delayTimer = new Timer();
 		delayTimer.schedule(task, durationInMs);
 		delayTimerRunning = true;
+		
+		while (delayTimerRunning)
+			refreshInterface();
 	}
 }

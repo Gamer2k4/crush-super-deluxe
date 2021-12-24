@@ -3,7 +3,6 @@ package main.presentation.game.sprite;
 public enum TileSpriteType
 {
 	UNDEFINED_TYPE(-1, 0),
-	STUN_STARS(-2, 0),	//necessary because the stun stars animation frames aren't sequential
 	WALK_TARGET_RED(0),
 //	RAT_SE(1),	//seems to be repeated later on
 	TERROR(2),
@@ -31,6 +30,10 @@ public enum TileSpriteType
 	WALK_S_RED(24),
 	WALK_SW_RED(25),
 	WALK_W_RED(26),
+	BORDER_SE(31),
+	BORDER_SW(32),
+	BORDER_NW(33),
+	BORDER_NE(34),
 	CURSOR(38),
 	BALL_HIGHLIGHT(39),
 	BIN_N_UNTRIED(43),
@@ -45,6 +48,10 @@ public enum TileSpriteType
 	BIN_S_RED(52),
 	BIN_W_RED(53),
 	BIN_E_RED(54),
+	BORDER_E(59),
+	BORDER_W(60),
+	BORDER_S(61),
+	BORDER_N(62),
 	PORTAL_TILE(63, 4),
 	PAD_N_UNTRIED(67),
 	PAD_S_UNTRIED(68),
@@ -94,12 +101,22 @@ public enum TileSpriteType
 	CHECK_YELLOW(155),
 	CHECK_RED(156),
 	CHECK_GREEN(157),
-	STUN_STARS1(162),
-	STUN_STARS2(166),
-	STUN_STARS3(170),
-	STUN_STARS4(174),
+	STUN_STARS(162, 4),
 	RAT_NW(178),
 	RAT_SE(182),
+	
+	BIN_N_ANIMATION_1(47, 2),
+	BIN_S_ANIMATION_1(48, 2),
+	BIN_W_ANIMATION_1(49, 2),
+	BIN_E_ANIMATION_1(50, 2),
+	BIN_N_ANIMATION_2(47, 2),
+	BIN_S_ANIMATION_2(48, 2),
+	BIN_W_ANIMATION_2(49, 2),
+	BIN_E_ANIMATION_2(50, 2),
+	BIN_N_ANIMATION_3(47, 2),
+	BIN_S_ANIMATION_3(48, 2),
+	BIN_W_ANIMATION_3(49, 2),
+	BIN_E_ANIMATION_3(50, 2),
 	
 	WARP_ANIMATION(97, 8);
 	

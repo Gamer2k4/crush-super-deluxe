@@ -34,7 +34,9 @@ public class TeamImages
 	private Texture smallTeamBanner = null;
 	private Texture largeTeamBanner = null;
 	private Texture helmetColoredImage = null;
-	
+	private Texture darkGoalTiles = null;
+	private Texture litGoalTiles = null;
+
 	private Drawable drawableSmallTeamBanner = null;
 	private Drawable drawableLargeTeamBanner = null;
 	
@@ -107,6 +109,9 @@ public class TeamImages
 		drawableSmallTeamBanner = new TextureRegionDrawable(smallTeamBanner);
 		drawableLargeTeamBanner = new TextureRegionDrawable(largeTeamBanner);
 		
+		darkGoalTiles = colorReplacer.setColors(imageFactory.getTexture(ImageType.DARK_GOAL_TILES), mainColor, trimColor, transparentBg);
+		litGoalTiles = colorReplacer.setColors(imageFactory.getTexture(ImageType.LIT_GOAL_TILES), mainColor, trimColor, transparentBg);
+		
 //		helmetColoredImage = colorReplacer.setColors(imageFactory.getTexture(ImageType.EDITOR_HELMET), mainColor, trimColor, transparentBg);
 	}
 
@@ -165,6 +170,16 @@ public class TeamImages
 		return drawableLargeTeamBanner;
 	}
 	
+	public Texture getDarkGoalTiles()
+	{
+		return darkGoalTiles;
+	}
+	
+	public Texture getLitGoalTiles()
+	{
+		return litGoalTiles;
+	}
+	
 	public Texture getHelmetImage()
 	{
 		return helmetColoredImage;
@@ -200,6 +215,12 @@ public class TeamImages
 		
 		if (largeTeamBanner != null)
 			largeTeamBanner.dispose();
+		
+		if (darkGoalTiles != null)
+			darkGoalTiles.dispose();
+		
+		if (litGoalTiles != null)
+			litGoalTiles.dispose();
 		
 		if (helmetColoredImage != null)
 			helmetColoredImage.dispose();

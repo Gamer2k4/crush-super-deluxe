@@ -11,6 +11,7 @@ import javax.swing.Timer;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 import main.data.Event;
+import main.data.entities.Player;
 import main.data.entities.Race;
 import main.data.entities.Team;
 import main.presentation.audio.AudioManager;
@@ -26,7 +27,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	
 	private Point targetCoords;
 	
-	private Timer playerAnimationTimer = new Timer(0, null);
+	private Timer playerAnimationTimer = new Timer(0, this);
 	private TextureRegion currentSpriteImage = null;
 	private PlayerAnimation currentAnimation = null;
 	private int currentAnimationFrame = 0;
@@ -46,18 +47,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		targetCoords = new Point(coords.x, coords.y);
 		
 		playerAnimationTimer.stop();
-		playerAnimationTimer.addActionListener(this);
-		
-		//note that while the data will have to track a player's tile for engine purposes, the sprites themselves shouldn't be
-		//tied to a particular spot on the map (so that they can travel pixel by pixel across tiles)
 	}
-	
-	//TODO: this class manages everything about the sprite (including its position), meaning it's what decides which frame is returned
-	//		the state will be updated by methods the GUI can call
-	
-	//TODO: some animations will have to be defined in some AnimationSequence class that keeps track of frames and
-	//		their durations.  This would be for things like jumping, which presumably have a short "ready" pose, a
-	//		long "jump" pose, and a short "land" pose.
 	
 	@Override
 	public TextureRegion getImage()
@@ -97,11 +87,13 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	public void rotateClockwise()
 	{
 		facing = facing.rotateClockwise();
+		refreshSpriteImage();
 	}
 	
 	public void rotateCounterclockwise()
 	{
 		facing = facing.rotateCounterclockwise();
+		refreshSpriteImage();
 	}
 	
 	public void shock()
@@ -110,6 +102,29 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		beginAnimation(PlayerState.SHOCK);
 	}
 	
+	public void changeStatus(Event event)
+	{
+		int newStatus = event.flags[2];
+		
+		if (newStatus == Player.STS_OKAY)
+			setState(PlayerState.PASSIVE);
+		else if (newStatus == Player.STS_STUN_SIT)
+			setState(PlayerState.SIT);
+		else if (newStatus == Player.STS_HURT || newStatus == Player.STS_DEAD)
+			setState(PlayerState.INJURY);
+		else if (newStatus == Player.STS_DOWN || newStatus == Player.STS_STUN_DOWN)
+		{
+			playOohSound();
+			setState(PlayerState.DOWN);
+		}
+	}
+	
+	public void hurt()
+	{
+		setState(PlayerState.INJURY);
+		playHurtSound();
+	}
+
 	public void walk(Event event)
 	{
 		int targetRow = event.flags[2];
@@ -213,7 +228,6 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		if (queuedAnimationStates.isEmpty())
 		{
 			setState(PlayerState.PASSIVE);
-			currentSpriteImage = PlayerAnimationManager.getInstance().getSprite(team, race, PlayerSpriteType.getPlayerSpriteType(state, facing));
 			return;
 		}
 		
@@ -289,6 +303,50 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 			
 		AudioManager.getInstance().playSound(walkSound);
 	}
+	
+	private void playOohSound()
+	{
+		SoundType walkSound = SoundType.MEDOOH;
+		
+		if (race == Race.CURMIAN)
+			walkSound = SoundType.HIGHOOH;
+		else if (race == Race.SLITH)
+			walkSound = SoundType.SLTOOH;
+		else if (race == Race.XJS9000)
+			walkSound = SoundType.ROBOOH;
+		else if (race == Race.GRONK)
+			walkSound = SoundType.LOWOOH;
+		else if (race == Race.DRAGORAN)
+			walkSound = SoundType.DRGOOH;
+		else if (race == Race.NYNAX)
+			walkSound = SoundType.ANTOOH;
+		else if (race == Race.KURGAN)
+			walkSound = SoundType.BEVOOH;
+			
+		AudioManager.getInstance().playSound(walkSound);
+	}
+	
+	private void playHurtSound()
+	{
+		SoundType walkSound = SoundType.HUMDEAT;
+		
+		if (race == Race.CURMIAN)
+			walkSound = SoundType.KRMDEAT;
+		else if (race == Race.SLITH)
+			walkSound = SoundType.SLDEAT;
+		else if (race == Race.XJS9000)
+			walkSound = SoundType.ROBDEAT;
+		else if (race == Race.GRONK)
+			walkSound = SoundType.GRDEAT;
+		else if (race == Race.DRAGORAN)
+			walkSound = SoundType.DRGDEAT;
+		else if (race == Race.NYNAX)
+			walkSound = SoundType.ANTDEAT;
+		else if (race == Race.KURGAN)
+			walkSound = SoundType.KURDEAT;
+			
+		AudioManager.getInstance().playSound(walkSound);
+	}
 
 	private void setState(PlayerState newState)
 	{
@@ -298,5 +356,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 			state = PlayerState.valueOf(newState.name() + "_BALL");
 		else
 			state = newState;
+		
+		currentSpriteImage = PlayerAnimationManager.getInstance().getSprite(team, race, PlayerSpriteType.getPlayerSpriteType(state, facing));
 	}
 }

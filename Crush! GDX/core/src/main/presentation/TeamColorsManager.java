@@ -82,6 +82,18 @@ public class TeamColorsManager
 		return teamImageSource.getLargeTeamBanner();
 	}
 	
+	public Texture getDarkGoalTiles(Team team)
+	{
+		TeamImages teamImageSource = getTeamImages(team);
+		return teamImageSource.getDarkGoalTiles();
+	}
+	
+	public Texture getLitGoalTiles(Team team)
+	{
+		TeamImages teamImageSource = getTeamImages(team);
+		return teamImageSource.getLitGoalTiles();
+	}
+	
 	public Texture getHelmetImage(Team team)
 	{
 		TeamImages teamImageSource = getTeamImages(team);

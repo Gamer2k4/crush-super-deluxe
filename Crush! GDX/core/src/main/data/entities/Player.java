@@ -24,11 +24,12 @@ public class Player extends SaveableEntity
 	public static final int STS_DECK = 1;
 	public static final int STS_OKAY = 2;
 	public static final int STS_DOWN = 3;
-	public static final int STS_STUN = 4;
+	public static final int STS_STUN_DOWN = 4;
 	public static final int STS_BLOB = 5;
 	public static final int STS_HURT = 6;
 	public static final int STS_DEAD = 7;
 	public static final int STS_OUT = 8;
+	public static final int STS_STUN_SIT = 9;
 	
 	// TODO: IMPORTANT! Update these two arrays if the race order ever changes (also update getSalary())
 	public static final String[] races = { "Human", "Gronk", "Curmian", "Dragoran", "Nynax", "Slith", "Kurgan", "XJS9000" };
@@ -523,7 +524,7 @@ public class Player extends SaveableEntity
 
 	public boolean isInGame()
 	{
-		return status == Player.STS_OKAY || status == Player.STS_DOWN || status == Player.STS_STUN;
+		return status == Player.STS_OKAY || status == Player.STS_DOWN || status == Player.STS_STUN_DOWN || status == Player.STS_STUN_SIT;
 	}
 
 	public String serialize()

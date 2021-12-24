@@ -10,7 +10,8 @@ import main.presentation.common.Logger;
 
 public abstract class AbstractColorReplacer
 {
-	private static final double[] DARKEN = { 1, .85, .7225, .6141, .3685, .2372, .1313 };
+	protected static final int MAX_DARKEN_LEVEL = 7;
+	private static final double[] DARKEN = { 1, .85, .7225, .6141, .5, .3685, .2372, .1313 };
 
 	protected abstract Color getColor1(int level);
 	protected abstract Color getColor2(int level);
@@ -37,10 +38,9 @@ public abstract class AbstractColorReplacer
 			{
 				Color pixelColor = getColorFromPixmapPixel(originalPixmap, i, j);
 
-				if (ImageUtils.rgbEquals(pixelColor, getBackgroundBase()))
+				if (ImageUtils.rgbaEquals(pixelColor, getBackgroundBase()))
 				{
 					pixelColor = bgColor;
-					// pixelColor = new Color(0, 0, 0, 255); //TODO: make sure the BufferedImage supports transparency (done in ImageFactory)
 				} else if (ImageUtils.rgbEquals(pixelColor, getColor1(0)))
 				{
 					pixelColor = darkenColor(fgColor1, 0);
@@ -62,6 +62,9 @@ public abstract class AbstractColorReplacer
 				} else if (ImageUtils.rgbEquals(pixelColor, getColor1(6)))
 				{
 					pixelColor = darkenColor(fgColor1, 6);
+				} else if (ImageUtils.rgbEquals(pixelColor, getColor1(7)))
+				{
+					pixelColor = darkenColor(fgColor1, 7);
 				} else if (ImageUtils.rgbEquals(pixelColor, getColor2(0)))
 				{
 					pixelColor = darkenColor(fgColor2, 0);
@@ -83,6 +86,9 @@ public abstract class AbstractColorReplacer
 				} else if (ImageUtils.rgbEquals(pixelColor, getColor2(6)))
 				{
 					pixelColor = darkenColor(fgColor2, 6);
+				} else if (ImageUtils.rgbEquals(pixelColor, getColor2(7)))
+				{
+					pixelColor = darkenColor(fgColor2, 7);
 				}
 				
 				targetPixmap.drawPixel(i, j, ImageUtils.getRGBAfromColor(pixelColor));
@@ -102,7 +108,7 @@ public abstract class AbstractColorReplacer
 		int rgbaPixelColor = pixmap.getPixel(x, y);
 		int rgbPixelColor = rgbaPixelColor >> 8;
 		int alphaThenRgb = (rgbaPixelColor << 24) + rgbPixelColor;
-		return new Color(alphaThenRgb);
+		return new Color(alphaThenRgb, true);
 	}
 
 	protected Color darkenColor(Color color, int level)
@@ -110,8 +116,8 @@ public abstract class AbstractColorReplacer
 		if (color == null)
 			return null;
 		
-		if (level < 0 || level > 6)
-			throw new IllegalArgumentException("Level must be between 0 and 4, inclusive.");
+		if (level < 0 || level > MAX_DARKEN_LEVEL)
+			throw new IllegalArgumentException("Level must be between 0 and " + MAX_DARKEN_LEVEL + ", inclusive.");
 		
 		int red = color.getRed();
 		int green = color.getGreen();

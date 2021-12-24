@@ -17,6 +17,8 @@ public interface Data
 
 	public void newGame(List<Team> allThreeTeams, Integer fieldNum);
 
+	public int getNextStateForRecoveringPlayer(Player player);
+	
 	public void processEvent(Event theEvent);
 
 	public Stats getStatsOfPlayer(Player p);

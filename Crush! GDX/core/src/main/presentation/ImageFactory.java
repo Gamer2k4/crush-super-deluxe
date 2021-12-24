@@ -158,8 +158,8 @@ public class ImageFactory
 
 	private void addEjectionImages()
 	{
-		addImage(ImageType.EJECT_INJURY, "eventoverlays/death.png");
-		addImage(ImageType.EJECT_KILL, "eventoverlays/doctor.png");
+		addImage(ImageType.EJECT_INJURY, "eventoverlays/doctor.png");
+		addImage(ImageType.EJECT_KILL, "eventoverlays/death.png");
 		addImage(ImageType.EJECT_BLOB, "eventoverlays/mutation.png");
 		addImage(ImageType.EJECT_REF, "eventoverlays/ref.png");
 		addImage(ImageType.EJECT_TEXTBOX, "eventoverlays/ejection_textbox.png");
@@ -206,6 +206,14 @@ public class ImageFactory
 		addImage(ImageType.SPRITES_NYNAX, "sprites/sprite_antman.png");
 		addImage(ImageType.SPRITES_SLITH, "sprites/sprite_slith.png");
 		addImage(ImageType.SPRITES_XJS9000, "sprites/sprite_robot.png");
+		
+		Texture tiles = textures.get(ImageType.CRUSH_TILES);
+
+		Pixmap darkGoalTiles = ImageUtils.extractPixmapFromTextureRegion(new TextureRegion(tiles, 0, 90, 36, 480));
+		textures.put(ImageType.DARK_GOAL_TILES, new Texture(darkGoalTiles));
+		
+		Pixmap litGoalTiles = ImageUtils.extractPixmapFromTextureRegion(new TextureRegion(tiles, 0, 3930, 36, 480));
+		textures.put(ImageType.LIT_GOAL_TILES, new Texture(litGoalTiles));
 	}
 
 	private void addProfiles()
