@@ -2,32 +2,33 @@ package main;
 
 import java.awt.Color;
 
-public class InGameColorMap implements ColorMap
+public class GreyArenaColorMap implements ColorMap
 {
 	@Override
 	public Color getColor(int colorCode)
 	{
 		switch (colorCode)
 		{
+		case 254: // transparent
+			return new Color(0, 0, 0, 0);
 		case 255: // black (transparent on stats2.dve?)
 			return new Color(0, 0, 0);
-		case 254: // transparent?
-		case 0:	  // transparent
-			return new Color(0, 0, 0, 0);
+		case 0:
+			return new Color(0, 0, 31);
 		case 1:
-			return new Color(56, 0, 0);
+			return new Color(0, 0, 56);
 		case 2:
-			return new Color(87, 0, 0);
+			return new Color(0, 0, 87);
 		case 3:
-			return new Color(112, 0, 0);
+			return new Color(0, 0, 112);
 		case 4:
-			return new Color(143, 0, 0);
+			return new Color(0, 0, 143);
 		case 5:
-			return new Color(168, 0, 0);
+			return new Color(0, 0, 168);
 		case 6:
-			return new Color(199, 0, 0);
+			return new Color(0, 0, 199);
 		case 7:
-			return new Color(224, 0, 0);
+			return new Color(0, 0, 224);
 		case 8:
 			return new Color(31, 16, 0);
 		case 9: // bg 1
@@ -51,15 +52,15 @@ public class InGameColorMap implements ColorMap
 		case 18:
 			return new Color(87, 63, 0);
 		case 19:
-			return new Color(112, 80, 0);
+			return new Color(112, 48, 0);
 		case 20:
-			return new Color(143, 103, 0);
+			return new Color(143, 63, 0);
 		case 21:
-			return new Color(168, 120, 0);
+			return new Color(168, 72, 0);
 		case 22:
-			return new Color(199, 143, 0);
+			return new Color(199, 87, 0);
 		case 23:
-			return new Color(224, 160, 0);
+			return new Color(224, 96, 0);
 		case 24:
 			return new Color(31, 31, 0);
 		case 25:
@@ -489,8 +490,8 @@ public class InGameColorMap implements ColorMap
 			return new Color(112, 56, 31);
 		case 239:
 			return new Color(128, 64, 32);
-		case 240: // TODO: transparent (black for now, since it's black for the computer cursor)
-			return new Color(0, 0, 0);
+		case 240: // TODO: transparent (black for now, since it's black for the computer cursor and for player sprites)
+			return new Color(1, 0, 0);
 		case 241:
 			return new Color(31, 31, 31);
 		case 242:
@@ -511,8 +512,8 @@ public class InGameColorMap implements ColorMap
 			return new Color(255, 255, 255);
 		}
 
-//		return Color.CYAN;
+		return Color.CYAN;
 
-		throw new IllegalArgumentException("Unrecognized color: " + colorCode);
+//		throw new IllegalArgumentException("Unrecognized color: " + colorCode);
 	}
 }

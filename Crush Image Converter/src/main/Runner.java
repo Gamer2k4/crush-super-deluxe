@@ -31,7 +31,8 @@ public class Runner
 
 	private static final int FONT_CHARS = 56;
 	private static final int SPRITE_COUNT = 192;
-	private static final int SPRITE_COLUMNS = 4;
+	private static final int SPRITE_COLUMNS = 1;
+//	private static final int SPRITE_COLUMNS = 16;
 	private static final int TILE_COUNT = 192;
 
 	private static final int MAP_WIDTH = 1152;
@@ -43,7 +44,7 @@ public class Runner
 	private static final int TILE_WIDTH = 36;
 	private static final int TILE_HEIGHT = 30;
 
-	// private static final boolean SHOW_OUTPUT = true;
+//	private static final boolean SHOW_OUTPUT = true;
 	private static final boolean SHOW_OUTPUT = false;
 
 	private static JFrame frame;
@@ -74,16 +75,20 @@ public class Runner
 		loadFileAllChooser = createLoadFileAllChooser();
 		saveFileChooser = createSaveFileChooser();
 
-		setColorMap(true);
+		setColorMap(2);
 
 		currentImage = new BufferedImage(300, 200, BufferedImage.TYPE_INT_RGB);
 		showImage();
 	}
 
-	private static void setColorMap(boolean inGame)
+	private static void setColorMap(int mapType)
 	{
-		if (inGame)
+		if (mapType == 1)
 			colorMap = new InGameColorMap();
+		else if (mapType == 2)
+			colorMap = new GreyArenaColorMap();
+		else if (mapType == 3)
+			colorMap = new GreenArenaColorMap();
 		else
 			colorMap = new OutsideGameColorMap();
 
@@ -316,8 +321,18 @@ public class Runner
 			}
 			
 			int amount = singlePixelsDefined ? 1 : readUnsignedByte(dis);
-
-			Color color = colorMap.getColor(colorCode);
+			
+			Color color = Color.CYAN;
+			
+			try
+			{
+				color = colorMap.getColor(colorCode);
+			} catch (IllegalArgumentException iae)
+			{
+				System.out.println("[" + (startX + curX) + ", " + (startY + curY) + "] has an unrecognized color code of " + colorCode);
+				System.exit(1);
+			}
+					
 
 			if (SHOW_OUTPUT)
 				System.out.println("Printing color(" + colorCode + ") " + amount + " times.");
@@ -397,9 +412,17 @@ public class Runner
 
 		ButtonGroup group = new ButtonGroup();
 		JRadioButtonMenuItem gameColors = new JRadioButtonMenuItem("In-Game");
-		gameColors.setSelected(true);
 		group.add(gameColors);
 		colorMenu.add(gameColors);
+		
+		JRadioButtonMenuItem greyColors = new JRadioButtonMenuItem("Grey Arena");
+		greyColors.setSelected(true);
+		group.add(greyColors);
+		colorMenu.add(greyColors);
+		
+		JRadioButtonMenuItem greenColors = new JRadioButtonMenuItem("Green Arena");
+		group.add(greenColors);
+		colorMenu.add(greenColors);
 
 		JRadioButtonMenuItem introColors = new JRadioButtonMenuItem("Opening/Credits");
 		group.add(introColors);
@@ -411,6 +434,8 @@ public class Runner
 		saveItem.setActionCommand("save");
 		exitItem.setActionCommand("exit");
 		gameColors.setActionCommand("gameColor");
+		greyColors.setActionCommand("greyColor");
+		greenColors.setActionCommand("greenColor");
 		introColors.setActionCommand("introColor");
 
 		loadImageItem.addActionListener(al);
@@ -419,6 +444,7 @@ public class Runner
 		saveItem.addActionListener(al);
 		exitItem.addActionListener(al);
 		gameColors.addActionListener(al);
+		greenColors.addActionListener(al);
 		introColors.addActionListener(al);
 
 		fileMenu.add(loadImageItem);
@@ -451,9 +477,13 @@ public class Runner
 				if (command.equals("save"))
 					saveImage();
 				if (command.equals("gameColor"))
-					setColorMap(true);
+					setColorMap(1);
+				if (command.equals("greyColor"))
+					setColorMap(2);
+				if (command.equals("greenColor"))
+					setColorMap(3);
 				if (command.equals("introColor"))
-					setColorMap(false);
+					setColorMap(4);
 			}
 		};
 
