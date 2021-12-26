@@ -1,7 +1,6 @@
 package main.presentation.game;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,6 +38,8 @@ public class EventButtonBarFactory
 	private Map<Action, StaticImage> depressedButtons = new HashMap<Action, StaticImage>();
 	
 	private StaticImage[][] teamBanners = new StaticImage[3][2];
+	
+	private boolean ballFound = false;
 	
 	public static final int MINIMAP_X_START = 569;
 	public static final int MINIMAP_Y_START = 13;
@@ -100,9 +101,14 @@ public class EventButtonBarFactory
 	public void beginGame(Data clientData)
 	{
 		data = clientData;
+		ballFound = false;
 		generateNames();
 		generateTeamBanners();
-		//create minimap image
+	}
+	
+	public void setBallFound()
+	{
+		ballFound = true;
 	}
 
 	private void generateNames()
@@ -191,7 +197,7 @@ public class EventButtonBarFactory
 	{
 		Arena arena = data.getArena();
 		
-		if (!arena.isBallFound())
+		if (!ballFound)
 		{
 			String padsLeft = String.valueOf(arena.getUntriedBinCount());
 			int startX = getStringStartX(PADS_LEFT_BALL_ON_X_START, PADS_LEFT_BALL_ON_MAX_WIDTH, padsLeft); 
@@ -310,7 +316,7 @@ public class EventButtonBarFactory
 		currentTeamIndicator.setPosition(new Point(535, 49 - (10 * data.getCurrentTeam())));
 		images.add(currentTeamIndicator);
 		
-		if (!data.getArena().isBallFound())
+		if (!ballFound)
 		{
 			StaticImage padsLeft = new StaticImage(ImageType.GAME_OVERLAY_PADSLEFT, new Point(489, 8));
 			images.add(padsLeft);

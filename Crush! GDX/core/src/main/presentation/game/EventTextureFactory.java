@@ -84,8 +84,8 @@ public class EventTextureFactory
 	{
 		List<CrushSprite> arenaSprites = new ArrayList<CrushSprite>();
 		
-//		CrushSprite arenaSprite = CrushArenaImageManager.getInstance().createArena(data.getArena());		//saves loading time by not updating field colors
-		CrushSprite arenaSprite = CrushArenaImageManager.getInstance().getArenaForHomeTeam(data.getArena().getIndex(), data.getTeam(0));
+		CrushSprite arenaSprite = CrushArenaImageManager.getInstance().createArena(data.getArena());		//saves loading time by not updating field colors
+//		CrushSprite arenaSprite = CrushArenaImageManager.getInstance().getArenaForHomeTeam(data.getArena().getIndex(), data.getTeam(0));
 		
 		if (arenaSprite != null)
 			arenaSprites.add(arenaSprite);
@@ -126,7 +126,6 @@ public class EventTextureFactory
 		}	
 	}
 
-	//TODO: make this safe for concurrent modification
 	@Deprecated
 	public List<CrushSprite> getTileSprites_notConcurrentSafe()
 	{
@@ -362,7 +361,7 @@ public class EventTextureFactory
 	public List<CrushSprite> getElevatedSprites()
 	{
 		//TODO: this will be cleared before the other sprites are generated and filled as they are
-		//		it will include jumping players, thrown balls, and cameras
+		//		it will include jumping players, checking players (so they always overlap the defender) thrown balls, and cameras
 		return elevatedSprites;
 	}
 	

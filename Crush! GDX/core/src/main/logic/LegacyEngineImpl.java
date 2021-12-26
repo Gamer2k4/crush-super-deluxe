@@ -39,6 +39,8 @@ public class LegacyEngineImpl implements Engine
 	private static final Player BACKFIRE_BELT = new Player(Race.XJS9000, "BACKFIRE BELT");
 	
 	private static final int SHOCK_TILE_STRENGTH = 60;
+	private static final int FLOOR_DAMAGE_STRENGTH = 20;
+	private static final int BIN_SHOCK_STRENGTH = 20;
 	
 	public LegacyEngineImpl(Data dataImplSource)
 	{
@@ -133,7 +135,7 @@ public class LegacyEngineImpl implements Engine
 		{
 			boolean isJumping = false;
 			Player activePlayer = localData.getPlayer(theCommand.flags[0]);
-			Point origin = (Point) localData.getLocationOfPlayer(activePlayer).clone();
+			Point origin = (Point) localData.getLocationOfPlayer(activePlayer).clone();		//TODO: this threw a null pointer after a moving player was injured/ejected
 			Point destination = new Point(theCommand.flags[2], theCommand.flags[3]);
 			
 			int originalAP = activePlayer.currentAP;
@@ -196,7 +198,7 @@ public class LegacyEngineImpl implements Engine
 					{
 						curAP = 0;
 						
-						Event failedJumpInjuryEvent = generateCheckResultEvent(HITTING_THE_GROUND, activePlayer, 20 + Randomizer.getRandomInt(1, RANDOMNESS), curTG + Randomizer.getRandomInt(1, RANDOMNESS));		//failed jumps attack with 20 strength (TODO: confirm this)
+						Event failedJumpInjuryEvent = generateCheckResultEvent(HITTING_THE_GROUND, activePlayer, FLOOR_DAMAGE_STRENGTH + Randomizer.getRandomInt(1, RANDOMNESS), curTG + Randomizer.getRandomInt(1, RANDOMNESS));		//failed jumps attack with 20 strength (TODO: confirm this)
 						processAndOfferEvent(toRet, failedJumpInjuryEvent);
 						
 						//can't pick up the ball if you're on your butt
@@ -216,7 +218,7 @@ public class LegacyEngineImpl implements Engine
 				
 				//CHECK IF THIS IS AN ELECTRICAL TILE AND ACT ACCORDINGLY
 				//TODO: when going through a list of destinations, the list keeps going even if a player is hurt
-				if (curArena.getTile(playerMoveCoords.x, playerMoveCoords.y) == Arena.TILE_SHOCK  && !playerResistsShock(activePlayer) && !knockdownBool)
+				if (curArena.getTile(playerMoveCoords.x, playerMoveCoords.y) == Arena.TILE_SHOCK && !playerResistsShock(activePlayer) && !knockdownBool)
 				{
 					Event shockTileInjuryEvent = generateCheckResultEvent(ELECTROCUTION, activePlayer, SHOCK_TILE_STRENGTH + Randomizer.getRandomInt(1, RANDOMNESS), curTG + Randomizer.getRandomInt(1, RANDOMNESS));		//shock tiles attack with 60 strength (TODO: confirm this)
 					toRet.add(Event.shock(localData.getIndexOfPlayer(activePlayer)));
@@ -226,6 +228,8 @@ public class LegacyEngineImpl implements Engine
 					{
 						fumbleBall(toRet);
 					}
+					
+					break;	//stop going through move events
 				}
 				
 				//CHECK IF THE BALL IS HERE AND ACT ACCORDINGLY
@@ -281,6 +285,9 @@ public class LegacyEngineImpl implements Engine
 				Queue<Event> reflexChecks = generateReflexCheckEvents(activePlayer, playerMoveCoords, localData.getTeamIndexOfPlayer(activePlayer));
 				toRet.addAll(reflexChecks);
 				
+				if (reflexChecksContainSuccessfulCheck(reflexChecks))
+					break;	//stop going through move events, since the player was either knocked own or hurt/killed
+				
 				//CHECK IF THIS IS A BALL BIN PAD AND ACT ACCORDINGLY
 				int binIndex = curArena.getPadIndex(playerMoveCoords.x, playerMoveCoords.y);
 				
@@ -307,11 +314,13 @@ public class LegacyEngineImpl implements Engine
 						if (!playerResistsShock(activePlayer))					//no effect if player has insulated boots
 						{
 							toRet.add(Event.shock(localData.getIndexOfPlayer(activePlayer)));
-							toRet.offer(generateCheckResultEvent(ELECTROCUTION, activePlayer, 20 + Randomizer.getRandomInt(1, RANDOMNESS), curTG + Randomizer.getRandomInt(1, RANDOMNESS)));		//ball bins attack with 20 strength
+							toRet.offer(generateCheckResultEvent(ELECTROCUTION, activePlayer, BIN_SHOCK_STRENGTH + Randomizer.getRandomInt(1, RANDOMNESS), curTG + Randomizer.getRandomInt(1, RANDOMNESS)));		//ball bins attack with 20 strength
 						}
 						
 						//don't need to worry about dropping the ball, since there's no way you can have the ball and be shocked by a bin
 					}
+					
+					break;	//stop going through move events
 				}
 				
 				lastCoords = playerMoveCoords;
@@ -409,6 +418,29 @@ public class LegacyEngineImpl implements Engine
 		}
 		
 		return toRet;
+	}
+
+	private boolean reflexChecksContainSuccessfulCheck(Queue<Event> reflexChecks)
+	{
+		for (Event event : reflexChecks)
+		{
+			if (event.getType() != Event.EVENT_CHECK)
+				continue;
+			
+			if (event.flags[2] == Event.CHECK_PUSH)
+				return true;
+			
+			if (event.flags[2] == Event.CHECK_PUSHFALL)
+				return true;
+			
+			if (event.flags[2] == Event.CHECK_FALL)
+				return true;
+			
+			if (event.flags[2] == Event.CHECK_DOUBLEFALL)
+				return true;
+		}
+		
+		return false;
 	}
 
 	private void fumbleBall(Queue<Event> eventQueue)
@@ -846,7 +878,8 @@ public class LegacyEngineImpl implements Engine
 			processAndOfferEvent(toRet, Event.check(theCommand.flags[0], theCommand.flags[1], Event.CHECK_FAIL, reflex));
 			
 			//if nothing would happen but the player has repulsor gloves, push the target anyway
-			if (playerHasRepulsorGauntlets(attacker) && !playerHasMagneticBoots(defender))
+			//note that repulsor gloves don't seem to activate on reflex checks
+			if (playerHasRepulsorGauntlets(attacker) && !playerHasMagneticBoots(defender) && !reflex)
 			{
 				System.out.println("  Repulsor gauntlets have activated!");
 				toRet = addEventChainToQueue(toRet, generatePushEvent(theCommand.flags[0], theCommand.flags[1], false));	//TODO
@@ -870,7 +903,7 @@ public class LegacyEngineImpl implements Engine
 		else if (result > 5 && result <= 20 && !playerHasMagneticBoots(defender))
 		{
 			processAndOfferEvent(toRet, Event.check(theCommand.flags[0], theCommand.flags[1], Event.CHECK_PUSH, reflex));
-			toRet = addEventChainToQueue(toRet, generatePushEvent(theCommand.flags[0], theCommand.flags[1], false));	//TODO
+			toRet = addEventChainToQueue(toRet, generatePushEvent(theCommand.flags[0], theCommand.flags[1], false));
 		}
 		else if (result > 20 && result <= 40)
 		{
@@ -916,16 +949,27 @@ public class LegacyEngineImpl implements Engine
 		if (attackerCoords.y < defenderCoords.y) yChange = 1;
 		if (attackerCoords.y > defenderCoords.y) yChange = -1;
 		
-		return Event.move(pushedPlayerIndex, defenderCoords.x + xChange, defenderCoords.y + yChange, true, false, isKnockdown);
+		Point pushTargetCoords = new Point(defenderCoords.x + xChange, defenderCoords.y + yChange);
+		
+		//don't generate a move if there's a player blocking it
+		if (localData.getPlayerAtLocation(pushTargetCoords) != null)
+			return null;
+		
+		return Event.move(pushedPlayerIndex, pushTargetCoords.x, pushTargetCoords.y, true, false, isKnockdown);
 	}
 	
 	private Queue<Event> addEventChainToQueue(Queue<Event> returnQueue, Event event)
 	{
+		if (event == null)
+			return returnQueue;
+		
 		Queue<Event> eventResults = generateEventsAndPersistData(event);
 		
 		for (Event e2 : eventResults)
 		{
 			returnQueue.offer(e2);
+			if (e2.getType() == Event.EVENT_EJECT)
+				break;		//this is to avoid things like getting hit into a teleporter, blobbing, then getting stunned or something
 		}
 		
 		return returnQueue;

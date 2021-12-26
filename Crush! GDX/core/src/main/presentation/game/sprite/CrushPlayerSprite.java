@@ -14,6 +14,7 @@ import main.data.Event;
 import main.data.entities.Player;
 import main.data.entities.Race;
 import main.data.entities.Team;
+import main.logic.Randomizer;
 import main.presentation.audio.AudioManager;
 import main.presentation.audio.SoundType;
 
@@ -35,6 +36,11 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	
 	private double yMoveFraction = 0;
 	private static final double FRACTION_TOLERANCE = .01;
+	
+	private Point lastCoordCheckResult = new Point(-50, -50);
+	private int timesCoordCheckWasUnchanged = 0;
+	
+	private static final int MAX_ITERATIONS_BEFORE_EASING_SPRITE = 5000;
 	
 	public CrushPlayerSprite(Team team, Race race)
 	{
@@ -69,9 +75,42 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 			return true;
 		
 		if (targetCoords.x != coords.x || targetCoords.y != coords.y)
+		{
+			easeSpriteAlong();
 			return true;
+		}
 		
 		return false;
+	}
+	
+	//to prevent infinite looping because the sprite never arrives at its destination (due to fractions being lost in the x -> y conversion), this will
+	//slowly shift the sprite toward where it's supposed to go.
+	private void easeSpriteAlong()
+	{
+		if (lastCoordCheckResult.x == coords.x && lastCoordCheckResult.y == coords.y)
+			timesCoordCheckWasUnchanged++;
+		else
+		{
+			timesCoordCheckWasUnchanged = 0;
+			lastCoordCheckResult = new Point(coords.x, coords.y);
+		}
+		
+		if (timesCoordCheckWasUnchanged > MAX_ITERATIONS_BEFORE_EASING_SPRITE)
+		{
+			System.out.println("Current coords have been " + coords + " for too long; easing sprite along to target: " + targetCoords);
+			timesCoordCheckWasUnchanged = 0;
+			yMoveFraction = 0;
+			
+			if (coords.x < targetCoords.x)
+				coords.x++;
+			if (coords.x > targetCoords.x)
+				coords.x--;
+			if (coords.y < targetCoords.y)
+				coords.y++;
+			if (coords.y > targetCoords.y)
+				coords.y--;
+			
+		}
 	}
 	
 	private boolean isAnimating()
@@ -102,6 +141,28 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		beginAnimation(PlayerState.SHOCK);
 	}
 	
+	public void dodge()
+	{
+		AudioManager.getInstance().playSound(SoundType.DODGE);
+		
+		if (hasBall)
+			beginAnimation(PlayerState.DODGE_BALL);
+		else
+			beginAnimation(PlayerState.DODGE);
+	}
+	
+	public void check()
+	{
+		playOohSound();
+		
+		if (hasBall)
+			beginAnimation(PlayerState.CHECK_BALL);
+		else if (Randomizer.getRandomInt(1, 3) == 1)		//a 1 in 3 chance is probably TOTALLY not how this is determined
+			beginAnimation(PlayerState.CHECK_STRONG);
+		else
+			beginAnimation(PlayerState.CHECK_WEAK);
+	}
+	
 	public void changeStatus(Event event)
 	{
 		int newStatus = event.flags[2];
@@ -127,16 +188,35 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 
 	public void walk(Event event)
 	{
-		int targetRow = event.flags[2];
-		int targetCol = event.flags[3];
-		targetCoords.x = getXValueForColumn(targetCol);
-		targetCoords.y = getYValueForRow(targetRow);
+		setTargetCoords(event.flags[2], event.flags[3]);
 		turnTowardPixelCoords(targetCoords);
 		
 		if (hasBall)
 			beginAnimation(PlayerState.WALK_BALL);
 		else
 			beginAnimation(PlayerState.WALK);
+	}
+	
+	public void slide(Event event)
+	{
+		setTargetCoords(event.flags[2], event.flags[3]);
+		
+		if (hasBall)
+			beginAnimation(PlayerState.SLIDE_BALL);
+		else
+			beginAnimation(PlayerState.SLIDE);
+	}
+	
+	public void knockbackKo(Event event)
+	{
+		setTargetCoords(event.flags[2], event.flags[3]);
+		beginAnimation(PlayerState.KNOCKBACK_FALL);
+	}
+	
+	private void setTargetCoords(int targetRow, int targetCol)
+	{
+		targetCoords.x = getXValueForColumn(targetCol);
+		targetCoords.y = getYValueForRow(targetRow);
 	}
 	
 	public void receiveBall(Event event)
@@ -159,6 +239,12 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	
 	public void turnTowardPixelCoords(Point location)
 	{
+		facing = getDirectionTowardPixelCoords(location);
+		refreshSpriteImage();
+	}
+	
+	public Facing getDirectionTowardPixelCoords(Point location)
+	{
 		String facingString = "";
 		
 		if (location.y < coords.y)
@@ -169,9 +255,10 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 			facingString = facingString + "W";
 		if (location.x > coords.x)
 			facingString = facingString + "E";
+		if (facingString.isEmpty())
+			facingString = facing.name();
 		
-		facing = Facing.valueOf(facingString);
-		refreshSpriteImage();
+		return Facing.valueOf(facingString);
 	}
 	
 	@Override
@@ -214,7 +301,12 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		}
 		
 		currentSpriteImage = PlayerAnimationManager.getInstance().getSprite(team, race, currentFrame.getFrame());
-		advanceSprite(currentFrame.getPositionPixelChange());
+		
+		if (movingToNewTile())
+			advanceSprite(currentFrame.getPositionPixelChange());
+		else
+			advanceSpriteByFacing(currentFrame.getPositionPixelChange());
+		
 		playAnimationFrameSound();
 		playerAnimationTimer.setInitialDelay(currentFrame.getFrameDuration());
 		playerAnimationTimer.restart();
@@ -235,7 +327,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		beginAnimation(nextAnimation);
 	}
 
-	private void advanceSprite(int positionPixelChange)
+	private void advanceSpriteByFacing(int positionPixelChange)
 	{
 		double xChange = positionPixelChange;
 		double yChange = positionPixelChange * (5.0 / 6.0);
@@ -254,17 +346,41 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		coords.x += xChange;
 		coords.y += yChange;
 	}
+	
+	private void advanceSprite(int positionPixelChange)
+	{
+		//assume the sprite is going NE, since that's positive change for both axes
+		
+		Facing directionToMove = getDirectionTowardPixelCoords(targetCoords);
+		
+		double xChange = positionPixelChange;
+		double yChange = positionPixelChange * (5.0 / 6.0);
+		
+		yChange = adjustYChangeForFraction(yChange);
+		
+		if (directionToMove == Facing.SW || directionToMove == Facing.S || directionToMove == Facing.SE)
+			yChange *= -1;
+		if (directionToMove == Facing.NW || directionToMove == Facing.W || directionToMove == Facing.SW)
+			xChange *= -1;
+		if (directionToMove == Facing.E || directionToMove == Facing.W)
+			yChange = 0;
+		if (directionToMove == Facing.N || directionToMove == Facing.S)
+			xChange = 0;
+		
+		coords.x += xChange;
+		coords.y += yChange;
+	}
 
 	private int adjustYChangeForFraction(double yChange)
 	{
 		double fractionalAmount = yChange - (int)yChange;
 		
-		if (fractionalAmount < FRACTION_TOLERANCE)
+		if (Math.abs(fractionalAmount) < FRACTION_TOLERANCE)
 			return (int)yChange;
 		
 		yMoveFraction += fractionalAmount;
 		
-		if (yMoveFraction + FRACTION_TOLERANCE < 1)
+		if (Math.abs(yMoveFraction) + FRACTION_TOLERANCE < 1)
 			return ((int)yChange);
 		
 		yMoveFraction = 0;
@@ -358,5 +474,10 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 			state = newState;
 		
 		currentSpriteImage = PlayerAnimationManager.getInstance().getSprite(team, race, PlayerSpriteType.getPlayerSpriteType(state, facing));
+	}
+
+	private boolean movingToNewTile()
+	{
+		return state == PlayerState.WALK || state == PlayerState.WALK_BALL || state == PlayerState.SLIDE || state == PlayerState.SLIDE_BALL || state == PlayerState.KNOCKBACK_FALL;
 	}
 }

@@ -15,8 +15,8 @@ public class GameDataPreloader
 		
 		long startTime = System.currentTimeMillis();
 		
-		for (int i = 0; i < 20; i++)	//TODO: define "total arenas" somewhere
-			CrushArenaImageManager.getInstance().getArenaForHomeTeam(i, homeTeam);
+//		for (int i = 0; i < 20; i++)	//TODO: define "total arenas" somewhere
+//			CrushArenaImageManager.getInstance().getArenaForHomeTeam(i, homeTeam);
 		
 		System.out.println("Arena colors updated (for home team) in " + (System.currentTimeMillis() - startTime) + "ms.");
 		

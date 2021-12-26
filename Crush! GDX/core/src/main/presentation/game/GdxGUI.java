@@ -179,6 +179,8 @@ public class GdxGUI extends GameRunnerGUI
 			handleStatusEvent(event);
 		else if (event.getType() == Event.EVENT_RECVR)
 			handleRecoverEvent(event);
+		else if (event.getType() == Event.EVENT_CHECK)
+			handleCheckEvent(event);
 		
 		checkForNextEvents();
 		gameScreen.refreshTextures();
@@ -245,7 +247,16 @@ public class GdxGUI extends GameRunnerGUI
 		Player player = getData().getPlayer(event.flags[0]);
 		
 		CrushPlayerSprite playerSprite = eventTextureFactory.getPlayerSprite(player);
-		playerSprite.walk(event);
+		
+		if (event.flags[4] == 0 && event.flags[5] == 0 && event.flags[6] == 0)
+			playerSprite.walk(event);
+		else if (event.flags[4] == 1 && event.flags[6] == 1)	//slide, knockdown
+			playerSprite.knockbackKo(event);
+		else if (event.flags[4] == 1)	//slide
+			playerSprite.slide(event);
+		else if (event.flags[5] == 1)	//jump
+			;
+		
 		activeSpriteAnimations.add(playerSprite);
 	}
 	
@@ -288,6 +299,39 @@ public class GdxGUI extends GameRunnerGUI
 			delayMs = 1350;
 		
 		delay(delayMs);
+	}
+
+	private void handleCheckEvent(Event event)
+	{
+		if (event.getType() != Event.EVENT_CHECK)
+			return;
+		
+		//no need to go further if the "check" came from a trap or something
+		if (event.flags[0] < 0)
+			return;
+		
+		Player attacker = getData().getPlayer(event.flags[0]);
+		Player defender = getData().getPlayer(event.flags[1]);
+		
+		Point attackerLocation = getData().getLocationOfPlayer(attacker);
+		Point defenderLocation = getData().getLocationOfPlayer(defender);
+		
+		CrushPlayerSprite attackerSprite = eventTextureFactory.getPlayerSprite(attacker);
+		CrushPlayerSprite defenderSprite = eventTextureFactory.getPlayerSprite(defender);
+				
+		attackerSprite.turnTowardArenaLocation(defenderLocation);
+		defenderSprite.turnTowardArenaLocation(attackerLocation);
+		
+		if (event.flags[2] == Event.CHECK_DODGE)
+		{
+			defenderSprite.dodge();
+			activeSpriteAnimations.add(defenderSprite);
+		}
+		
+		attackerSprite.check();
+		activeSpriteAnimations.add(attackerSprite);
+		
+		//that should be it, since knockbacks, shocks, etc. are handled as separate events
 	}
 
 	@Override
@@ -390,6 +434,7 @@ public class GdxGUI extends GameRunnerGUI
 		
 		if (result == 1)
 		{
+			eventButtonBarFactory.setBallFound();
 			audioManager.playSound(SoundType.SIREN);
 			delay(250);
 			playerSprite.receiveBall(event);

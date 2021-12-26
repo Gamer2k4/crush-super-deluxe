@@ -12,10 +12,13 @@ import main.data.entities.Team;
 import main.presentation.ColorPairKey;
 import main.presentation.ImageFactory;
 import main.presentation.ImageType;
+import main.presentation.common.Logger;
 import main.presentation.common.image.ColorReplacer;
 
 public class CrushArenaImageManager
 {
+	private static final int MAX_CACHED_ARENAS = 24;	//enough for a full league plus a tournament plus an exhibition (12 + 9 + 3)
+
 	private static Map<ColorPairKey, Map<Integer, Texture>> teamArenas = new HashMap<ColorPairKey, Map<Integer, Texture>>();
 	
 	private static ImageFactory imageFactory = ImageFactory.getInstance();
@@ -60,7 +63,12 @@ public class CrushArenaImageManager
 		Integer arenaIndex = new Integer(index);
 		
 		if (!arenasForTeam.containsKey(arenaIndex))
+		{
+			if (teamArenas.size() > MAX_CACHED_ARENAS)
+				clearTeamArenaCache(key);
+			
 			arenasForTeam.put(arenaIndex, updateArenaImage(index, team));
+		}
 		
 		Texture arenaTexture = arenasForTeam.get(arenaIndex);
 		
@@ -69,6 +77,13 @@ public class CrushArenaImageManager
 		
 		TextureRegion region = new TextureRegion(arenaTexture);
 		return new CrushArena(region);
+	}
+
+	private void clearTeamArenaCache(ColorPairKey key)
+	{
+		Logger.error("Team arena cache has more than the maximum entries of " + MAX_CACHED_ARENAS +"; clearing team arena cache.");
+		dispose();
+		teamArenas.put(key, new HashMap<Integer, Texture>());
 	}
 
 	private Texture updateArenaImage(int index, Team team)
