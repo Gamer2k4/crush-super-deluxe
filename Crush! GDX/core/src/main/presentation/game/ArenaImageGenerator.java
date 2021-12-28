@@ -49,16 +49,25 @@ public class ArenaImageGenerator
 		arenaPixmap.fillRectangle(x * tileSize, y * tileSize, tileSize, tileSize);
 	}
 	
+	//TODO: I think the coloration here isn't QUITE right; in fact, I think I give more detail than the original game does
 	public static void generateArenaImage(Arena arena, int arenaSideLength, int tileSize)
 	{
 		dispose();
-		arenaPixmap = new Pixmap(arenaSideLength * tileSize, arenaSideLength * tileSize, Format.RGBA8888);
 		
-		for (int i = 0; i < arenaSideLength; i++)
+		int sideLengthWithBorders = arenaSideLength + 2;
+		arenaPixmap = new Pixmap(sideLengthWithBorders * tileSize, sideLengthWithBorders * tileSize, Format.RGBA8888);
+		
+		for (int i = 0; i < sideLengthWithBorders; i++)
 		{
-			for (int j = 0; j < arenaSideLength; j++)
+			for (int j = 0; j < sideLengthWithBorders; j++)
 			{
-				drawTile(j, i, arena.getTile(i, j), tileSize);
+				if (i == 0 || j == 0 || i == sideLengthWithBorders - 1 || j == sideLengthWithBorders - 1)
+				{
+					drawTile(j, i, Arena.TILE_WALL, tileSize);
+					continue;
+				}
+				
+				drawTile(j, i, arena.getTile(i - 1, j - 1), tileSize);
 			}
 		}
 		

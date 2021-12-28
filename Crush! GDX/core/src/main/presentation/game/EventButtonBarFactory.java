@@ -41,8 +41,8 @@ public class EventButtonBarFactory
 	
 	private boolean ballFound = false;
 	
-	public static final int MINIMAP_X_START = 569;
-	public static final int MINIMAP_Y_START = 13;
+	public static final int MINIMAP_X_START = 567;
+	public static final int MINIMAP_Y_START = 11;
 	public static final int MAPNAME_Y_START = 385;
 	public static final int MAP_NAME_MAX_WIDTH = 78;
 	
@@ -113,12 +113,12 @@ public class EventButtonBarFactory
 
 	private void generateNames()
 	{
-		arenaName = GameText.small2(new Point(getStringStartX(MINIMAP_X_START - 11, MAP_NAME_MAX_WIDTH, data.getArena().getName()), MAPNAME_Y_START), LegacyUiConstants.COLOR_LEGACY_BLUE, data.getArena().getName());
+		arenaName = GameText.small2(new Point(GameText.getStringStartX(GameText.small2, MINIMAP_X_START - 11, MAP_NAME_MAX_WIDTH, data.getArena().getName()), MAPNAME_Y_START), LegacyUiConstants.COLOR_LEGACY_BLUE, data.getArena().getName());
 		
 		for (int i = 0; i < 3; i++)
 		{
 			String teamName = data.getTeam(i).teamName;
-			teamNames[i] = GameText.small2(new Point(getStringStartX(TEAM_NAME_X_START, TEAM_NAME_MAX_WIDTH, teamName), TEAM_NAME_Y_START), LegacyUiConstants.COLOR_LEGACY_WHITE, teamName);
+			teamNames[i] = GameText.small2(new Point(GameText.getStringStartX(GameText.small2, TEAM_NAME_X_START, TEAM_NAME_MAX_WIDTH, teamName), TEAM_NAME_Y_START), LegacyUiConstants.COLOR_LEGACY_WHITE, teamName);
 			
 			for (int j = 0; j < 9; j++)
 			{
@@ -143,33 +143,6 @@ public class EventButtonBarFactory
 			teamBanners[i][0] = new StaticImage(TeamColorsManager.getInstance().getSmallTeamBanner(team), new Point(541, 49 - (10 * i)));
 			teamBanners[i][1] = new StaticImage(TeamColorsManager.getInstance().getLargeTeamBanner(team), new Point(398, 48));
 		}
-	}
-	
-	private int getStringStartX(int targetX, int maxWidth, String text)
-	{
-		int stringLength = getStringPixelLength(text);
-		
-		if (stringLength > maxWidth)
-			return targetX;
-		
-		int lengthDif = maxWidth - getStringPixelLength(text);
-		
-		return targetX + (lengthDif / 2);
-	}
-	
-	private int getStringPixelLength(String text)
-	{
-		int length = 0;
-		
-		for (int i = 0; i < text.length(); i++)
-		{
-			if (text.charAt(i) == ' ')
-				length += 3;
-			else
-				length += 6;
-		}
-		
-		return length;
 	}
 
 	public List<GameText> getPlayerTextInfo(Player currentPlayer)
@@ -200,7 +173,7 @@ public class EventButtonBarFactory
 		if (!ballFound)
 		{
 			String padsLeft = String.valueOf(arena.getUntriedBinCount());
-			int startX = getStringStartX(PADS_LEFT_BALL_ON_X_START, PADS_LEFT_BALL_ON_MAX_WIDTH, padsLeft); 
+			int startX = GameText.getStringStartX(GameText.small2, PADS_LEFT_BALL_ON_X_START, PADS_LEFT_BALL_ON_MAX_WIDTH, padsLeft); 
 			return GameText.small2(new Point(startX, PADS_LEFT_BALL_ON_Y_START), LegacyUiConstants.COLOR_LEGACY_BLUE, padsLeft);
 		}
 		
@@ -214,11 +187,11 @@ public class EventButtonBarFactory
 			int xDist = Math.abs(ballLocation.x - goalLine.x);
 			int yDist = Math.abs(ballLocation.y - goalLine.y);
 			String ballOn = String.valueOf(Math.max(xDist, yDist));		//TODO: not quite accurate; the "goal line" is the innermost corner of the goal, so any other goal tile
-			int startX = getStringStartX(PADS_LEFT_BALL_ON_X_START, PADS_LEFT_BALL_ON_MAX_WIDTH, ballOn);							//will have a non-zero value
+			int startX = GameText.getStringStartX(GameText.small2, PADS_LEFT_BALL_ON_X_START, PADS_LEFT_BALL_ON_MAX_WIDTH, ballOn);							//will have a non-zero value
 			return GameText.small2(new Point(startX, PADS_LEFT_BALL_ON_Y_START), LegacyUiConstants.COLOR_LEGACY_BLUE, ballOn);
 		} catch (NullPointerException npe)	//could happen if data hasn't quite updated by the time we're here
 		{
-			int startX = getStringStartX(PADS_LEFT_BALL_ON_X_START, PADS_LEFT_BALL_ON_MAX_WIDTH, "0");
+			int startX = GameText.getStringStartX(GameText.small2, PADS_LEFT_BALL_ON_X_START, PADS_LEFT_BALL_ON_MAX_WIDTH, "0");
 			return GameText.small2(new Point(startX, PADS_LEFT_BALL_ON_Y_START), LegacyUiConstants.COLOR_LEGACY_BLUE, "0");
 		}
 	}
@@ -244,14 +217,14 @@ public class EventButtonBarFactory
 		
 		for (Point padCoords : failedPadLocations)
 		{
-			ArenaImageGenerator.drawTile(padCoords.y, padCoords.x, ArenaImageGenerator.FLOOR_COLOR, TILE_SIZE);
+			ArenaImageGenerator.drawTile(padCoords.y + 1, padCoords.x + 1, ArenaImageGenerator.FLOOR_COLOR, TILE_SIZE);
 		}
 		
 		List<Point> dimGoalLocations = data.getArena().getDimGoalLocations();
 		
 		for (Point padCoords : dimGoalLocations)
 		{
-			ArenaImageGenerator.drawTile(padCoords.y, padCoords.x, ArenaImageGenerator.DIM_GOAL_COLOR, TILE_SIZE);
+			ArenaImageGenerator.drawTile(padCoords.y + 1, padCoords.x + 1, ArenaImageGenerator.DIM_GOAL_COLOR, TILE_SIZE);
 		}
 	}
 
@@ -270,7 +243,7 @@ public class EventButtonBarFactory
 					continue;
 				}
 				
-				ArenaImageGenerator.drawTile(location.y, location.x, ImageUtils.gdxColor(pointColor), TILE_SIZE);
+				ArenaImageGenerator.drawTile(location.y + 1, location.x + 1, ImageUtils.gdxColor(pointColor), TILE_SIZE);	//coords are +1 to account for the map border
 			}
 		}
 	}

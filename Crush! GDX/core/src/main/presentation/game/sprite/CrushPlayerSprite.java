@@ -21,12 +21,12 @@ import main.presentation.audio.SoundType;
 public class CrushPlayerSprite extends CrushSprite implements ActionListener
 {
 	private PlayerState state;
-	private Facing facing;
+	protected Facing facing;
 	private final Team team;
 	private final Race race;
 	private boolean hasBall = false;
 	
-	private Point targetCoords;
+	protected Point targetCoords;
 	
 	private Timer playerAnimationTimer = new Timer(0, this);
 	private TextureRegion currentSpriteImage = null;
@@ -85,7 +85,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	
 	//to prevent infinite looping because the sprite never arrives at its destination (due to fractions being lost in the x -> y conversion), this will
 	//slowly shift the sprite toward where it's supposed to go.
-	private void easeSpriteAlong()
+	protected void easeSpriteAlong()
 	{
 		if (lastCoordCheckResult.x == coords.x && lastCoordCheckResult.y == coords.y)
 			timesCoordCheckWasUnchanged++;
@@ -205,6 +205,18 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 			beginAnimation(PlayerState.SLIDE_BALL);
 		else
 			beginAnimation(PlayerState.SLIDE);
+	}
+
+	public void jump(Event event)
+	{
+		AudioManager.getInstance().playSound(SoundType.JUMP);
+		setTargetCoords(event.flags[2], event.flags[3]);
+		turnTowardPixelCoords(targetCoords);
+		
+		if (hasBall)
+			beginAnimation(PlayerState.JUMP_BALL);
+		else
+			beginAnimation(PlayerState.JUMP);
 	}
 	
 	public void knockbackKo(Event event)
@@ -327,7 +339,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		beginAnimation(nextAnimation);
 	}
 
-	private void advanceSpriteByFacing(int positionPixelChange)
+	protected void advanceSpriteByFacing(int positionPixelChange)
 	{
 		double xChange = positionPixelChange;
 		double yChange = positionPixelChange * (5.0 / 6.0);
@@ -478,6 +490,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 
 	private boolean movingToNewTile()
 	{
-		return state == PlayerState.WALK || state == PlayerState.WALK_BALL || state == PlayerState.SLIDE || state == PlayerState.SLIDE_BALL || state == PlayerState.KNOCKBACK_FALL;
+		return state == PlayerState.WALK || state == PlayerState.WALK_BALL || state == PlayerState.SLIDE || state == PlayerState.SLIDE_BALL
+				|| state == PlayerState.KNOCKBACK_FALL || state == PlayerState.JUMP || state == PlayerState.JUMP_BALL;
 	}
 }

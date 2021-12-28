@@ -72,6 +72,9 @@ public class ImageFactory
 	private void addScreens()
 	{
 		addImage(ImageType.MAIN_MENU, "screens/main.png");
+		addImage(ImageType.SCREEN_EXHIBITION_PREGAME, "screens/pregamee.png");
+		addImage(ImageType.SCREEN_TOURNAMENT_PREGAME, "screens/pregamet.png");
+		addImage(ImageType.SCREEN_LEAGUE_PREGAME, "screens/pregamel.png");
 	}
 
 	private void addArenas()
@@ -105,6 +108,7 @@ public class ImageFactory
 	{
 		Texture menuUpButtons = generateTexture(ImageType.MENU2, "screens/menu2.png");
 		Texture menuDownButtons = generateTexture(ImageType.MENU, "screens/menu.png");
+		addImage(ImageType.GAME_START_BUTTON_DOWN, "screens/start.png");
 		
 		images.put(ImageType.MAIN_BUTTON_EXHIBITION_UP, new TextureRegionDrawable(new TextureRegion(menuUpButtons, 1, 1, 158, 14)));
 		images.put(ImageType.MAIN_BUTTON_TOURNAMENT_UP, new TextureRegionDrawable(new TextureRegion(menuUpButtons, 1, 21, 158, 14)));
@@ -116,6 +120,7 @@ public class ImageFactory
 		images.put(ImageType.MAIN_BUTTON_LEAGUE_DOWN, new TextureRegionDrawable(new TextureRegion(menuDownButtons, 1, 41, 158, 14)));
 		images.put(ImageType.MAIN_BUTTON_EXIT_DOWN, new TextureRegionDrawable(new TextureRegion(menuDownButtons, 1, 61, 158, 14)));
 		
+		images.put(ImageType.GAME_START_BUTTON_UP, new TextureRegionDrawable(new TextureRegion(textures.get(ImageType.SCREEN_EXHIBITION_PREGAME), 542, 362, 79, 15)));
 	}
 	
 	private void addCursorImages()

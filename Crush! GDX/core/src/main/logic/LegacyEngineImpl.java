@@ -540,7 +540,7 @@ public class LegacyEngineImpl implements Engine
 		Player carrier = localData.getBallCarrier();
 		Point coords = localData.getLocationOfPlayer(carrier);
 		
-		System.out.println("Drop coordinates are (" + coords.x + ", " + coords.y + ").");	//TODO: this threw a null pointer exception, though I don't know why
+		System.out.println("Drop coordinates are (" + coords.x + ", " + coords.y + ").");	//TODO: this threw a null pointer exception; perhaps if the ball carrier is injured/killed, he's gone, so this can't register?
 		
 		Event toRet = Event.moveBall(coords.x, coords.y); 
 		

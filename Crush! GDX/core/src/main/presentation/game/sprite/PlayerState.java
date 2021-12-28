@@ -15,10 +15,11 @@ public enum PlayerState
 	DODGE,
 	DODGE_BALL,
 	JUMP,
+	JUMP_BALL,
 	SLIDE,
 	SLIDE_BALL,
 	KNOCKBACK_FALL,
 	INJURY,
+	GIVE_BALL,
 	RECEIVE_BALL
-	//TODO: more
 }

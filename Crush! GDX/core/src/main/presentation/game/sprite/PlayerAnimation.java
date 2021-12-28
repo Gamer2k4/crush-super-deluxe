@@ -16,6 +16,7 @@ public class PlayerAnimation
 	private static final int CHECK_FRAME_DURATION = 35;
 	private static final int SLIDE_FRAME_DURATION = 20;
 	private static final int KNOCKBACK_KO_FRAME_DURATION = 30;
+	private static final int JUMP_FRAME_DURATION = 20;
 	
 	private PlayerAnimation(int totalFrames)
 	{
@@ -39,7 +40,13 @@ public class PlayerAnimation
 		if (!animations.containsKey(state))
 			animations.put(state, createAnimations(state));
 		
-		return animations.get(state).get(facing);
+		try {
+			return animations.get(state).get(facing);
+		} catch (NullPointerException npe)
+		{
+			System.out.println("Null pointer when trying to fetch animation for state " + state);
+			return null;
+		}
 	}
 
 	private static Map<Facing, PlayerAnimation> createAnimations(PlayerState state)
@@ -73,11 +80,15 @@ public class PlayerAnimation
 		case KNOCKBACK_FALL:
 			return createKnockbackFallAnimation();
 		case JUMP:
-			break;
+			return createJumpAnimation();
+		case JUMP_BALL:
+			return createJumpBallAnimation();
 		case DOWN:
 			break;
 		case SIT:
 			break;
+		case GIVE_BALL:
+			return createGiveBallAnimation();
 		case RECEIVE_BALL:
 			return createReceiveBallAnimation();
 		case SHOCK:
@@ -333,6 +344,58 @@ public class PlayerAnimation
 		}
 		
 		return createdAnimations;
+	}
+
+	private static Map<Facing, PlayerAnimation> createJumpAnimation()
+	{
+		Map<Facing, PlayerAnimation> createdAnimations = new HashMap<Facing, PlayerAnimation>();
+		
+		for (Facing facing : Facing.values())
+		{
+			PlayerAnimation animation = new PlayerAnimation(8);
+			
+			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_WINDUP_" + facing.name()), JUMP_FRAME_DURATION * 6, 0);		//6 frames
+			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_SPRING_" + facing.name()), JUMP_FRAME_DURATION * 2, 0);		//2
+			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), JUMP_FRAME_DURATION * 3, 4);			//3
+			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_FLY_" + facing.name()), JUMP_FRAME_DURATION, 18);				//1
+			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_FLY_" + facing.name()), JUMP_FRAME_DURATION, 26);				//1
+			animation.frames[5] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_FLY_" + facing.name()), JUMP_FRAME_DURATION, 8);				//1
+			animation.frames[6] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), JUMP_FRAME_DURATION * 2, 12);			//2
+			animation.frames[7] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_SPRING_" + facing.name()), JUMP_FRAME_DURATION * 4, 4);		//3
+			
+			createdAnimations.put(facing, animation);
+		}
+		
+		return createdAnimations;
+	}
+
+	private static Map<Facing, PlayerAnimation> createJumpBallAnimation()
+	{
+		Map<Facing, PlayerAnimation> createdAnimations = new HashMap<Facing, PlayerAnimation>();
+		
+		for (Facing facing : Facing.values())
+		{
+			PlayerAnimation animation = new PlayerAnimation(8);
+			
+			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_WINDUP_BALL_" + facing.name()), JUMP_FRAME_DURATION * 6, 0);		//6 frames
+			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_SPRING_BALL_" + facing.name()), JUMP_FRAME_DURATION * 2, 0);		//2
+			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), JUMP_FRAME_DURATION * 3, 4);			//3
+			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), JUMP_FRAME_DURATION, 18);			//1
+			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), JUMP_FRAME_DURATION, 26);			//1
+			animation.frames[5] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), JUMP_FRAME_DURATION, 8);			//1
+			animation.frames[6] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), JUMP_FRAME_DURATION * 2, 12);			//2
+			animation.frames[7] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_SPRING_BALL_" + facing.name()), JUMP_FRAME_DURATION * 4, 4);		//3
+			
+			createdAnimations.put(facing, animation);
+		}
+		
+		return createdAnimations;
+	}
+
+	private static Map<Facing, PlayerAnimation> createGiveBallAnimation()
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	private static Map<Facing, PlayerAnimation> createReceiveBallAnimation()

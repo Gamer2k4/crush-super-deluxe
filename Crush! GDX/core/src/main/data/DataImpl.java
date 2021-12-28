@@ -208,7 +208,7 @@ public class DataImpl implements Data
 		
 //		fieldIndex = Arena.ARENA_SAVANNA;		//TODO: currently always savannah for testing
 //		fieldIndex = Arena.ARENA_ABYSS;
-		fieldIndex = Arena.ARENA_THE_VOID;
+//		fieldIndex = Arena.ARENA_THE_VOID;
 //		fieldIndex = Arena.ARENA_JACKALS_LAIR;
 //		fieldIndex = Arena.ARENA_FULCRUM;
 //		fieldIndex = Arena.ARENA_SPACECOM;

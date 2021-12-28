@@ -28,9 +28,9 @@ public class EventTextureFactory
 	
 	private Data data;
 	
-	private Map<Point, CrushSprite> tileSprites = new HashMap<Point, CrushSprite>();
-	private Map<Point, CrushPlayerSprite> playerSprites = new HashMap<Point, CrushPlayerSprite>();
-	private Map<Player, CrushPlayerSprite> playerSpriteMap = new HashMap<Player, CrushPlayerSprite>();
+	private Map<Point, CrushSprite> tileSpritesAtArenaLocation = new HashMap<Point, CrushSprite>();
+	private Map<Point, CrushPlayerSprite> playerSpritesAtArenaLocation = new HashMap<Point, CrushPlayerSprite>();
+	private Map<Player, CrushPlayerSprite> playerSpritesByPlayer = new HashMap<Player, CrushPlayerSprite>();
 	private List<CrushSprite> elevatedSprites = new ArrayList<CrushSprite>();
 	
 	private List<HighlightIcon> highlightsToDisplay = new ArrayList<HighlightIcon>();
@@ -84,8 +84,8 @@ public class EventTextureFactory
 	{
 		List<CrushSprite> arenaSprites = new ArrayList<CrushSprite>();
 		
-		CrushSprite arenaSprite = CrushArenaImageManager.getInstance().createArena(data.getArena());		//saves loading time by not updating field colors
-//		CrushSprite arenaSprite = CrushArenaImageManager.getInstance().getArenaForHomeTeam(data.getArena().getIndex(), data.getTeam(0));
+//		CrushSprite arenaSprite = CrushArenaImageManager.getInstance().createArena(data.getArena());		//saves loading time by not updating field colors
+		CrushSprite arenaSprite = CrushArenaImageManager.getInstance().getArenaForHomeTeam(data.getArena().getIndex(), data.getTeam(0));
 		
 		if (arenaSprite != null)
 			arenaSprites.add(arenaSprite);
@@ -95,7 +95,7 @@ public class EventTextureFactory
 	
 	public void refreshTileSprites()
 	{
-		tileSprites.clear();
+		tileSpritesAtArenaLocation.clear();
 		
 		if (data == null)
 			return;
@@ -121,7 +121,7 @@ public class EventTextureFactory
 				CrushTile tileSprite = CrushTile.createTile(OFFSCREEN_COORDS, tileSheetIndex);
 				Point coords = new Point(i, j);
 				tileSprite.setArenaPosition(coords);
-				tileSprites.put(coords, tileSprite);
+				tileSpritesAtArenaLocation.put(coords, tileSprite);
 			}
 		}	
 	}
@@ -131,7 +131,7 @@ public class EventTextureFactory
 	{
 		List<CrushSprite> tileSpriteList = new ArrayList<CrushSprite>();
 		
-		for (CrushSprite sprite : tileSprites.values())
+		for (CrushSprite sprite : tileSpritesAtArenaLocation.values())
 		{
 			tileSpriteList.add(sprite);
 		}
@@ -147,7 +147,7 @@ public class EventTextureFactory
 		
 		do {
 			try {
-				iter = tileSprites.values().iterator();
+				iter = tileSpritesAtArenaLocation.values().iterator();
 		
 				while (iter.hasNext()) {
 					tileSpriteList.add(iter.next());
@@ -183,7 +183,7 @@ public class EventTextureFactory
 	{
 		List<CrushSprite> cursorSpriteList = new ArrayList<CrushSprite>();
 		
-		CrushPlayerSprite currentSprite = playerSpriteMap.get(currentPlayer);
+		CrushPlayerSprite currentSprite = playerSpritesByPlayer.get(currentPlayer);
 		
 		if (currentSprite == null)
 			return cursorSpriteList;
@@ -218,9 +218,9 @@ public class EventTextureFactory
 	
 	private void refreshPlayerBallStatus(Player ballCarrier)
 	{
-		for (Player player : playerSpriteMap.keySet())
+		for (Player player : playerSpritesByPlayer.keySet())
 		{
-			CrushPlayerSprite sprite = playerSpriteMap.get(player);
+			CrushPlayerSprite sprite = playerSpritesByPlayer.get(player);
 			sprite.setHasBall(false);
 			
 			if (player == ballCarrier)
@@ -236,8 +236,8 @@ public class EventTextureFactory
 		{
 			CrushPlayerSprite sprite = new CrushPlayerSprite(data.getTeamOfPlayer(player), player.getRace());
 			sprite.setArenaPosition(OFFSCREEN_COORDS);
-			playerSprites.put(OFFSCREEN_COORDS, sprite);
-			playerSpriteMap.put(player, sprite);
+			playerSpritesAtArenaLocation.put(OFFSCREEN_COORDS, sprite);
+			playerSpritesByPlayer.put(player, sprite);
 		}
 	}
 	
@@ -245,12 +245,12 @@ public class EventTextureFactory
 	{
 		List<CrushSprite> playerSpriteList = new ArrayList<CrushSprite>();
 		
-		for (Point coords : playerSprites.keySet())
+		for (Point coords : playerSpritesAtArenaLocation.keySet())
 		{
 			if (coords.x < 0 || coords.y < 0 || coords.x >= 30 || coords.y >= 30)
 				continue;
 			
-			CrushPlayerSprite playerSprite = playerSprites.get(coords);
+			CrushPlayerSprite playerSprite = playerSpritesAtArenaLocation.get(coords);
 			
 			if (playerSprite != null)
 				playerSpriteList.add(playerSprite);
@@ -373,14 +373,14 @@ public class EventTextureFactory
 			return OFFSCREEN_COORDS;
 		}
 		
-		CrushPlayerSprite playerSprite = playerSpriteMap.get(player);
+		CrushPlayerSprite playerSprite = playerSpritesByPlayer.get(player);
 		
 		if (playerSprite == null)
 			throw new IllegalArgumentException("Could not get sprite arena coordinates for player [" + player + "]; no sprite was found");
 		
-		for (Point key : playerSprites.keySet())
+		for (Point key : playerSpritesAtArenaLocation.keySet())
 		{
-			CrushPlayerSprite spriteToCheck = playerSprites.get(key);
+			CrushPlayerSprite spriteToCheck = playerSpritesAtArenaLocation.get(key);
 			
 			if (spriteToCheck == playerSprite)	//yes, we want actual object equality here, not just identical values
 				return key;
@@ -399,19 +399,19 @@ public class EventTextureFactory
 		if (arenaCoords == null)
 			return null;
 		
-		return playerSprites.get(arenaCoords);
+		return playerSpritesAtArenaLocation.get(arenaCoords);
 	}
 	
 	public CrushPlayerSprite getPlayerSprite(Player player)
 	{
-		return playerSpriteMap.get(player);
+		return playerSpritesByPlayer.get(player);
 	}
 	
 	public void updatePlayerSpriteCoords(CrushPlayerSprite player, Point newArenaCoords)
 	{
-		for (Player key : playerSpriteMap.keySet())
+		for (Player key : playerSpritesByPlayer.keySet())
 		{
-			CrushPlayerSprite spriteToCheck = playerSpriteMap.get(key);
+			CrushPlayerSprite spriteToCheck = playerSpritesByPlayer.get(key);
 			
 			if (spriteToCheck == player)	//yes, we want actual object equality here, not just identical values
 			{
@@ -429,26 +429,59 @@ public class EventTextureFactory
 			return;
 		}
 		
-		CrushPlayerSprite playerSprite = playerSpriteMap.get(player);
+		CrushPlayerSprite playerSprite = playerSpritesByPlayer.get(player);
 		
 		if (playerSprite == null)
-			throw new IllegalArgumentException("Could not update sprite arena coordinates for player [" + player + "]; no sprite was found");
-		
-		//TODO: will need to prevent concurrent modification with this
-		//the player sprite may not be in the coordinations map if it's offscreen; however, it if is there, remove it so it can be re-added.
-		for (Point key : playerSprites.keySet())
 		{
-			CrushPlayerSprite spriteToCheck = playerSprites.get(key);
+			Logger.warn("Could not update sprite arena coordinates for player [" + player + "]; no sprite was found");
+			return;
+		}
+		
+		removePlayerSpriteFromCoordsMap(playerSprite);
+		playerSprite.setArenaPosition(newArenaCoords);
+		playerSpritesAtArenaLocation.put(newArenaCoords, playerSprite);
+	}
+	
+	public void elevateSprite(CrushPlayerSprite sprite)
+	{
+		if (elevatedSprites.contains(sprite))
+			return;
+		
+		removePlayerSpriteFromCoordsMap(sprite);
+		elevatedSprites.add(sprite);
+	}
+	
+	public void lowerSprite(CrushPlayerSprite sprite)
+	{
+		if (!elevatedSprites.contains(sprite))
+			return;
+		
+		elevatedSprites.remove(sprite);
+		playerSpritesAtArenaLocation.put(sprite.getArenaPosition(), sprite);
+	}
+	
+	private boolean removePlayerSpriteFromCoordsMap(CrushPlayerSprite spriteToRemove)
+	{
+		Point locationOfSpriteToRemove = null;
+		
+		//the player sprite may not be in the coordinations map if it's offscreen; however, it if is there, remove it so it can be re-added.
+		for (Point key : playerSpritesAtArenaLocation.keySet())
+		{
+			CrushPlayerSprite spriteToCheck = playerSpritesAtArenaLocation.get(key);
 			
-			if (spriteToCheck == playerSprite)	//yes, we want actual object equality here, not just identical values
+			if (spriteToCheck == spriteToRemove)	//yes, we want actual object equality here, not just identical values
 			{
-				playerSprites.remove(key);
+				locationOfSpriteToRemove = key;
 				break;
 			}
 		}
 		
-		playerSprite.setArenaPosition(newArenaCoords);
-		playerSprites.put(newArenaCoords, playerSprite);
+		//done here to avoid concurrent modification exception
+		if (locationOfSpriteToRemove == null)
+			return false;
+		
+		playerSpritesAtArenaLocation.remove(locationOfSpriteToRemove);
+		return true;
 	}
 	
 	public Facing getBinSpriteFacing(Point coords)

@@ -12,7 +12,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-import main.data.GameDataPreloader;
+import main.data.entities.Arena;
 import main.data.entities.Team;
 import main.data.factory.CpuTeamFactory;
 import main.logic.Client;
@@ -21,6 +21,8 @@ import main.presentation.CursorManager;
 import main.presentation.ImageFactory;
 import main.presentation.TeamColorsManager;
 import main.presentation.audio.AudioManager;
+import main.presentation.audio.SoundType;
+import main.presentation.common.Logger;
 import main.presentation.common.ScreenCommand;
 import main.presentation.game.ArenaImageGenerator;
 import main.presentation.game.GameText;
@@ -29,8 +31,10 @@ import main.presentation.game.StaticImage;
 import main.presentation.game.sprite.CrushAnimatedTile;
 import main.presentation.game.sprite.CrushArenaImageManager;
 import main.presentation.game.sprite.CrushSprite;
+import main.presentation.screens.EventDetails;
 import main.presentation.screens.GameScreen;
 import main.presentation.screens.GameScreenManager;
+import main.presentation.screens.PregameScreen;
 import main.presentation.screens.ScreenType;
 import main.presentation.screens.teamselect.AbstractTeamSelectScreen;
 
@@ -45,6 +49,8 @@ public class CrushGame extends Game implements ActionListener
 	private SpriteBatch spriteBatch;
 	
 	private OrthographicCamera fixedCamera;
+	
+	private boolean gameIsActive = false;
 
 	@Override
 	public void create()
@@ -144,7 +150,7 @@ public class CrushGame extends Game implements ActionListener
 	
 	private void renderStaticText()
 	{
-		List<GameText> gameTexts = getCurrentScreen().getStaticText(); 
+		List<GameText> gameTexts = getCurrentScreen().getStaticText();
 		
 		spriteBatch.setProjectionMatrix(fixedCamera.combined);
 		spriteBatch.begin();
@@ -160,6 +166,7 @@ public class CrushGame extends Game implements ActionListener
 	@Override
 	public void dispose()
 	{
+		GameScreenManager.getInstance().dispose();
 		CrushArenaImageManager.getInstance().dispose();
 		TeamColorsManager.getInstance().dispose();
 		ImageFactory.getInstance().dispose();
@@ -175,7 +182,7 @@ public class CrushGame extends Game implements ActionListener
 		return (GameScreen) getScreen();
 	}
 
-	private void startNewGame(AbstractTeamSelectScreen sourceScreen)
+	private void prepareNewGame(AbstractTeamSelectScreen sourceScreen)
 	{
 //		List<Team> gameTeams = getTeamsForGameStart(sourceScreen.getTeams(), sourceScreen.getBudget());
 		List<Team> rawTeams = new ArrayList<Team>();
@@ -184,9 +191,24 @@ public class CrushGame extends Game implements ActionListener
 		rawTeams.add(new Team());
 		
 		List<Team> gameTeams = getTeamsForGameStart(rawTeams, 900);
-
-		GameDataPreloader.preloadGameData(gameTeams);
+		int arenaIndex = gameTeams.get(0).homeField;		//TODO: update this for playoffs
 		
+		EventDetails.setTeams(gameTeams);
+		EventDetails.setArena(arenaIndex);
+		
+		PregameScreen pregameScreen = (PregameScreen) activeScreen;
+		pregameScreen.newGame();
+	}
+	
+	private void beginNewGame()
+	{
+		if (gameIsActive)
+		{
+			Logger.warn("Attempting to begin a new game while one is ongoing!");
+			return;
+		}
+		
+		gameIsActive = true;
 		client = new Client(host, this);
 
 		setScreen(GameScreenManager.getInstance().getScreen(ScreenType.GAME_PLAY));
@@ -195,7 +217,7 @@ public class CrushGame extends Game implements ActionListener
 		GdxGUI gui = (GdxGUI) client.getGui();
 		gui.setGameScreen(activeScreen);
 
-		host.newGame(gameTeams, gameTeams.get(0).homeField);		//TODO: update this for playoffs
+		host.newGame(EventDetails.getTeams(), EventDetails.getArenaIndex());
 		client.getGui().beginGame();
 	}
 
@@ -234,9 +256,15 @@ public class CrushGame extends Game implements ActionListener
 		{
 		case EXIT:
 			Gdx.app.exit();
-			break;		
+			break;
+		case EXHIBITION_PREGAME:
+			setScreen(GameScreenManager.getInstance().getScreen(ScreenType.EXHIBITION_PREGAME_SCREEN));
+			activeScreen.reset();
+			prepareNewGame(null);
+			break;
 		case BEGIN_GAME:
-			startNewGame(null);
+			AudioManager.getInstance().stopSound(SoundType.PREGAME);
+			beginNewGame();
 			break;
 		}
 	}

@@ -44,6 +44,8 @@ public class GdxGUI extends GameRunnerGUI
 	
 	private boolean delayTimerRunning = false;
 	
+	private boolean jumpQueued = false;
+	
 	private List<CrushAnimatedTile> activeOverlayAnimations = new ArrayList<CrushAnimatedTile>();
 	private List<CrushPlayerSprite> activeSpriteAnimations = new ArrayList<CrushPlayerSprite>();
 	
@@ -255,11 +257,32 @@ public class GdxGUI extends GameRunnerGUI
 		else if (event.flags[4] == 1)	//slide
 			playerSprite.slide(event);
 		else if (event.flags[5] == 1)	//jump
-			;
+		{
+			handleJump(event, playerSprite);
+			return;
+		}
 		
 		activeSpriteAnimations.add(playerSprite);
 	}
-	
+
+	private void handleJump(Event event, CrushPlayerSprite playerSprite)
+	{
+		if (!jumpQueued)
+		{
+			jumpQueued = true;
+			return;
+		}
+		
+		jumpQueued = false;
+		eventTextureFactory.elevateSprite(playerSprite);
+		refreshInterface();
+		playerSprite.jump(event);
+		activeSpriteAnimations.add(playerSprite);
+		waitForAnimationsToConclude();
+		eventTextureFactory.lowerSprite(playerSprite);
+		refreshInterface();
+	}
+
 	private void handleEjectionEvent(Event event)
 	{
 		if (event.getType() != Event.EVENT_EJECT)
@@ -322,6 +345,9 @@ public class GdxGUI extends GameRunnerGUI
 		attackerSprite.turnTowardArenaLocation(defenderLocation);
 		defenderSprite.turnTowardArenaLocation(attackerLocation);
 		
+		eventTextureFactory.elevateSprite(attackerSprite);
+		refreshInterface();
+		
 		if (event.flags[2] == Event.CHECK_DODGE)
 		{
 			defenderSprite.dodge();
@@ -330,6 +356,10 @@ public class GdxGUI extends GameRunnerGUI
 		
 		attackerSprite.check();
 		activeSpriteAnimations.add(attackerSprite);
+		waitForAnimationsToConclude();
+		
+		eventTextureFactory.lowerSprite(attackerSprite);
+		refreshInterface();
 		
 		//that should be it, since knockbacks, shocks, etc. are handled as separate events
 	}
@@ -606,7 +636,7 @@ public class GdxGUI extends GameRunnerGUI
 			@Override
 			public void run()
 			{
-				Logger.debug("Polling client for next event.");
+				Logger.info("Polling client for next event.");
 				Event event = myClient.getNextEvent();
 				if (event != null)
 				{

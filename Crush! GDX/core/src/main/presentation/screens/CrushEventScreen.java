@@ -37,7 +37,6 @@ public class CrushEventScreen extends GameScreen
 	
 	private Texture mapTexture = ImageFactory.getInstance().getTexture(ImageType.MAP_A1);
 	
-	//TODO: these two never get disposed, as far as I know
 	private Image buttonBar = new Image(ImageFactory.getInstance().getDrawable(ImageType.GAME_BUTTONBAR));
 	private Pixmap clickMap;
 	
@@ -69,7 +68,7 @@ public class CrushEventScreen extends GameScreen
 
 	public void refreshTextures()
 	{
-		Logger.debug("Refreshing textures...");
+		Logger.info("Refreshing textures...");
 		activeSprites = gui.getActiveSprites();
 	}
 
@@ -137,6 +136,7 @@ public class CrushEventScreen extends GameScreen
 			if (gui.showingEjectionAlert())
 			{
 				gui.confirmEjectionAlert();
+				touchRegistered = true;
 				return;
 			}
 			
@@ -335,5 +335,11 @@ public class CrushEventScreen extends GameScreen
 	    
 	    clickMap = textureData.consumePixmap();
 	    textureData.disposePixmap();
+	}
+	
+	@Override
+	public void dispose()
+	{
+		clickMap.dispose();
 	}
 }

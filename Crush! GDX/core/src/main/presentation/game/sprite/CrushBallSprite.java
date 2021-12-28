@@ -17,4 +17,9 @@ public class CrushBallSprite extends CrushPlayerSprite
 	{
 		return ballImage.getImage();
 	}
+	
+	//from tile_crush.png
+	//95 is WALK_LEFT_NW
+	//96 is WALK_RIGHT_NW
+	//98 is WALK_BOTH_NW
 }

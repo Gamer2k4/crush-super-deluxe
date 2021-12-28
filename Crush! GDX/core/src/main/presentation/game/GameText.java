@@ -11,9 +11,10 @@ import main.presentation.common.image.ImageUtils;
 
 public class GameText
 {
-	private static BitmapFont big = new BitmapFont(Gdx.files.internal("fonts/big.fnt"), Gdx.files.internal("fonts/gdx_big.png"), true);
-	private static BitmapFont small = new BitmapFont(Gdx.files.internal("fonts/small.fnt"), Gdx.files.internal("fonts/gdx_small.png"), true);
-	private static BitmapFont small2 = new BitmapFont(Gdx.files.internal("fonts/small2.fnt"), Gdx.files.internal("fonts/gdx_small2.png"), true);
+	public static BitmapFont big = new BitmapFont(Gdx.files.internal("fonts/big.fnt"), Gdx.files.internal("fonts/gdx_big.png"), true);
+	public static BitmapFont huge = new BitmapFont(Gdx.files.internal("fonts/huge.fnt"), Gdx.files.internal("fonts/gdx_huge.png"), true);
+	public static BitmapFont small = new BitmapFont(Gdx.files.internal("fonts/small.fnt"), Gdx.files.internal("fonts/gdx_small.png"), true);
+	public static BitmapFont small2 = new BitmapFont(Gdx.files.internal("fonts/small2.fnt"), Gdx.files.internal("fonts/gdx_small2.png"), true);
 	
 	private BitmapFont font;
 	private Point coords;
@@ -36,7 +37,8 @@ public class GameText
 			font = big;
 			return;
 		case FONT_HUGE:
-			break;
+			font = huge;
+			return;
 		case FONT_SMALL:
 			font = small;
 			return;
@@ -44,7 +46,6 @@ public class GameText
 			font = small2;
 			return;
 		case FONT_SMALL_TIGHT:
-			break;
 		default:
 			font = small2;
 			break;
@@ -80,12 +81,71 @@ public class GameText
 	
 	public static void dispose()
 	{
+		big.dispose();
+		huge.dispose();
+		small.dispose();
 		small2.dispose();
+	}
+	
+	public int getStringStartX(int targetX, int maxWidth)
+	{
+		return getStringStartX(this.font, targetX, maxWidth, text);
+	}
+	
+	public static int getStringStartX(BitmapFont fontUsed, int targetX, int maxWidth, String text)
+	{
+		int stringLength = getStringPixelLength(fontUsed, text);
+		
+		if (stringLength > maxWidth)
+			return targetX;
+		
+		int lengthDif = maxWidth - getStringPixelLength(fontUsed, text);
+		
+		return targetX + (lengthDif / 2);
+	}
+	
+	private static int getStringPixelLength(BitmapFont fontUsed, String text)
+	{
+		int length = 0;
+		
+		for (int i = 0; i < text.length(); i++)
+		{
+			if (text.charAt(i) == ' ')
+				length += getSpaceLength(fontUsed);
+			else
+				length += getCharacterLength(fontUsed);
+		}
+		
+		return length;
+	}
+	
+	private static int getSpaceLength(BitmapFont font)
+	{
+		if (font == huge)
+			return 20;
+		
+		return 3;
+	}
+	
+	private static int getCharacterLength(BitmapFont font)
+	{
+		if (font == huge)
+			return 40;
+		
+		if (font == small || font == big)
+			return 11;
+		
+		return 6;
 	}
 	
 	public static GameText big(Point coords, Color color, String text)
 	{
 		return new GameText(FontType.FONT_BIG, coords, color, text);
+	}
+	
+	public static GameText huge(Point coords, String text)
+	{
+		return new GameText(FontType.FONT_HUGE, coords, Color.WHITE, text);
 	}
 	
 	public static GameText small(Point coords, Color color, String text)
