@@ -45,12 +45,14 @@ public class DataImpl implements Data
 	public static final int AP_CHECK_COST = 20;
 	public static final int AP_CHARGE_COST = 10;
 	public static final int AP_POPUP_COST = 10;
+	
+	private boolean gameActive = false;
 
 	@Override
 	public Data clone()
 	{
 		// clone the easy to clone data
-		DataImpl toRet = new DataImpl();
+		DataImpl toRet = new DataImpl(name + "[clone]");
 		toRet.ball = new Point(ball.x, ball.y);
 		toRet.currentTeam = currentTeam;
 		toRet.gameWinner = gameWinner;
@@ -219,6 +221,7 @@ public class DataImpl implements Data
 		createMap(fieldIndex);
 		
 		gameWinner = GAME_IN_PROGRESS;
+		gameActive = true;
 	}
 	
 	private Player putPlayerOnDeck(Player player)
@@ -234,6 +237,8 @@ public class DataImpl implements Data
 
 	private void endGame(int winningTeam)
 	{
+		gameActive = false;
+		
 		//save the stats for everyone
 		for (Player player : allPlayers)
 		{
@@ -310,7 +315,7 @@ public class DataImpl implements Data
 		// dumbly execute events as they come in; the Engine should've sanitized them so nothing illegal can happen
 		// only do one at a time, since by this point everything is resolved and distinct
 		
-		Logger.debug("Data " + name + " received event: " + theEvent);
+		Logger.debug("\t\tData " + name + " received event: " + theEvent);
 
 		if (theEvent.getType() == Event.EVENT_TURN)
 		{
@@ -402,7 +407,7 @@ public class DataImpl implements Data
 			statsOfPlayer.get(player).tryPad();
 		} else if (theEvent.getType() == Event.EVENT_BALLMOVE)
 		{
-			System.out.println("DATA MOVING BALL");
+			Logger.debug("DATA MOVING BALL");
 			ball.x = theEvent.flags[2];
 			ball.y = theEvent.flags[3];
 			
@@ -534,7 +539,7 @@ public class DataImpl implements Data
 			if (injury)		//getting killed is already handled in EJECT_DEATH
 				statsOfPlayer.get(player).getInjured();
 			
-			System.out.println("Data - eject event: " + theEvent);
+			Logger.debug("Data - eject event: " + theEvent);
 
 			// damage the player's attributes if there was an injury
 			player.applyInjury(theEvent.flags[3], theEvent.flags[4]);
@@ -709,6 +714,12 @@ public class DataImpl implements Data
 	}
 	
 	@Override
+	public boolean playersAreOpponents(Player player1, Player player2)
+	{
+		return getTeamIndexOfPlayer(player1) != getTeamIndexOfPlayer(player2);
+	}
+	
+	@Override
 	public Stats getStatsOfPlayer(Player p)
 	{
 		return statsOfPlayer.get(p);
@@ -801,10 +812,12 @@ public class DataImpl implements Data
 	{
 		return currentTeam;
 	}
-
-	private void setCurrentTeam(int curTeam)
+	
+	@Override
+	public boolean isCurrentTeamHumanControlled()
 	{
-		currentTeam = curTeam;
+		Team team = teams.get(currentTeam);
+		return team.humanControlled;
 	}
 
 	@Override
@@ -915,6 +928,12 @@ public class DataImpl implements Data
 		return 2;	//TODO: record this
 	}
 
+	@Override
+	public boolean isGameActive()
+	{
+		return gameActive;
+	}
+
 	// TODO: DEBUG
 	@Override
 	public void printMap()
@@ -924,12 +943,12 @@ public class DataImpl implements Data
 			for (int j = 0; j < 30; j++)
 			{
 				if (playerLocs[i][j] == null)
-					System.out.print("0, ");
+					Logger.output("0, ");
 				else
-					System.out.print(playerLocs[i][j].name.substring(0, 1) + ", ");
+					Logger.output(playerLocs[i][j].name.substring(0, 1) + ", ");
 			}
 
-			System.out.println();
+			Logger.output("\n");
 		}
 	}
 	

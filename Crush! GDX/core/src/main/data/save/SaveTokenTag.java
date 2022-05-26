@@ -14,6 +14,7 @@ public enum SaveTokenTag
 	T_GST,	//team game stats
 	T_SST,	//team season stats
 	T_CST,	//team career stats
+	T_HUM,	//team human controlled
 	
 	P_UID,	//player unique identifier
 	P_STS,	//player status

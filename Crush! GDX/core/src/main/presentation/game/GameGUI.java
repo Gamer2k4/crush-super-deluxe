@@ -86,4 +86,6 @@ public abstract class GameGUI
 	public abstract void beginGame();
 	
 	public abstract void endGame();
+	
+	public abstract boolean gameStarted();
 }

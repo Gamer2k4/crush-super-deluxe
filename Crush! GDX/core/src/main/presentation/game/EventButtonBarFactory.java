@@ -177,7 +177,7 @@ public class EventButtonBarFactory
 			return GameText.small2(new Point(startX, PADS_LEFT_BALL_ON_Y_START), LegacyUiConstants.COLOR_LEGACY_BLUE, padsLeft);
 		}
 		
-		Point goalLine = arena.getGoalLine();
+		Point goalLine = arena.getGoalFarCorner();
 		Point ballLocation = data.getBallLocation();
 		
 		if (ballLocation.x == -1 && ballLocation.y == -1)
@@ -186,8 +186,9 @@ public class EventButtonBarFactory
 		try {
 			int xDist = Math.abs(ballLocation.x - goalLine.x);
 			int yDist = Math.abs(ballLocation.y - goalLine.y);
-			String ballOn = String.valueOf(Math.max(xDist, yDist));		//TODO: not quite accurate; the "goal line" is the innermost corner of the goal, so any other goal tile
-			int startX = GameText.getStringStartX(GameText.small2, PADS_LEFT_BALL_ON_X_START, PADS_LEFT_BALL_ON_MAX_WIDTH, ballOn);							//will have a non-zero value
+			int totalDist = Math.max(xDist, yDist) - 3;	//subtracting 3 because we're calculating from the innermost corner, so all edges will be the same distance
+			String ballOn = String.valueOf(Math.max(totalDist, 0));	//no negative numbers (could come from jumping into the goal)		
+			int startX = GameText.getStringStartX(GameText.small2, PADS_LEFT_BALL_ON_X_START, PADS_LEFT_BALL_ON_MAX_WIDTH, ballOn);
 			return GameText.small2(new Point(startX, PADS_LEFT_BALL_ON_Y_START), LegacyUiConstants.COLOR_LEGACY_BLUE, ballOn);
 		} catch (NullPointerException npe)	//could happen if data hasn't quite updated by the time we're here
 		{

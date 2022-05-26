@@ -20,6 +20,8 @@ public interface Data
 	public int getNextStateForRecoveringPlayer(Player player);
 	
 	public void processEvent(Event theEvent);
+	
+	public boolean playersAreOpponents(Player player1, Player player2);
 
 	public Stats getStatsOfPlayer(Player p);
 
@@ -47,6 +49,8 @@ public interface Data
 
 	public Team getTeam(int index);
 
+	boolean isCurrentTeamHumanControlled();
+
 	public Player getBallCarrier();
 
 	public Point getBallLocation();
@@ -68,8 +72,9 @@ public interface Data
 	public int getTurnBallFound();
 
 	public int getTurnBallScored();
+	
+	public boolean isGameActive();
 
 	// TODO: DEBUG
 	public void printMap();
-
 }

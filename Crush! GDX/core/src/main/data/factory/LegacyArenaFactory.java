@@ -57,10 +57,10 @@ public class LegacyArenaFactory extends ArenaFactory
 
 	private void loadArenas()
 	{
-		Logger.output("Loading map data...\n");
+		Logger.info("Loading map data...\n");
 
 		arenas = LegacyMapLoader.loadLegacyMaps();
 
-		Logger.output("Done!\n");
+		Logger.info("Done!\n");
 	}
 }

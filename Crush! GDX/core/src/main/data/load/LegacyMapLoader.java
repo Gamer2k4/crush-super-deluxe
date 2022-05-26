@@ -34,7 +34,7 @@ public class LegacyMapLoader extends ByteFileReader
 			{
 				String nextLine = s.nextLine().replace("\\\\", "\\");
 				String arenaPath = GameSettings.getRootDirectory() + nextLine.substring(1);
-				System.out.println("\t" + arenaPath);
+				Logger.info("\t" + arenaPath);
 				arenas.add(loadMap(arenas.size(), arenaPath));
 			}
 
@@ -42,7 +42,7 @@ public class LegacyMapLoader extends ByteFileReader
 			s.close();
 		} catch (IOException e)
 		{
-			System.out.println("LegacyMapLoader - Could not read file " + path);
+			Logger.error("LegacyMapLoader - Could not read file " + path);
 			return new ArrayList<Arena>();
 		}
 		
@@ -72,7 +72,7 @@ public class LegacyMapLoader extends ByteFileReader
 		} catch (IOException e)
 		{
 			e.printStackTrace();
-			System.out.println("Exception when reading legacy map file at " + fullPath);
+			Logger.error("Exception when reading legacy map file at " + fullPath);
 		}
 
 		return arena;

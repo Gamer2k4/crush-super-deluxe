@@ -20,8 +20,8 @@ public class Event implements Serializable
 	public static final int EVENT_EJECT = 11;
 	public static final int EVENT_SHOCK = 12;
 
-	public static final int HANDOFF_FALL = -1;
-	public static final int HANDOFF_PASS = 0;
+	public static final int HANDOFF_FAIL = -1;
+	public static final int HANDOFF_SUCCESS = 0;
 	public static final int HANDOFF_HURL = 1;
 	
 	public static final int CHECK_UNRESOLVED = -2;

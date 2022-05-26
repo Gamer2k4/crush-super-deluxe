@@ -41,6 +41,8 @@ public class Team extends SaveableEntity
 		lastGameStats = new Stats();
 		seasonStats = new Stats();
 		careerStats = new Stats();
+		
+		humanControlled = true;
 	}
 
 	private List<Player> players;
@@ -55,6 +57,8 @@ public class Team extends SaveableEntity
 	private Stats seasonStats;
 	private Stats careerStats;
 	//TODO: add season and career stats - remember to update constructor, equals(), hashCode(), clone(), and saving
+	
+	public boolean humanControlled;
 	
 	@Override
 	public Team clone()
@@ -89,6 +93,8 @@ public class Team extends SaveableEntity
 		team.lastGameStats = lastGameStats.clone();
 		team.seasonStats = seasonStats.clone();
 		team.careerStats = careerStats.clone();
+		
+		team.humanControlled = humanControlled;
 		
 		return team;
 	}
@@ -328,6 +334,8 @@ public class Team extends SaveableEntity
 		ssb.addToken(new SaveToken(SaveTokenTag.T_GST, convertStatsToString(lastGameStats)));
 		ssb.addToken(new SaveToken(SaveTokenTag.T_SST, convertStatsToString(seasonStats)));
 		ssb.addToken(new SaveToken(SaveTokenTag.T_CST, convertStatsToString(careerStats)));
+		
+		ssb.addToken(new SaveToken(SaveTokenTag.T_HUM, String.valueOf(humanControlled)));
 
 		return ssb.getSaveString();
 	}
@@ -348,6 +356,7 @@ public class Team extends SaveableEntity
 		setMember(ssb, SaveTokenTag.T_BGC);
 		setMember(ssb, SaveTokenTag.T_PLR);
 		setMember(ssb, SaveTokenTag.T_GST);
+		setMember(ssb, SaveTokenTag.T_HUM);
 
 		//TODO: intentionally not loading season and game stats (for now, i guess - assuming a "new season")
 		
@@ -455,6 +464,11 @@ public class Team extends SaveableEntity
 					addPlayer(player);
 			}
 			break;
+			
+		case T_HUM:
+			saveToken = ssb.getToken(saveTokenTag);
+			humanControlled = Boolean.parseBoolean(saveToken.getContents());
+			break;
 
 		default:
 			throw new IllegalArgumentException("Team - Unhandled token: " + saveTokenTag.toString());
@@ -478,7 +492,7 @@ public class Team extends SaveableEntity
 
 		if (!teamName.equals(team.teamName) || !coachName.equals(team.coachName) || homeField != team.homeField || 
 				!lastGameStats.equals(team.getLastGameStats()) || !seasonStats.equals(team.getLastGameStats()) ||
-				!careerStats.equals(team.getLastGameStats()))
+				!careerStats.equals(team.getLastGameStats()) || humanControlled != team.humanControlled)
 			return false;
 
 		if (!teamColors[0].equals(team.teamColors[0]) || !teamColors[1].equals(team.teamColors[1]))
@@ -524,6 +538,7 @@ public class Team extends SaveableEntity
 		hash = 31 * hash + lastGameStats.hashCode();   // TODO: check if this should be saveHash()
 		hash = 31 * hash + seasonStats.hashCode();   // TODO: check if this should be saveHash()
 		hash = 31 * hash + careerStats.hashCode();   // TODO: check if this should be saveHash()
+		hash = 31 * hash + (humanControlled ? 1 : 0);
 
 		for (int i = 0; i < 4; i++)
 			hash = 31 * hash + (docbot[i] ? 1 : 0);

@@ -6,14 +6,13 @@ import java.util.Map;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 
-import main.presentation.screens.ScreenType;
+import main.execute.DebugConstants;
 
 public class AudioManager
 {
 	private static AudioManager instance = null;
 	
 	private Map<SoundType, Sound> sounds;
-	private Sound background = null;
 	
 	private AudioManager()
 	{
@@ -34,19 +33,26 @@ public class AudioManager
 		return instance;
 	}
 	
-	//TODO: this needs work
-	public void updateBackground(ScreenType screen)
+	public long loopSound(SoundType soundType)
 	{
-		if (screen != ScreenType.GAME_PLAY)
-			background = sounds.get(SoundType.THEME);
+		if (!DebugConstants.AUDIO_ON)
+			return -1;
 		
-		if (background != null)
-			background.loop();
+		Sound sound = sounds.get(soundType);
+		
+		if (sound != null)
+			sound.loop();
+		
+		return -1;
 	}
 	
-	public long playSound(SoundType soundType)	//TODO: siren for successful bin, horn for unsuccessful one
+	public long playSound(SoundType soundType)
 	{
+		if (!DebugConstants.AUDIO_ON)
+			return -1;
+		
 		Sound sound = sounds.get(soundType);
+		
 		if (sound != null)
 			return sound.play();
 		

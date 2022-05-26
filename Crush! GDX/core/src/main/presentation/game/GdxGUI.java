@@ -1,6 +1,7 @@
 package main.presentation.game;
 
 import java.awt.Point;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,18 +11,21 @@ import java.util.TimerTask;
 import main.data.Event;
 import main.data.entities.Player;
 import main.data.entities.Race;
+import main.execute.DebugConstants;
 import main.logic.Client;
+import main.logic.Randomizer;
 import main.logic.Server;
 import main.presentation.audio.AudioManager;
 import main.presentation.audio.SoundType;
 import main.presentation.common.Logger;
 import main.presentation.common.PlayerTextFactory;
 import main.presentation.common.ScreenCommand;
-import main.presentation.game.ejectionalert.EjectionAlert;
 import main.presentation.game.ejectionalert.EquipmentEjectionAlert;
 import main.presentation.game.ejectionalert.FatalityEjectionAlert;
 import main.presentation.game.ejectionalert.InjuryEjectionAlert;
 import main.presentation.game.ejectionalert.MutationEjectionAlert;
+import main.presentation.game.ejectionalert.NewTurnAlert;
+import main.presentation.game.ejectionalert.PopupAlert;
 import main.presentation.game.sprite.CrushAnimatedTile;
 import main.presentation.game.sprite.CrushPlayerSprite;
 import main.presentation.game.sprite.CrushSprite;
@@ -29,7 +33,7 @@ import main.presentation.game.sprite.Facing;
 import main.presentation.screens.CrushEventScreen;
 import main.presentation.screens.GameScreen;
 
-public class GdxGUI extends GameRunnerGUI
+public class GdxGUI extends GameRunnerGUI implements ActionListener
 {
 	private static final int EVENT_POLL_RATE_MS = 50;
 	
@@ -41,6 +45,7 @@ public class GdxGUI extends GameRunnerGUI
 	
 	private Timer eventPoller;
 	private Timer delayTimer;
+	private javax.swing.Timer bgNoiseTimer = new javax.swing.Timer(15000, this);		//TODO: stop this when victory happens
 	
 	private boolean delayTimerRunning = false;
 	
@@ -49,8 +54,11 @@ public class GdxGUI extends GameRunnerGUI
 	private List<CrushAnimatedTile> activeOverlayAnimations = new ArrayList<CrushAnimatedTile>();
 	private List<CrushPlayerSprite> activeSpriteAnimations = new ArrayList<CrushPlayerSprite>();
 	
-	private EjectionAlert activeEjectionAlert = null;
+	private PopupAlert activeAlert = null;
 	private Event activeEjectEvent = null;
+	private Player lastPlayerCameraSnappedTo = null;
+	
+	private NewTurnAlert[] newTurnAlerts = new NewTurnAlert[3];
 	
 	public GdxGUI(Client client, ActionListener gameEndListener)
 	{
@@ -61,7 +69,7 @@ public class GdxGUI extends GameRunnerGUI
 	{
 		super(theClient, theServer, gameEndListener);
 		PlayerTextFactory.setGameDataImpl(getData());
-		
+		bgNoiseTimer.stop();
 		resumeEventPoller();
 	}
 
@@ -74,6 +82,7 @@ public class GdxGUI extends GameRunnerGUI
 	public void handleCommand(ScreenCommand command)
 	{
 		Logger.debug("GUI - command received: " + command);
+		Logger.debug(" getData() returns data object with ID: " + getData().toString());
 
 		switch (command)
 		{
@@ -82,14 +91,23 @@ public class GdxGUI extends GameRunnerGUI
 			clearHighlights();
 			break;
 		case GAME_CHECK_ACTION:
+			if (!canCurrentPlayerCheck())
+				break;
+			
 			currentAction = Action.ACTION_CHECK;
 			setHighlightsForCheck();
 			break;
 		case GAME_JUMP_ACTION:
+			if (!canCurrentPlayerJump())
+				break;
+			
 			currentAction = Action.ACTION_JUMP;
 			setHighlightsForJump();
 			break;
 		case GAME_HANDOFF_ACTION:
+			if (!canCurrentPlayerHandoff())
+				break;
+			
 			currentAction = Action.ACTION_HANDOFF;
 			setHighlightsForHandoff();
 			break;
@@ -163,7 +181,10 @@ public class GdxGUI extends GameRunnerGUI
 	@Override
 	public void receiveEvent(Event event)
 	{
-		System.out.println("\tGUI received event: " + event);
+		Logger.debug("GUI received event: " + event);
+		
+		if (event.getType() != Event.EVENT_MOVE)
+			lastPlayerCameraSnappedTo = null;
 		
 		if (event.getType() == Event.EVENT_TELE)
 			handleTeleportEvent(event);
@@ -183,6 +204,8 @@ public class GdxGUI extends GameRunnerGUI
 			handleRecoverEvent(event);
 		else if (event.getType() == Event.EVENT_CHECK)
 			handleCheckEvent(event);
+		else if (event.getType() == Event.EVENT_HANDOFF)
+			handleHandoffEvent(event);
 		
 		checkForNextEvents();
 		gameScreen.refreshTextures();
@@ -193,9 +216,15 @@ public class GdxGUI extends GameRunnerGUI
 		if (event.getType() != Event.EVENT_TURN)
 			return;
 		
+		curTeamIndex = event.flags[0];
 		currentAction = Action.ACTION_MOVE;
 		curPlayerIndex = getFirstEligiblePlayer();
 		snapToPlayer(getData().getPlayer(curPlayerIndex));
+		
+		//TODO: this needs to pop up after all the recover events are done, not here
+		//		also it shouldn't pop up for CPU players
+		//		kept to remind myself that I've made the popup already
+		//showNewTurnAlert(event.flags[0]);
 	}
 	
 	private void handleRecoverEvent(Event event)
@@ -247,6 +276,13 @@ public class GdxGUI extends GameRunnerGUI
 			return;
 		
 		Player player = getData().getPlayer(event.flags[0]);
+		
+		//only snap to the first move; otherwise it's unpleasantly jarring
+		if (player != lastPlayerCameraSnappedTo)
+		{
+			snapToPlayer(player);
+			lastPlayerCameraSnappedTo = player;
+		}
 		
 		CrushPlayerSprite playerSprite = eventTextureFactory.getPlayerSprite(player);
 		
@@ -336,6 +372,8 @@ public class GdxGUI extends GameRunnerGUI
 		Player attacker = getData().getPlayer(event.flags[0]);
 		Player defender = getData().getPlayer(event.flags[1]);
 		
+		snapToPlayer(attacker);
+		
 		Point attackerLocation = getData().getLocationOfPlayer(attacker);
 		Point defenderLocation = getData().getLocationOfPlayer(defender);
 		
@@ -364,6 +402,52 @@ public class GdxGUI extends GameRunnerGUI
 		//that should be it, since knockbacks, shocks, etc. are handled as separate events
 	}
 
+	private void handleHandoffEvent(Event event)
+	{
+		if (event.getType() != Event.EVENT_HANDOFF)
+			return;
+		
+		if (event.flags[2] == Event.HANDOFF_HURL)
+		{
+			handleHurlEvent(event.flags[0]);
+			return;
+		}
+		
+		Player giver = getData().getPlayer(event.flags[0]);
+		Player getter = getData().getPlayer(event.flags[1]);
+		
+		Point giverLocation = getData().getLocationOfPlayer(giver);
+		Point getterLocation = getData().getLocationOfPlayer(getter);
+		
+		CrushPlayerSprite giverSprite = eventTextureFactory.getPlayerSprite(giver);
+		CrushPlayerSprite getterSprite = eventTextureFactory.getPlayerSprite(getter);
+				
+		giverSprite.turnTowardArenaLocation(getterLocation);
+		getterSprite.turnTowardArenaLocation(giverLocation);
+		
+		refreshInterface();
+		
+		getterSprite.receiveBall();
+		giverSprite.setHasBall(false);			//TODO: not working?
+		activeSpriteAnimations.add(getterSprite);
+		waitForAnimationsToConclude();
+		
+		if (event.flags[2] == Event.HANDOFF_FAIL)
+			getterSprite.setHasBall(false);
+		
+		refreshInterface();
+	}
+
+	private void handleHurlEvent(int playerIndex)
+	{
+		Player player = getData().getPlayer(playerIndex);
+		CrushPlayerSprite sprite = eventTextureFactory.getPlayerSprite(player);
+		sprite.hurlBall();
+		activeSpriteAnimations.add(sprite);
+		waitForAnimationsToConclude();
+		refreshInterface();
+	}
+
 	@Override
 	protected void handleTeleportEvent(Event event)
 	{
@@ -380,8 +464,8 @@ public class GdxGUI extends GameRunnerGUI
 			oldPortalCoords = getData().getArena().getPortal(event.flags[2]);
 		
 		
-		System.out.println(playerWarpingHere.name + " is warping.  Current player at original portal is " + getData().getPlayerAtLocation(oldPortalCoords) + ", current player at new portal is " + getData().getPlayerAtLocation(newPortalCoords));
-		System.out.println("\tCurrent sprite at original portal is " + eventTextureFactory.getPlayerSpriteAtCoords(oldPortalCoords) + ", current sprite at new portal is " + eventTextureFactory.getPlayerSpriteAtCoords(newPortalCoords));
+		Logger.debug(playerWarpingHere.name + " is warping.  Current player at original portal is " + getData().getPlayerAtLocation(oldPortalCoords) + ", current player at new portal is " + getData().getPlayerAtLocation(newPortalCoords));
+		Logger.debug("\tCurrent sprite at original portal is " + eventTextureFactory.getPlayerSpriteAtCoords(oldPortalCoords) + ", current sprite at new portal is " + eventTextureFactory.getPlayerSpriteAtCoords(newPortalCoords));
 		
 		//if a player wasn't displaced but was teleporting normally, show a leaving animation from his original portal
 		if (playerWarpingHere == getData().getPlayerAtLocation(oldPortalCoords))
@@ -406,8 +490,6 @@ public class GdxGUI extends GameRunnerGUI
 		}
 		
 		//TODO: if the player warping in doesn't have a source portal (first entry into the game), check for equipment, and, if necessary, display the alert, then warp them back out
-		//	note that warping them out should be a generic "ejection" portal animation, because it happens for injuries too
-		
 		
 		if (isBlobEvent)	//OR the player was ejected; basically if the player teleporting isn't eligible
 			setActivePlayer(getFirstEligiblePlayer());
@@ -453,6 +535,8 @@ public class GdxGUI extends GameRunnerGUI
 		Point playerLocation = getData().getLocationOfPlayer(player);
 		Point binLocation = getData().getArena().getBinLocation(binIndex);
 		
+		snapToPlayer(player);
+		
 		CrushPlayerSprite playerSprite = eventTextureFactory.getPlayerSpriteAtCoords(playerLocation);
 		playerSprite.turnTowardArenaLocation(binLocation);
 		
@@ -467,7 +551,7 @@ public class GdxGUI extends GameRunnerGUI
 			eventButtonBarFactory.setBallFound();
 			audioManager.playSound(SoundType.SIREN);
 			delay(250);
-			playerSprite.receiveBall(event);
+			playerSprite.receiveBall();
 		}
 		else
 		{
@@ -520,6 +604,11 @@ public class GdxGUI extends GameRunnerGUI
 	    
 		dingTimer.scheduleAtFixedRate(task, 0, frameDuration);
 	}
+	
+	private void showNewTurnAlert(int currentTeamIndex)
+	{
+		activeAlert = newTurnAlerts[currentTeamIndex];
+	}
 
 	private void showEjectionAlert(Event event)
 	{
@@ -531,22 +620,22 @@ public class GdxGUI extends GameRunnerGUI
 		if (event.flags[2] == Event.EJECT_BLOB)
 		{
 			audioManager.playSound(SoundType.MUTATE);
-			activeEjectionAlert = new MutationEjectionAlert(getData(), event);
+			activeAlert = new MutationEjectionAlert(getData(), event);
 		}
 		else if (event.flags[2] == Event.EJECT_DEATH)
 		{
 			audioManager.playSound(SoundType.FATAL);
-			activeEjectionAlert = new FatalityEjectionAlert(getData(), event);
+			activeAlert = new FatalityEjectionAlert(getData(), event);
 		}
 		else if (event.flags[2] == Event.EJECT_SERIOUS || event.flags[2] == Event.EJECT_TRIVIAL)
 		{
 			audioManager.playSound(SoundType.INJVOC);
-			activeEjectionAlert = new InjuryEjectionAlert(getData(), event);
+			activeAlert = new InjuryEjectionAlert(getData(), event);
 		}
 		else if (event.flags[2] == Event.EJECT_REF)
 		{
 			audioManager.playSound(SoundType.WHISTLE);
-			activeEjectionAlert = new EquipmentEjectionAlert(getData(), event);
+			activeAlert = new EquipmentEjectionAlert(getData(), event);
 		}
 	}
 
@@ -601,8 +690,8 @@ public class GdxGUI extends GameRunnerGUI
 		texts.addAll(eventButtonBarFactory.getPlayerAttributes(currentPlayer));
 		texts.addAll(eventButtonBarFactory.getPlayerApStatuses(getData().getCurrentTeam()));
 		
-		if (showingEjectionAlert())
-			texts.addAll(activeEjectionAlert.getInfoText());
+		if (showingAlert())
+			texts.addAll(activeAlert.getInfoText());
 		
 		return texts;
 	}
@@ -617,10 +706,10 @@ public class GdxGUI extends GameRunnerGUI
 		images.addAll(eventButtonBarFactory.getSelectedTeamAndPlayerIndicators(currentPlayer));
 		images.addAll(eventButtonBarFactory.getPlayerStatuses());
 		
-		if (showingEjectionAlert())
+		if (showingAlert())
 		{
-			images.add(activeEjectionAlert.getImage());
-			images.add(activeEjectionAlert.getTextBox());
+			images.add(activeAlert.getImage());
+			images.add(activeAlert.getTextBox());
 		}
 			
 		
@@ -641,7 +730,26 @@ public class GdxGUI extends GameRunnerGUI
 				if (event != null)
 				{
 					Logger.debug("\tEvent received: " + event);
-					receiveEvent(event);
+					
+					try {
+						receiveEvent(event);
+					} catch (RuntimeException re)
+					{
+						if (re.getMessage() != null && re.getMessage().contains("No OpenGL context found in the current thread"))
+						{
+							Logger.warn("GdxGUI - Hiding OpenGL exception and repolling event.");
+							return;
+						}
+						
+						if (!DebugConstants.HIDE_EVENT_EXCEPTIONS)
+							throw re;
+						
+						Logger.error("Runtime exception caught when polling for events; exception message was: " + re.getMessage());
+						Logger.error("Event will be repolled.");
+						return;
+					}
+					
+					
 					eventPoller.cancel();
 				}
 			}
@@ -674,7 +782,7 @@ public class GdxGUI extends GameRunnerGUI
 	
 	private void waitForAnimationsToConclude()
 	{
-		while (!activeOverlayAnimations.isEmpty() || !activeSpriteAnimations.isEmpty() || showingEjectionAlert() || delayTimerRunning)
+		while (!activeOverlayAnimations.isEmpty() || !activeSpriteAnimations.isEmpty() || showingAlert() || delayTimerRunning)
 		{
 			removeFinishedAnimations();
 			refreshInterface();
@@ -850,15 +958,15 @@ public class GdxGUI extends GameRunnerGUI
 	
 	private Point getOriginLocationWithTileAtCenter(Point tileMapCoords)
 	{
-		System.out.println("Tile map coords: " + tileMapCoords);
+		Logger.debug("Tile map coords: " + tileMapCoords);
 		int centerX = 36 + 36 * tileMapCoords.y; // getting y because it represents the column (so the X axis)
 		int centerY = 30 + 30 * tileMapCoords.x; // getting x because it represents the row (so the Y axis)
-		System.out.println("Center XY: (" + centerX + ", " + centerY + ")");
+		Logger.debug("Center XY: (" + centerX + ", " + centerY + ")");
 		
 		int originX = centerX + 18;
 		int originY = 906 - centerY;
 		
-		System.out.println("Camera XY: (" + originX + ", " + originY + ")");
+		Logger.debug("Camera XY: (" + originX + ", " + originY + ")");
 
 		return new Point(originX, originY);
 	}
@@ -866,16 +974,34 @@ public class GdxGUI extends GameRunnerGUI
 	@Override
 	public void beginGame()
 	{
+		generateNewTurnAlerts();
 		eventTextureFactory.beginGame(getData());
 		eventButtonBarFactory.beginGame(getData());
 		super.beginGame();
+		bgNoiseTimer.start();
 	}
 	
-	public void confirmEjectionAlert()
+	private void generateNewTurnAlerts()
 	{
+		for (int i = 0; i < 3; i++)
+		{
+			NewTurnAlert alert = new NewTurnAlert(getData().getTeam(i).teamName);
+			newTurnAlerts[i] = alert;
+		}
+	}
+
+	public void confirmAlert()
+	{
+		activeAlert = null;
+		
+		//if we're only showing a new turn popup, we're done here
+		if (activeEjectEvent == null)
+			return;
+		
 		int playerIndex = activeEjectEvent.flags[0];
 		int ejectType = activeEjectEvent.flags[2];
-		activeEjectionAlert = null;
+		
+		activeAlert = null;
 		activeEjectEvent = null;
 		
 		//don't need to teleport out a blobbed player, since he's already one with the void
@@ -890,9 +1016,9 @@ public class GdxGUI extends GameRunnerGUI
 		eventTextureFactory.updatePlayerSpriteCoords(spriteToEject, EventTextureFactory.OFFSCREEN_COORDS);
 	}
 	
-	public boolean showingEjectionAlert()
+	public boolean showingAlert()
 	{
-		if (activeEjectionAlert != null)
+		if (activeAlert != null)
 			return true;
 		
 		return false;
@@ -902,7 +1028,10 @@ public class GdxGUI extends GameRunnerGUI
 	{
 		removeFinishedAnimations();
 		
-		if (activeOverlayAnimations.isEmpty() && activeSpriteAnimations.isEmpty() && !delayTimerRunning)
+		if (activeOverlayAnimations.isEmpty() && activeSpriteAnimations.isEmpty() && !delayTimerRunning && getData().isCurrentTeamHumanControlled())
+			return true;
+		
+		if (showingAlert())
 			return true;
 		
 		return false;
@@ -925,5 +1054,29 @@ public class GdxGUI extends GameRunnerGUI
 		
 		while (delayTimerRunning)
 			refreshInterface();
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e)
+	{
+		//this makes the sound play approximately every 45 seconds (the timers fires every 15 seconds), so there's some variance
+		if (Randomizer.getRandomInt(1, 3) != 1)
+			return;
+		
+		Logger.info("Playing background sound.");
+		int backgroundTrack = Randomizer.getRandomInt(1, 6);
+		
+		if (backgroundTrack == 1)
+			audioManager.playSound(SoundType.ORGAN1);
+		else if (backgroundTrack == 2)
+			audioManager.playSound(SoundType.ORGAN2);
+		else if (backgroundTrack == 3)
+			audioManager.playSound(SoundType.ORGAN3);
+		else if (backgroundTrack == 4)
+			audioManager.playSound(SoundType.HOTDOGS);
+		else if (backgroundTrack == 5)
+			audioManager.playSound(SoundType.DRINKS);
+		else if (backgroundTrack == 6)
+			audioManager.playSound(SoundType.CLAP);
 	}
 }

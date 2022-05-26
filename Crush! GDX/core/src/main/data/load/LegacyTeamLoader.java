@@ -64,7 +64,7 @@ public class LegacyTeamLoader extends ByteFileReader
 		return team;
 	}
 
-	private static Player loadLegacyPlayer(DataInputStream dis) throws IOException
+	public static Player loadLegacyPlayer(DataInputStream dis) throws IOException
 	{
 		int PLAYER_NAME_LENGTH = 8;
 		int MAX_SKILLS = 30;
@@ -228,7 +228,7 @@ public class LegacyTeamLoader extends ByteFileReader
 			player.changeAttribute(Player.ATT_AP, -10);
 	}
 
-	private static Team loadLegacyTeam(DataInputStream dis) throws IOException
+	public static Team loadLegacyTeam(DataInputStream dis) throws IOException
 	{
 		int TEAM_NAME_LENGTH = 15;
 		int MAX_EQUIPMENT = 36;

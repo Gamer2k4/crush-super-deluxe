@@ -526,6 +526,39 @@ public class Player extends SaveableEntity
 	{
 		return status == Player.STS_OKAY || status == Player.STS_DOWN || status == Player.STS_STUN_DOWN || status == Player.STS_STUN_SIT;
 	}
+	
+	public boolean canJump()
+	{
+		if (!isInGame())
+			return false;
+		
+		if (currentAP >= 30)
+			return true;
+		
+		if (hasSkill(Skill.HIGH_JUMP) && currentAP >= 20)
+			return true;
+		
+		return false;
+	}
+	
+	public boolean canThrowCheck()
+	{
+		if (!isInGame())
+			return false;
+		
+		if (currentAP >= 20)
+			return true;
+		
+		if (hasSkill(Skill.CHARGE) && currentAP >= 10)
+			return true;
+		
+		return false;
+	}
+
+	public boolean canBeChecked()
+	{
+		return status == Player.STS_OKAY;
+	}
 
 	public String serialize()
 	{

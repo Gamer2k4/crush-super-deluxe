@@ -16,10 +16,10 @@ import main.presentation.common.image.ColorReplacer;
 import main.presentation.common.image.TeamColorType;
 
 //TODO: uncomment line about helmetColoredImage once I load it in the imagefactory
-//TODO: based on how texture regions work, I might be better served just updating the colors on the original equipment
-//		texture, then offering sections of it as requested
 public class TeamImages
 {
+	private static final Color TRANSPARENT_BG = new Color(0, 0, 0, 0);
+	
 	private ColorPairKey colorPairKey;
 	
 	private static Map<Race, Texture> raceProfileTemplates = null;
@@ -28,7 +28,7 @@ public class TeamImages
 	private Map<Race, Texture> raceColoredProfiles = new HashMap<Race, Texture>();
 	private Map<Race, Texture> raceColoredSprites = new HashMap<Race, Texture>();
 
-	private static Texture gearColoredTemplate = null;
+	private Texture gearColoredTemplate = null;
 	private Drawable[] gearColoredImages = new Drawable[Equipment.EQUIP_TYPE_COUNT];
 	
 	private Texture smallTeamBanner = null;
@@ -50,10 +50,10 @@ public class TeamImages
 	
 	public TeamImages(Color mainColor, Color trimColor)
 	{
+		colorPairKey = new ColorPairKey(mainColor, trimColor);
+		
 		loadRaceProfileTemplates();
 		loadRaceSpriteTemplates();
-
-		updateColors(mainColor, trimColor);
 	}
 	
 	public ColorPairKey getColorPairKey()
@@ -88,35 +88,33 @@ public class TeamImages
 			raceSpriteTemplates.put(race, imageFactory.getTexture(ImageType.valueOf(imageName)));
 		}
 	}
-
-	private void updateColors(Color mainColor, Color trimColor)
+	
+	private void updateRaceProfiles()
 	{
-		dispose();
-		
-		Color transparentBg = new Color(0, 0, 0, 0);
+		disposeProfiles();
 		
 		for (Race race : Race.values())
 		{
-			raceColoredProfiles.put(race, colorReplacer.setColors(raceProfileTemplates.get(race), mainColor, trimColor, transparentBg));
-			raceColoredSprites.put(race, colorReplacer.setColors(raceSpriteTemplates.get(race), mainColor, trimColor, transparentBg));
+			raceColoredProfiles.put(race, colorReplacer.setColors(raceProfileTemplates.get(race), colorPairKey.getForeground(), colorPairKey.getBackground(), TRANSPARENT_BG));
 		}
+	}
+	
+	private void updateRaceSprites()
+	{
+		disposeSprites();
 		
-		gearColoredTemplate = colorReplacer.setColors(imageFactory.getTexture(ImageType.GEAR_ALLGEAR), mainColor, trimColor, transparentBg);
-		loadGearImages();
-		
-		smallTeamBanner = colorReplacer.setColors(imageFactory.getTexture(ImageType.GAME_OVERLAY_TEAM1BANNER), mainColor, trimColor, transparentBg);
-		largeTeamBanner = colorReplacer.setColors(imageFactory.getTexture(ImageType.GAME_OVERLAY_CURRENTTEAMBANNER), mainColor, trimColor, transparentBg);
-		drawableSmallTeamBanner = new TextureRegionDrawable(smallTeamBanner);
-		drawableLargeTeamBanner = new TextureRegionDrawable(largeTeamBanner);
-		
-		darkGoalTiles = colorReplacer.setColors(imageFactory.getTexture(ImageType.DARK_GOAL_TILES), mainColor, trimColor, transparentBg);
-		litGoalTiles = colorReplacer.setColors(imageFactory.getTexture(ImageType.LIT_GOAL_TILES), mainColor, trimColor, transparentBg);
-		
-//		helmetColoredImage = colorReplacer.setColors(imageFactory.getTexture(ImageType.EDITOR_HELMET), mainColor, trimColor, transparentBg);
+		for (Race race : Race.values())
+		{
+			raceColoredSprites.put(race, colorReplacer.setColors(raceSpriteTemplates.get(race), colorPairKey.getForeground(), colorPairKey.getBackground(), TRANSPARENT_BG));
+		}
 	}
 
-	private void loadGearImages()
+	private void updateGear()
 	{
+		disposeGear();
+		
+		gearColoredTemplate = colorReplacer.setColors(imageFactory.getTexture(ImageType.GEAR_ALLGEAR), colorPairKey.getForeground(), colorPairKey.getBackground(), TRANSPARENT_BG);
+		
 		gearColoredImages[Equipment.EQUIP_HEAVY_ARMOR] = new TextureRegionDrawable(new TextureRegion(gearColoredTemplate, 0, 0, 100, 50));
 		gearColoredImages[Equipment.EQUIP_REINFORCED_ARMOR] = new TextureRegionDrawable(new TextureRegion(gearColoredTemplate, 100, 0, 100, 50));
 		gearColoredImages[Equipment.EQUIP_REPULSOR_ARMOR] = new TextureRegionDrawable(new TextureRegion(gearColoredTemplate, 200, 0, 100, 50));
@@ -144,64 +142,134 @@ public class TeamImages
 		gearColoredImages[Equipment.EQUIP_SPIKED_GLOVES] = new TextureRegionDrawable(new TextureRegion(gearColoredTemplate, 295, 117, 98, 24));
 		gearColoredImages[Equipment.EQUIP_SURGE_GLOVES] = new TextureRegionDrawable(new TextureRegion(gearColoredTemplate, 393, 117, 98, 24));
 	}
+	
+	private void updateBanners()
+	{
+		disposeBanners();
+		
+		smallTeamBanner = colorReplacer.setColors(imageFactory.getTexture(ImageType.GAME_OVERLAY_TEAM1BANNER), colorPairKey.getForeground(), colorPairKey.getBackground(), TRANSPARENT_BG);
+		largeTeamBanner = colorReplacer.setColors(imageFactory.getTexture(ImageType.GAME_OVERLAY_CURRENTTEAMBANNER), colorPairKey.getForeground(), colorPairKey.getBackground(), TRANSPARENT_BG);
+		drawableSmallTeamBanner = new TextureRegionDrawable(smallTeamBanner);
+		drawableLargeTeamBanner = new TextureRegionDrawable(largeTeamBanner);
+	}
+	
+	private void updateGoalTiles()
+	{
+		disposeGoalTiles();
+		
+		darkGoalTiles = colorReplacer.setColors(imageFactory.getTexture(ImageType.DARK_GOAL_TILES), colorPairKey.getForeground(), colorPairKey.getBackground(), TRANSPARENT_BG);
+		litGoalTiles = colorReplacer.setColors(imageFactory.getTexture(ImageType.LIT_GOAL_TILES), colorPairKey.getForeground(), colorPairKey.getBackground(), TRANSPARENT_BG);
+	}
+
+	private void updateHelmetImage()
+	{
+		disposeHelmetImage();
+		
+//		helmetColoredImage = colorReplacer.setColors(imageFactory.getTexture(ImageType.EDITOR_HELMET), mainColor, trimColor, transparentBg);
+	}
 
 	public Texture getPlayerImage(Race race)
 	{
+		if (raceColoredProfiles.isEmpty())
+			updateRaceProfiles();
+		
 		return raceColoredProfiles.get(race);
 	}
 	
 	public Texture getSpriteSheet(Race race)
 	{
+		if (raceColoredSprites.isEmpty())
+			updateRaceSprites();
+		
 		return raceColoredSprites.get(race);
 	}
 
 	public Drawable getEquipmentImage(int equipment)
 	{
+		if (gearColoredTemplate == null)
+			updateGear();
+		
 		return gearColoredImages[equipment];
 	}
 	
 	public Drawable getSmallTeamBanner()
 	{
+		if (smallTeamBanner == null)
+			updateBanners();
+		
 		return drawableSmallTeamBanner;
 	}
 	
 	public Drawable getLargeTeamBanner()
 	{
+		if (largeTeamBanner == null)
+			updateBanners();
+		
 		return drawableLargeTeamBanner;
 	}
 	
 	public Texture getDarkGoalTiles()
 	{
+		if (darkGoalTiles == null)
+			updateGoalTiles();
+		
 		return darkGoalTiles;
 	}
 	
 	public Texture getLitGoalTiles()
 	{
+		if (litGoalTiles == null)
+			updateGoalTiles();
+		
 		return litGoalTiles;
 	}
 	
 	public Texture getHelmetImage()
 	{
+		if (helmetColoredImage == null)
+			updateHelmetImage();
+		
 		return helmetColoredImage;
 	}
 	
 	public void dispose()
 	{
+		disposeProfiles();
+		disposeSprites();
+		disposeGear();
+		disposeBanners();
+		disposeGoalTiles();
+		disposeHelmetImage();
+	}
+	
+	private void disposeProfiles()
+	{
 		for (Race race : Race.values())
 		{
 			Texture profile = raceColoredProfiles.get(race);
-			Texture sprite = raceColoredSprites.get(race);
 			
 			if (profile != null)
 				profile.dispose();
+		}
+		
+		raceColoredProfiles.clear();
+	}
+	
+	private void disposeSprites()
+	{
+		for (Race race : Race.values())
+		{
+			Texture sprite = raceColoredSprites.get(race);
 			
 			if (sprite != null)
 				sprite.dispose();
-			
-			raceColoredProfiles.remove(race);
-			raceColoredSprites.remove(race);
 		}
 		
+		raceColoredSprites.clear();
+	}
+	
+	private void disposeGear()
+	{
 		for (int i = 0; i < Equipment.EQUIP_TYPE_COUNT; i++)
 		{
 			gearColoredImages[i] = null;
@@ -209,19 +277,28 @@ public class TeamImages
 		
 		if (gearColoredTemplate != null)
 			gearColoredTemplate.dispose();
-		
+	}
+	
+	private void disposeBanners()
+	{
 		if (smallTeamBanner != null)
 			smallTeamBanner.dispose();
 		
 		if (largeTeamBanner != null)
 			largeTeamBanner.dispose();
-		
+	}
+	
+	private void disposeGoalTiles()
+	{
 		if (darkGoalTiles != null)
 			darkGoalTiles.dispose();
 		
 		if (litGoalTiles != null)
 			litGoalTiles.dispose();
-		
+	}
+	
+	private void disposeHelmetImage()
+	{
 		if (helmetColoredImage != null)
 			helmetColoredImage.dispose();
 	}

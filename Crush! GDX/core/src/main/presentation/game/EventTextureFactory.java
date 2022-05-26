@@ -110,7 +110,7 @@ public class EventTextureFactory
 			{
 				int tileSheetIndex = -1;
 				
-				if (i == -1 || j == -1 || i == 30 || j == 30)
+				if (i == -1 || j == -1 || i == Arena.ARENA_DIMENSIONS || j == Arena.ARENA_DIMENSIONS)
 					tileSheetIndex = getBorderTile(i, j);
 				else
 					tileSheetIndex = convertLegacyTileValueToTileSheetIndex(arena.getLegacyTile(i, j));
@@ -171,7 +171,6 @@ public class EventTextureFactory
 		//TODO:	it's not this simple for when the BALL is scurrying around, but this is good for now
 		if (ballArenaLocation.x != -1 && ballArenaLocation.y != -1)
 		{
-			refreshPlayerBallStatus(null);
 			ballOnField.setArenaPosition(ballArenaLocation);
 			ballSprite.add(ballOnField);
 		}
@@ -207,25 +206,18 @@ public class EventTextureFactory
 		
 		Point ballCarrierCoords = getSpriteCoordsOfPlayer(ballCarrier);
 		CrushPlayerSprite ballCarrierSprite = getPlayerSpriteAtCoords(ballCarrierCoords);
+		
+		if (ballCarrierSprite == null)
+		{
+			Logger.warn("No sprite available to mark with ball indicator!");
+			return ballSprite;
+		}
+		
 		Point ballCoords = new Point(ballCarrierSprite.getX(), ballCarrierSprite.getY());
 		ballHighlight.setCoords(ballCoords);
 		ballSprite.add(ballHighlight);
-		
-		refreshPlayerBallStatus(ballCarrier);
 			
 		return ballSprite; 
-	}
-	
-	private void refreshPlayerBallStatus(Player ballCarrier)
-	{
-		for (Player player : playerSpritesByPlayer.keySet())
-		{
-			CrushPlayerSprite sprite = playerSpritesByPlayer.get(player);
-			sprite.setHasBall(false);
-			
-			if (player == ballCarrier)
-				sprite.setHasBall(true);
-		}
 	}
 
 	public void generatePlayerSprites()
@@ -241,6 +233,7 @@ public class EventTextureFactory
 		}
 	}
 	
+	//TODO: concurrent modification exception is possible here, though I have no idea how
 	public List<CrushSprite> getPlayerSprites()
 	{
 		List<CrushSprite> playerSpriteList = new ArrayList<CrushSprite>();
@@ -460,6 +453,7 @@ public class EventTextureFactory
 		playerSpritesAtArenaLocation.put(sprite.getArenaPosition(), sprite);
 	}
 	
+	//TODO: this can throw a concurrent modification exception
 	private boolean removePlayerSpriteFromCoordsMap(CrushPlayerSprite spriteToRemove)
 	{
 		Point locationOfSpriteToRemove = null;

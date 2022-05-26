@@ -130,7 +130,7 @@ public abstract class GameRunnerGUI extends GameGUI
 					int playerStatus = playerToJump.getStatus();
 
 					// if the player in the way is down, stunned, or if the jumper is a curmian (which can jump standing players), there's nothing in the way
-					if (playerStatus == Player.STS_DOWN || playerStatus == Player.STS_STUN_DOWN || plyr.getRace() == Race.CURMIAN)
+					if (playerStatus == Player.STS_DOWN || playerStatus == Player.STS_STUN_DOWN || playerStatus == Player.STS_STUN_SIT || plyr.getRace() == Race.CURMIAN)
 					{
 						playerInWay = false;
 					} else
@@ -200,8 +200,14 @@ public abstract class GameRunnerGUI extends GameGUI
 					{
 						int checkOdds = HighlightIcon.HI_CHECK_EVEN;
 
-						int dif = (getAssistBonus(plyr, target) + plyr.getAttributeWithModifiers(Player.ATT_CH))
-								- (getAssistBonus(target, plyr) + target.getAttributeWithModifiers(Player.ATT_CH));
+						int atk_base_CH = plyr.getAttributeWithModifiers(Player.ATT_CH);
+						int def_base_CH = target.getAttributeWithModifiers(Player.ATT_CH);
+						
+						if (def_base_CH < atk_base_CH && target.hasSkill(Skill.JUDO))
+							def_base_CH = atk_base_CH;
+						
+						int dif = (getAssistBonus(plyr, target) + atk_base_CH)
+								- (getAssistBonus(target, plyr) + def_base_CH);
 
 						if (dif >= 20)
 							checkOdds = HighlightIcon.HI_CHECK_GOOD;
@@ -261,34 +267,34 @@ public abstract class GameRunnerGUI extends GameGUI
 		// make sure a player is selected
 		// get the team of the player
 		// make sure that it's that teams turn, that this client controls that team, and that the player has AP
-		System.out.println("Act Check 0");
-		System.out.println(currentPlayer);
+		Logger.info("Act Check 0");
+		Logger.info(currentPlayer.toString());
 		if (currentPlayer == null)
 			return false;
-		System.out.println("Act Check 1");
+		Logger.info("Act Check 1");
 		int playersTeam = getData().getTeamIndexOfPlayer(currentPlayer);
-		System.out.println("Act Check 2");
+		Logger.info("Act Check 2");
 
-		System.out.println("\tTEAM: " + playersTeam + " | " + getData().getCurrentTeam());
-		System.out.println("\tCONTROL? " + myClient.controlsTeam(playersTeam));
-		System.out.println("\tAP: " + currentPlayer.currentAP);
+		Logger.info("\tTEAM: " + playersTeam + " | " + getData().getCurrentTeam());
+		Logger.info("\tCONTROL? " + myClient.controlsTeam(playersTeam));
+		Logger.info("\tAP: " + currentPlayer.currentAP);
 
 		if (playersTeam == getData().getCurrentTeam() && myClient.controlsTeam(playersTeam) && currentPlayer.currentAP >= 10)
 			return true;
-		System.out.println("Act Check 3");
+		Logger.info("Act Check 3");
 		return false;
 	}
 
 	protected boolean canCurrentPlayerJump()
 	{
-		System.out.println("Jump Check 0");
+		Logger.info("Jump Check 0");
 		if (!canCurrentPlayerAct())
 			return false;
-		System.out.println("Jump Check 1");
+		Logger.info("Jump Check 1");
 
-		if (currentPlayer.currentAP >= 30 || (currentPlayer.currentAP >= 20 && currentPlayer.getRace() == Race.CURMIAN))
+		if (currentPlayer.canJump())
 			return true;
-		System.out.println("Jump Check 2");
+		Logger.info("Jump Check 2");
 		return false;
 	}
 
@@ -296,7 +302,7 @@ public abstract class GameRunnerGUI extends GameGUI
 	{
 		if (!canCurrentPlayerAct())
 			return false;
-		if (currentPlayer.currentAP >= 20 || (currentPlayer.currentAP >= 10 && currentPlayer.hasSkill(Skill.CHARGE)))
+		if (currentPlayer.canThrowCheck())
 			return true;
 		return false;
 	}
@@ -314,7 +320,7 @@ public abstract class GameRunnerGUI extends GameGUI
 	
 	protected int getFirstEligiblePlayer()
 	{
-		System.out.println("FIRST: team index is " + curTeamIndex);
+		Logger.debug("GameRunnerGUI - getting first eligible player for team index " + curTeamIndex);
 		int startingIndex = curTeamIndex * 9;
 
 		for (int i = startingIndex; i < startingIndex + 9; i++)
@@ -326,7 +332,7 @@ public abstract class GameRunnerGUI extends GameGUI
 
 			if (p.status == Player.STS_OKAY || p.status == Player.STS_STUN_DOWN || p.status == Player.STS_DOWN)
 			{
-				System.out.println("SETTING CURRENT PLAYER");
+				Logger.debug("\tCurrent player set to " + p.name);
 				currentPlayer = p;
 				return i;
 			}
@@ -425,37 +431,41 @@ public abstract class GameRunnerGUI extends GameGUI
 
 	protected void setActivePlayer(int index)
 	{
-		Logger.debug("Setting Active Player to " + index);
+		Logger.debug("GameRunnerGui - Setting Active Player to " + index);
+		Logger.debug(" getData() returns data object with ID: " + getData().toString());
 
 		highlights.clear();
 		currentAction = Action.ACTION_MOVE;
 
 		int tempIndex = curPlayerIndex;
 		curPlayerIndex = curTeamIndex * 9 + index - 1;
-		Logger.debug("Active 1");
+		Logger.debug("\tCurrent team index is " + curTeamIndex);
+		Logger.debug("\tCurrent player index is " + curPlayerIndex);
 		Player p = getData().getPlayer(curPlayerIndex);
-		Logger.debug("Active 2");
+		
 		if (p == null)
 		{
-			Logger.debug("Active 3a");
+			Logger.debug("\tPlayer is null; setting current player index back to " + tempIndex);
 			curPlayerIndex = tempIndex;
 			return;
 		}
-
+		
+		Logger.debug("\tCurrent player name is " + p.name);
+		
 		if (p.status == Player.STS_DEAD || p.status == Player.STS_LATE || p.status == Player.STS_DECK || p.status == Player.STS_BLOB
 				|| p.status == Player.STS_HURT || p.status == Player.STS_OUT)
 		{
-			Logger.debug("Active 3b");
+			Logger.debug("\tPlayer is unable to act; setting current player index back to " + tempIndex);
 			curPlayerIndex = tempIndex;
 			return;
 		}
 
-		Logger.debug("Active 4");
+		Logger.debug("\tPlayer is able to act");
 
 		Point pnt = getData().getLocationOfPlayer(p);
 		currentPlayer = p;
 
-		Logger.debug("Active 5");
+		Logger.debug("\tCurrent player has been set.");
 		Logger.debug("\tCurrent player index: " + curPlayerIndex);
 		Logger.debug("\tTarget zoom point: " + pnt);
 
@@ -473,6 +483,12 @@ public abstract class GameRunnerGUI extends GameGUI
 	public void endGame()
 	{
 		gameStarted = false;
+	}
+	
+	@Override
+	public boolean gameStarted()
+	{
+		return gameStarted;
 	}
 	
 	protected abstract void snapToTile(Point location);

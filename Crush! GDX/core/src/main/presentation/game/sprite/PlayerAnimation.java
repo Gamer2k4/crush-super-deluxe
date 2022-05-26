@@ -87,10 +87,12 @@ public class PlayerAnimation
 			break;
 		case SIT:
 			break;
-		case GIVE_BALL:
+		case BALL_GIVE:
 			return createGiveBallAnimation();
-		case RECEIVE_BALL:
+		case BALL_RECEIVE:
 			return createReceiveBallAnimation();
+		case BALL_HURL:
+			return createHurlBallAnimation();
 		case SHOCK:
 			return createShockAnimation();
 		default:
@@ -137,10 +139,10 @@ public class PlayerAnimation
 		{
 			PlayerAnimation animation = new PlayerAnimation(4);
 			
-			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_RIGHT_" + facing.name()), frameDurationInMs, 9);
-			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_" + facing.name()), frameDurationInMs, 9);
-			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_LEFT_" + facing.name()), frameDurationInMs, 9);
-			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_" + facing.name()), frameDurationInMs, 9);
+			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_RIGHT_" + facing.name()), frameDurationInMs, 7);
+			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_" + facing.name()), frameDurationInMs, 8);
+			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_LEFT_" + facing.name()), frameDurationInMs, 7);
+			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_" + facing.name()), frameDurationInMs, 8);
 			
 			createdAnimations.put(facing, animation);
 		}
@@ -157,10 +159,10 @@ public class PlayerAnimation
 		{
 			PlayerAnimation animation = new PlayerAnimation(4);
 			
-			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_RIGHT_BALL_" + facing.name()), frameDurationInMs, 9);
-			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), frameDurationInMs, 9);
-			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_LEFT_BALL_" + facing.name()), frameDurationInMs, 9);
-			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), frameDurationInMs, 9);
+			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_RIGHT_BALL_" + facing.name()), frameDurationInMs, 7);
+			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), frameDurationInMs, 8);
+			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_LEFT_BALL_" + facing.name()), frameDurationInMs, 7);
+			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), frameDurationInMs, 8);
 			
 			createdAnimations.put(facing, animation);
 		}
@@ -222,14 +224,14 @@ public class PlayerAnimation
 			
 			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), 80, 0);		//to wait for the other player to dodge
 			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WINDUP_" + facing.name()), CHECK_FRAME_DURATION, 0);
-			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_" + facing.name()), CHECK_FRAME_DURATION, 7);
-			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_STRONG_" + facing.name()), CHECK_FRAME_DURATION, 5);
-			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_STRONG_" + facing.name()), CHECK_FRAME_DURATION, 5);
+			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_" + facing.name()), CHECK_FRAME_DURATION, 6);
+			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_STRONG_" + facing.name()), CHECK_FRAME_DURATION, 4);
+			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_STRONG_" + facing.name()), CHECK_FRAME_DURATION, 4);
 			animation.frames[5] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_STRONG_" + facing.name()), 2 * CHECK_FRAME_DURATION, 4);
 			animation.frames[6] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_STRONG_" + facing.name()), CHECK_FRAME_DURATION, -4);
-			animation.frames[7] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_" + facing.name()), CHECK_FRAME_DURATION, -5);
-			animation.frames[8] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WINDUP_" + facing.name()), CHECK_FRAME_DURATION, -5);
-			animation.frames[9] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), 0, -7);
+			animation.frames[7] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_" + facing.name()), CHECK_FRAME_DURATION, -4);
+			animation.frames[8] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WINDUP_" + facing.name()), CHECK_FRAME_DURATION, -4);
+			animation.frames[9] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), 0, -6);
 			
 			createdAnimations.put(facing, animation);
 		}
@@ -247,14 +249,14 @@ public class PlayerAnimation
 			
 			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), 80, 0);		//to wait for the other player to dodge
 			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WINDUP_" + facing.name()), CHECK_FRAME_DURATION, 0);
-			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_" + facing.name()), CHECK_FRAME_DURATION, 7);
-			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WEAK_" + facing.name()), CHECK_FRAME_DURATION, 5);
-			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WEAK_" + facing.name()), CHECK_FRAME_DURATION, 5);
+			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_" + facing.name()), CHECK_FRAME_DURATION, 6);
+			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WEAK_" + facing.name()), CHECK_FRAME_DURATION, 4);
+			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WEAK_" + facing.name()), CHECK_FRAME_DURATION, 4);
 			animation.frames[5] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WEAK_" + facing.name()), 2 * CHECK_FRAME_DURATION, 4);
 			animation.frames[6] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WEAK_" + facing.name()), CHECK_FRAME_DURATION, -4);
-			animation.frames[7] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_" + facing.name()), CHECK_FRAME_DURATION, -5);
-			animation.frames[8] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WINDUP_" + facing.name()), CHECK_FRAME_DURATION, -5);
-			animation.frames[9] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), 0, -7);
+			animation.frames[7] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_" + facing.name()), CHECK_FRAME_DURATION, -4);
+			animation.frames[8] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WINDUP_" + facing.name()), CHECK_FRAME_DURATION, -4);
+			animation.frames[9] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), 0, -6);
 			
 			createdAnimations.put(facing, animation);
 		}
@@ -272,14 +274,14 @@ public class PlayerAnimation
 			
 			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), 80, 0);		//to wait for the other player to dodge
 			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WINDUP_BALL_" + facing.name()), CHECK_FRAME_DURATION, 0);
-			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), CHECK_FRAME_DURATION, 7);
-			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), CHECK_FRAME_DURATION, 5);
-			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), CHECK_FRAME_DURATION, 5);
+			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), CHECK_FRAME_DURATION, 6);
+			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), CHECK_FRAME_DURATION, 4);
+			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), CHECK_FRAME_DURATION, 4);
 			animation.frames[5] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), 2 * CHECK_FRAME_DURATION, 4);
 			animation.frames[6] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), CHECK_FRAME_DURATION, -4);
-			animation.frames[7] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), CHECK_FRAME_DURATION, -5);
-			animation.frames[8] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WINDUP_BALL_" + facing.name()), CHECK_FRAME_DURATION, -5);
-			animation.frames[9] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), 0, -7);
+			animation.frames[7] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), CHECK_FRAME_DURATION, -4);
+			animation.frames[8] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("CHECK_WINDUP_BALL_" + facing.name()), CHECK_FRAME_DURATION, -4);
+			animation.frames[9] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), 0, -6);
 			
 			createdAnimations.put(facing, animation);
 		}
@@ -295,11 +297,11 @@ public class PlayerAnimation
 		{
 			PlayerAnimation animation = new PlayerAnimation(5);
 			
-			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), SLIDE_FRAME_DURATION, 6);
-			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), SLIDE_FRAME_DURATION, 9);
-			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), SLIDE_FRAME_DURATION, 9);
-			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), SLIDE_FRAME_DURATION, 6);
-			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), 0, 6);
+			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), SLIDE_FRAME_DURATION, 5);
+			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), SLIDE_FRAME_DURATION, 8);
+			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), SLIDE_FRAME_DURATION, 7);
+			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), SLIDE_FRAME_DURATION, 5);
+			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), 0, 5);
 			
 			createdAnimations.put(facing, animation);
 		}
@@ -315,11 +317,11 @@ public class PlayerAnimation
 		{
 			PlayerAnimation animation = new PlayerAnimation(5);
 			
-			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), SLIDE_FRAME_DURATION, 6);
-			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), SLIDE_FRAME_DURATION, 9);
-			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), SLIDE_FRAME_DURATION, 9);
-			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), SLIDE_FRAME_DURATION, 6);
-			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), 0, 6);
+			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), SLIDE_FRAME_DURATION, 5);
+			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), SLIDE_FRAME_DURATION, 8);
+			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), SLIDE_FRAME_DURATION, 7);
+			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), SLIDE_FRAME_DURATION, 5);
+			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), 0, 5);
 			
 			createdAnimations.put(facing, animation);
 		}
@@ -335,9 +337,9 @@ public class PlayerAnimation
 		{
 			PlayerAnimation animation = new PlayerAnimation(4);
 			
-			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("KNOCKBACK_KO1_" + facing.name()), KNOCKBACK_KO_FRAME_DURATION, 9);
-			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("KNOCKBACK_KO2_" + facing.name()), KNOCKBACK_KO_FRAME_DURATION, 18);
-			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("KNOCKBACK_KO2_" + facing.name()), KNOCKBACK_KO_FRAME_DURATION * 3, 9);
+			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("KNOCKBACK_KO1_" + facing.name()), KNOCKBACK_KO_FRAME_DURATION, 7);
+			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("KNOCKBACK_KO2_" + facing.name()), KNOCKBACK_KO_FRAME_DURATION, 16);
+			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("KNOCKBACK_KO2_" + facing.name()), KNOCKBACK_KO_FRAME_DURATION * 3, 7);
 			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("DOWN_" + facing.name()), KNOCKBACK_KO_FRAME_DURATION, 0);
 			
 			createdAnimations.put(facing, animation);
@@ -356,12 +358,12 @@ public class PlayerAnimation
 			
 			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_WINDUP_" + facing.name()), JUMP_FRAME_DURATION * 6, 0);		//6 frames
 			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_SPRING_" + facing.name()), JUMP_FRAME_DURATION * 2, 0);		//2
-			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), JUMP_FRAME_DURATION * 3, 4);			//3
-			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_FLY_" + facing.name()), JUMP_FRAME_DURATION, 18);				//1
-			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_FLY_" + facing.name()), JUMP_FRAME_DURATION, 26);				//1
-			animation.frames[5] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_FLY_" + facing.name()), JUMP_FRAME_DURATION, 8);				//1
-			animation.frames[6] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), JUMP_FRAME_DURATION * 2, 12);			//2
-			animation.frames[7] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_SPRING_" + facing.name()), JUMP_FRAME_DURATION * 4, 4);		//3
+			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), JUMP_FRAME_DURATION * 3, 3);			//3
+			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_FLY_" + facing.name()), JUMP_FRAME_DURATION, 15);				//1
+			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_FLY_" + facing.name()), JUMP_FRAME_DURATION, 22);				//1
+			animation.frames[5] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_FLY_" + facing.name()), JUMP_FRAME_DURATION, 7);				//1
+			animation.frames[6] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_" + facing.name()), JUMP_FRAME_DURATION * 2, 10);			//2
+			animation.frames[7] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_SPRING_" + facing.name()), JUMP_FRAME_DURATION * 4, 3);		//3
 			
 			createdAnimations.put(facing, animation);
 		}
@@ -379,12 +381,12 @@ public class PlayerAnimation
 			
 			animation.frames[0] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_WINDUP_BALL_" + facing.name()), JUMP_FRAME_DURATION * 6, 0);		//6 frames
 			animation.frames[1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_SPRING_BALL_" + facing.name()), JUMP_FRAME_DURATION * 2, 0);		//2
-			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), JUMP_FRAME_DURATION * 3, 4);			//3
-			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), JUMP_FRAME_DURATION, 18);			//1
-			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), JUMP_FRAME_DURATION, 26);			//1
-			animation.frames[5] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), JUMP_FRAME_DURATION, 8);			//1
-			animation.frames[6] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), JUMP_FRAME_DURATION * 2, 12);			//2
-			animation.frames[7] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_SPRING_BALL_" + facing.name()), JUMP_FRAME_DURATION * 4, 4);		//3
+			animation.frames[2] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), JUMP_FRAME_DURATION * 3, 3);			//3
+			animation.frames[3] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), JUMP_FRAME_DURATION, 15);			//1
+			animation.frames[4] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), JUMP_FRAME_DURATION, 22);			//1
+			animation.frames[5] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("WALK_BOTH_BALL_" + facing.name()), JUMP_FRAME_DURATION, 7);			//1
+			animation.frames[6] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("PASSIVE_BALL_" + facing.name()), JUMP_FRAME_DURATION * 2, 10);			//2
+			animation.frames[7] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("JUMP_SPRING_BALL_" + facing.name()), JUMP_FRAME_DURATION * 4, 3);		//3
 			
 			createdAnimations.put(facing, animation);
 		}
@@ -429,6 +431,28 @@ public class PlayerAnimation
 			{
 				animation.frames[2 * i] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("SHOCK_OFF_" + facing.name()), frameDurationInMs, 0);
 				animation.frames[(2 * i) + 1] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("SHOCK_ON_" + facing.name()), frameDurationInMs, 0);
+			}
+			
+			createdAnimations.put(facing, animation);
+		}
+		
+		return createdAnimations;
+	}
+	
+	private static Map<Facing, PlayerAnimation> createHurlBallAnimation()
+	{
+		Map<Facing, PlayerAnimation> createdAnimations = new HashMap<Facing, PlayerAnimation>();
+		int frameDurationInMs = 50;
+		
+		for (Facing facing : Facing.values())
+		{
+			PlayerAnimation animation = new PlayerAnimation(24);
+			Facing nextFacing = facing;
+			
+			for (int i = 0; i < 16; i++)
+			{
+				nextFacing = nextFacing.rotateClockwise();
+				animation.frames[i] = new PlayerAnimationFrame(PlayerSpriteType.valueOf("HURL_BALL_" + nextFacing.name()), frameDurationInMs, 0);
 			}
 			
 			createdAnimations.put(facing, animation);

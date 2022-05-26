@@ -20,6 +20,39 @@ public enum PlayerState
 	SLIDE_BALL,
 	KNOCKBACK_FALL,
 	INJURY,
-	GIVE_BALL,
-	RECEIVE_BALL
+	BALL_GIVE,
+	BALL_RECEIVE,
+	BALL_HURL;
+	
+	public PlayerState withBall()
+	{
+		if (this == PlayerState.CHECK_WEAK || this == PlayerState.CHECK_STRONG)
+			return CHECK_BALL;
+		if (this == PlayerState.PASSIVE)
+			return PASSIVE_BALL;
+		if (this == PlayerState.WALK)
+			return WALK_BALL;
+		if (this == PlayerState.DODGE)
+			return DODGE_BALL;
+		if (this == PlayerState.SLIDE)
+			return SLIDE_BALL;
+		
+		return this;
+	}
+	
+	public PlayerState withoutBall()
+	{
+		if (this == PlayerState.CHECK_BALL)
+			return CHECK_WEAK;
+		if (this == PlayerState.PASSIVE_BALL)
+			return PASSIVE;
+		if (this == PlayerState.WALK_BALL)
+			return WALK;
+		if (this == PlayerState.DODGE_BALL)
+			return DODGE;
+		if (this == PlayerState.SLIDE_BALL)
+			return SLIDE;
+		
+		return this;
+	}
 }

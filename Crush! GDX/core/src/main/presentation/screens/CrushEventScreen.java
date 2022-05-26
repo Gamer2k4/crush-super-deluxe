@@ -1,8 +1,12 @@
 package main.presentation.screens;
 
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.Timer;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -36,6 +40,7 @@ public class CrushEventScreen extends GameScreen
 	private static final int SCROLL_SPEED = 1000;
 	
 	private Texture mapTexture = ImageFactory.getInstance().getTexture(ImageType.MAP_A1);
+	private Texture backgroundImage = ImageFactory.getInstance().getTexture(ImageType.MAP_STARS_BG);
 	
 	private Image buttonBar = new Image(ImageFactory.getInstance().getDrawable(ImageType.GAME_BUTTONBAR));
 	private Pixmap clickMap;
@@ -133,9 +138,9 @@ public class CrushEventScreen extends GameScreen
 			if (touchRegistered)
 				return;
 			
-			if (gui.showingEjectionAlert())
+			if (gui.showingAlert())
 			{
-				gui.confirmEjectionAlert();
+				gui.confirmAlert();
 				touchRegistered = true;
 				return;
 			}
@@ -286,8 +291,12 @@ public class CrushEventScreen extends GameScreen
 	@Override
 	public Texture getBackgroundImage()
 	{
-		return ImageFactory.getInstance().getTexture(ImageType.MAP_LAVA_BG);
-//		return ImageFactory.getInstance().getTexture(ImageType.MAP_STARS_BG);
+		return backgroundImage;
+	}
+	
+	public void setBackgroundImage(ImageType bgType)
+	{
+		backgroundImage = ImageFactory.getInstance().getTexture(bgType); 
 	}
 
 	@Override
@@ -317,7 +326,7 @@ public class CrushEventScreen extends GameScreen
 	public void setGui(GdxGUI gdxGUI)
 	{
 		this.gui = gdxGUI;
-		System.out.println("GUI has been set to " + gdxGUI);
+		Logger.info("GUI has been set to " + gdxGUI);
 	}
 	
 	public void setCameraPosition(Point position)

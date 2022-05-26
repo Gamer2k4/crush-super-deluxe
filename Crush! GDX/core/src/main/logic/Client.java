@@ -11,6 +11,7 @@ import main.data.Data;
 import main.data.DataImpl;
 import main.data.Event;
 import main.data.entities.Team;
+import main.presentation.common.Logger;
 import main.presentation.game.GameGUI;
 import main.presentation.game.GdxGUI;
 
@@ -68,6 +69,7 @@ public class Client
 	public void queueEventsForProcessing(Queue<Event> eventQueue)
 	{
 		queuedEvents.addAll(eventQueue);
+		Logger.debug("\t\tClient received new events; total event queue size is " + queuedEvents.size());
 	}
 	
 	public Event getNextEvent()
@@ -79,6 +81,7 @@ public class Client
 	{
 		Event event = queuedEvents.poll();
 		dataLayer.processEvent(event);
+		Logger.debug("\t\tClient processed event; total event queue size is " + queuedEvents.size());
 	}
 		
 	public void processEvents(Queue<Event> eventQueue)

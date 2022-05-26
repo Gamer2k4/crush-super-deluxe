@@ -42,7 +42,8 @@ public enum Skill
 	INTUITION("Intuition", 34, 20, 0),
 	HEALER("Healer", 35, 80, 3),
 	KARMA("Karma", 36, 60, 2),
-	NINJA_MASTER("Ninja Master", 37, 0, 5);
+	NINJA_MASTER("Ninja Master", 37, 0, 5),
+	HIVE_OVERSEER("Hive Overseer", 38, 60, 2);
 	//TODO: tie the cost with the tier, rather than having them be separate values
 	
 	private String name;

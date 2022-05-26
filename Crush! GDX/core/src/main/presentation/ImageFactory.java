@@ -62,7 +62,7 @@ public class ImageFactory
 		addEventBarsAndButtons();
 		extractStatusLabels();
 		extractButtonBarIndicators();
-		addEjectionImages();
+		addPopupImages();
 		addSprites();
 		addProfiles();
 		
@@ -161,13 +161,14 @@ public class ImageFactory
 		images.put(ImageType.DEPRESSED_HELP_BUTTON, new TextureRegionDrawable(new TextureRegion(allButtons, 431, 132, 44, 28)));
 	}
 
-	private void addEjectionImages()
+	private void addPopupImages()
 	{
 		addImage(ImageType.EJECT_INJURY, "eventoverlays/doctor.png");
 		addImage(ImageType.EJECT_KILL, "eventoverlays/death.png");
 		addImage(ImageType.EJECT_BLOB, "eventoverlays/mutation.png");
 		addImage(ImageType.EJECT_REF, "eventoverlays/ref.png");
 		addImage(ImageType.EJECT_TEXTBOX, "eventoverlays/ejection_textbox.png");
+		addImage(ImageType.NEW_TURN_TEXTBOX, "eventoverlays/new_turn_textbox.png");
 	}
 
 	private void extractStatusLabels()

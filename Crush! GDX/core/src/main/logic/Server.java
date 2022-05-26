@@ -1,25 +1,35 @@
 package main.logic;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+import javax.swing.Timer;
+
 import main.data.Data;
 import main.data.DataImpl;
 import main.data.Event;
 import main.data.entities.Team;
+import main.logic.AI.AI;
+import main.logic.AI.BasicAI;
 
-public class Server
+//TODO: the AI timer is probably in the wrong place, but it should be done on the server, and it doesn't really quite fit into the
+//		engine (whose only job is to act on received events)
+public class Server implements ActionListener
 {
 	private Data dataLayer;
 	private Engine logicLayer;
-//	private GameGUI presentationLayer;
 	
 	private List<Client> connectedClients;
 	
 	Map<Client, String> IPs;	//this is probably backwards
+	
+	private AI ai;
+	private Timer aiTimer;
 	
 	public Server()
 	{
@@ -28,6 +38,10 @@ public class Server
 		
 		connectedClients = new ArrayList<Client>();
 		IPs = new HashMap<Client, String>();
+		
+		ai = new BasicAI(dataLayer);
+		aiTimer = new Timer(250, this);
+		aiTimer.start();
 	}
 	
 	public void newGame(List<Team> teams)
@@ -103,6 +117,24 @@ public class Server
 	public Engine getEngine()
 	{
 		return logicLayer;
+	}
+	
+	
+	//AI timer firing
+	@Override
+	public void actionPerformed(ActionEvent e)
+	{
+		if (!dataLayer.isGameActive())
+			return;
+		
+		if (dataLayer.isCurrentTeamHumanControlled())
+			return;
+		
+		Event event = ai.generateEvent();
+		System.out.println("AI has generated an event: " + event);
+		
+		if (event != null)
+			receiveCommand(event);
 	}
 	
 	

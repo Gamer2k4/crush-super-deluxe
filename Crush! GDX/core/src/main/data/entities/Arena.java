@@ -42,12 +42,14 @@ public class Arena implements Serializable
 	public static final int ARENA_DARKSTAR = 18;
 	public static final int ARENA_SPACECOM = 19;
 	
+	public static final int ARENA_DIMENSIONS = 30;
+	
 	private static boolean ballFound = false;	//TODO: i really don't like that this is static
 	private int index;
 	private String name;
 	
-	private int[][] legacyTileData = new int[30][30];
-	private int[][] tiles = new int[30][30];
+	private int[][] legacyTileData = new int[ARENA_DIMENSIONS][ARENA_DIMENSIONS];
+	private int[][] tiles = new int[ARENA_DIMENSIONS][ARENA_DIMENSIONS];
 	private List<Point> portals = new ArrayList<Point>();
 	private List<Point> ballPads = new ArrayList<Point>();
 	private List<Point> ballBins = new ArrayList<Point>();
@@ -105,9 +107,9 @@ public class Arena implements Serializable
 			toRet.dimGoalTiles.add(p);
 		}
 		
-		for (int i = 0; i < 30; i++)
+		for (int i = 0; i < ARENA_DIMENSIONS; i++)
 		{
-			for (int j = 0; j < 30; j++)
+			for (int j = 0; j < ARENA_DIMENSIONS; j++)
 			{
 				toRet.tiles[i][j] = tiles[i][j];
 				toRet.legacyTileData[i][j] = legacyTileData[i][j];
@@ -152,9 +154,9 @@ public class Arena implements Serializable
 		
 		int stringIndex = 0;
 		
-		for (int i = 0; i < 30; i++)
+		for (int i = 0; i < ARENA_DIMENSIONS; i++)
 		{
-			for (int j = 0; j < 30; j++)
+			for (int j = 0; j < ARENA_DIMENSIONS; j++)
 			{
 				tiles[i][j] = Integer.parseInt(arenaAsString.substring(stringIndex, stringIndex + 1));
 				legacyTileData[i][j] = legacyTileDataString.charAt(stringIndex);
@@ -163,9 +165,9 @@ public class Arena implements Serializable
 		}
 		
 		//scan for special features
-		for (int i = 0; i < 30; i++)
+		for (int i = 0; i < ARENA_DIMENSIONS; i++)
 		{
-			for (int j = 0; j < 30; j++)
+			for (int j = 0; j < ARENA_DIMENSIONS; j++)
 			{
 				if (tiles[i][j] == TILE_TELE)
 				{
@@ -304,6 +306,14 @@ public class Arena implements Serializable
 	{
 		if (binIndex >= 0 && binIndex < 8)
 			return ballBins.get(binIndex);
+		
+		return null;
+	}
+	
+	public Point getPadLocation(int binIndex)
+	{
+		if (binIndex >= 0 && binIndex < 8)
+			return ballPads.get(binIndex);
 		
 		return null;
 	}
@@ -470,26 +480,26 @@ public class Arena implements Serializable
 	}
 	
 	//returns the inner corner of the active goal, defaulting to the lower right if it's not any of the others
-	public Point getGoalLine()
+	public Point getGoalFarCorner()
 	{
 		if (tiles[1][1] == TILE_GOAL)
-			return new Point(4, 4);
+			return new Point(1, 1);
 		
 		if (tiles[1][28] == TILE_GOAL)
-			return new Point(4, 25);
+			return new Point(1, 28);
 		
 		if (tiles[28][1] == TILE_GOAL)
-			return new Point(25, 4);
+			return new Point(28, 1);
 		
-		return new Point(25, 25);
+		return new Point(28, 28);
 	}
 
 	// TODO: DEBUG
 	public void printMap()
 	{
-		for (int i = 0; i < 30; i++)
+		for (int i = 0; i < ARENA_DIMENSIONS; i++)
 		{
-			for (int j = 0; j < 30; j++)
+			for (int j = 0; j < ARENA_DIMENSIONS; j++)
 			{
 //				System.out.print(tiles[i][j] + ", ");
 				System.out.print(legacyTileData[i][j] + ", ");

@@ -19,7 +19,7 @@ public enum Facing
 		if (this == S)
 			return Facing.SW;
 		if (this == SW)
-			return Facing.NW;
+			return Facing.W;
 		if (this == W)
 			return Facing.NW;
 		

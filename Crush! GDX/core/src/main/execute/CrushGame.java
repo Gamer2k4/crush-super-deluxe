@@ -12,13 +12,14 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-import main.data.entities.Arena;
 import main.data.entities.Team;
 import main.data.factory.CpuTeamFactory;
 import main.logic.Client;
+import main.logic.Randomizer;
 import main.logic.Server;
 import main.presentation.CursorManager;
 import main.presentation.ImageFactory;
+import main.presentation.ImageType;
 import main.presentation.TeamColorsManager;
 import main.presentation.audio.AudioManager;
 import main.presentation.audio.SoundType;
@@ -31,6 +32,7 @@ import main.presentation.game.StaticImage;
 import main.presentation.game.sprite.CrushAnimatedTile;
 import main.presentation.game.sprite.CrushArenaImageManager;
 import main.presentation.game.sprite.CrushSprite;
+import main.presentation.screens.CrushEventScreen;
 import main.presentation.screens.EventDetails;
 import main.presentation.screens.GameScreen;
 import main.presentation.screens.GameScreenManager;
@@ -61,6 +63,7 @@ public class CrushGame extends Game implements ActionListener
 		
 		GameScreenManager.getInstance().initializeScreens(this);
 		setScreen(GameScreenManager.getInstance().getScreen(ScreenType.GAME_SELECT));
+		AudioManager.getInstance().loopSound(SoundType.THEME);
 	}
 
 	@Override
@@ -184,6 +187,8 @@ public class CrushGame extends Game implements ActionListener
 
 	private void prepareNewGame(AbstractTeamSelectScreen sourceScreen)
 	{
+		AudioManager.getInstance().stopSound(SoundType.THEME);
+		
 //		List<Team> gameTeams = getTeamsForGameStart(sourceScreen.getTeams(), sourceScreen.getBudget());
 		List<Team> rawTeams = new ArrayList<Team>();
 		rawTeams.add(new Team());
@@ -192,6 +197,9 @@ public class CrushGame extends Game implements ActionListener
 		
 		List<Team> gameTeams = getTeamsForGameStart(rawTeams, 900);
 		int arenaIndex = gameTeams.get(0).homeField;		//TODO: update this for playoffs
+		
+		if (DebugConstants.ARENA_OVERRIDE != -1)
+			arenaIndex = DebugConstants.ARENA_OVERRIDE;
 		
 		EventDetails.setTeams(gameTeams);
 		EventDetails.setArena(arenaIndex);
@@ -212,13 +220,31 @@ public class CrushGame extends Game implements ActionListener
 		client = new Client(host, this);
 
 		setScreen(GameScreenManager.getInstance().getScreen(ScreenType.GAME_PLAY));
+		randomizeEventBackgroundImage();
 		activeScreen.reset();
 
 		GdxGUI gui = (GdxGUI) client.getGui();
 		gui.setGameScreen(activeScreen);
 
 		host.newGame(EventDetails.getTeams(), EventDetails.getArenaIndex());
+
+		//TODO: set this elsewhere
+		/* DEBUG */ EventDetails.getTeams().get(1).humanControlled = false;
+		/* DEBUG */ EventDetails.getTeams().get(2).humanControlled = false;
+		
 		client.getGui().beginGame();
+	}
+
+	private void randomizeEventBackgroundImage()
+	{
+		CrushEventScreen eventScreen = (CrushEventScreen) activeScreen;
+		
+		int backgroundChoice = Randomizer.getRandomInt(1, 2);
+		
+		if (backgroundChoice == 1)
+			eventScreen.setBackgroundImage(ImageType.MAP_LAVA_BG);
+		else
+			eventScreen.setBackgroundImage(ImageType.MAP_STARS_BG);
 	}
 
 	private List<Team> getTeamsForGameStart(List<Team> rawTeams, int budget)
@@ -264,6 +290,7 @@ public class CrushGame extends Game implements ActionListener
 			break;
 		case BEGIN_GAME:
 			AudioManager.getInstance().stopSound(SoundType.PREGAME);
+			AudioManager.getInstance().loopSound(SoundType.CROUD);
 			beginNewGame();
 			break;
 		}

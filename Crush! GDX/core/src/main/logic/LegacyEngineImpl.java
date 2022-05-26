@@ -13,6 +13,7 @@ import main.data.entities.Equipment;
 import main.data.entities.Player;
 import main.data.entities.Race;
 import main.data.entities.Skill;
+import main.execute.DebugConstants;
 import main.presentation.common.Logger;
 /**
  * class Engine
@@ -30,6 +31,8 @@ public class LegacyEngineImpl implements Engine
 {
 	private Data gameData;
 	private Data localData;
+	
+	private Point ejectedBallCarrierCoords = null;
 	
 	private static final int RANDOMNESS = 100;
 	private static final int MAX_PERCENT = 100;
@@ -114,12 +117,12 @@ public class LegacyEngineImpl implements Engine
 				toRet.offer(e);	//all the events should already be processed locally, so simply add them to the return queue
 			}
 			
-			System.out.println("ENGINE TURN EVENT: turnUser is " + turnUser + " and teamHasPlayer is " + teamHasPlayer);
+			Logger.debug("ENGINE TURN EVENT: turnUser is " + turnUser + " and teamHasPlayer is " + teamHasPlayer);
 			
 			//if no active players, increment the turn user
 			if (!teamHasPlayer)
 			{
-				/* FIX THIS; it's skipping wrong
+				/* TODO: FIX THIS; it's skipping wrong
 				if (turnUser == 2)
 					turnUser = 0;
 				else
@@ -147,10 +150,10 @@ public class LegacyEngineImpl implements Engine
 			
 			List<Point> path = createPath(activePlayer, origin, destination, isJumping);
 			
-			System.out.println("ENGINE - MOVE EVENT: Path distance is " + path.size());
-			System.out.println("Origin is: " + origin);
-			System.out.println("Destination is: " + destination);
-			System.out.println("Path is: " + path);
+			Logger.debug("ENGINE - MOVE EVENT: Path distance is " + path.size());
+			Logger.debug("Origin is: " + origin);
+			Logger.debug("Destination is: " + destination);
+			Logger.debug("Path is: " + path);
 
 			//TODO: this could break things with chained actions (perhaps a push check or something), since everything else uses local data
 			Player originalPlayer = gameData.getPlayer(theCommand.flags[0]);
@@ -185,7 +188,7 @@ public class LegacyEngineImpl implements Engine
 				//if the player is sliding, they can go forever
 				if (!slideBool)
 					curAP -= 10;
-				System.out.println("ENGINE - PATH MOVEMENT: curAP is " + curAP + ", originalAP is " + originalAP + ", and p.currentAP is " + activePlayer.currentAP);
+				Logger.debug("ENGINE - PATH MOVEMENT: curAP is " + curAP + ", originalAP is " + originalAP + ", and p.currentAP is " + activePlayer.currentAP);
 				
 				//TODO: somehow jumping still has players hitting electrical tiles and teleporters on the way.
 				//if we're jumping but have only moved one tile, none of the rest applies
@@ -303,6 +306,9 @@ public class LegacyEngineImpl implements Engine
 				{
 					int isCorrect = Randomizer.getRandomInt(1, curArena.getUntriedBinCount());
 					
+					if (DebugConstants.ALWAYS_BIN_SUCCESS)
+						isCorrect = 1;
+					
 					if (isCorrect == 1 || (isCorrect == 2 && activePlayer.hasSkill(Skill.INTUITION)))
 					{
 						toRet.offer(Event.tryBallBin(theCommand.flags[0], binIndex, 1));
@@ -356,7 +362,7 @@ public class LegacyEngineImpl implements Engine
 					// 2) If so, generate a teleport event for him.
 					Event teleEvent = Event.teleport(localData.getIndexOfPlayer(toTele), theCommand.flags[3], Randomizer.getRandomInt(0, curArena.getPortalCount() - 1));
 					
-					System.out.println("DISPLACEMENT! Player " + theCommand.flags[0] + " is displacing Player " + teleEvent.flags[0]);
+					Logger.debug("DISPLACEMENT! Player " + theCommand.flags[0] + " is displacing Player " + teleEvent.flags[0]);
 					
 					// 3) Push the new teleport event after the current one.
 					toRet = addEventChainToQueue(toRet, teleEvent);
@@ -368,7 +374,7 @@ public class LegacyEngineImpl implements Engine
 			{
 				int detectChance = p.getDetectionChance();
 				
-				System.out.println("ENGINE - WARPING IN: New player's detection chance is " + detectChance + ".");
+				Logger.debug("ENGINE - WARPING IN: New player's detection chance is " + detectChance + ".");
 				
 				if (Randomizer.getRandomInt(1, MAX_PERCENT) < detectChance)	//player was detected
 					toRet.offer(Event.eject(theCommand.flags[0], -1, Event.EJECT_REF, 0, 0, 0, 0, 0));
@@ -390,15 +396,13 @@ public class LegacyEngineImpl implements Engine
 				
 				boolean ballReceived = (5 <= Randomizer.getRandomInt(1, MAX_PERCENT));		//no hands check; 5% chance of failure
 				
-				Event e = Event.handoff(theCommand.flags[0], theCommand.flags[1], Event.HANDOFF_PASS);
-				
 				if (ballReceived)
 				{
-					processAndOfferEvent(toRet, e);
+					processAndOfferEvent(toRet, Event.handoff(theCommand.flags[0], theCommand.flags[1], Event.HANDOFF_SUCCESS));
 				}
 				else
 				{
-					processAndOfferEvent(toRet, e);
+					processAndOfferEvent(toRet, Event.handoff(theCommand.flags[0], theCommand.flags[1], Event.HANDOFF_FAIL));
 					fumbleBall(toRet);
 				}
 			}
@@ -458,7 +462,7 @@ public class LegacyEngineImpl implements Engine
 	//ball moves in a random direction
 	private Event generateRandomBallMotionEvent()
 	{
-		System.out.println("ENGINE - MOVING BALL");
+		Logger.debug("ENGINE - MOVING BALL");
 		int playerCount = 0;
 		Point ballLoc = localData.getBallLocation();
 		
@@ -470,7 +474,7 @@ public class LegacyEngineImpl implements Engine
 		
 		if (curX < 0 || curY < 0 || curX > 29 || curY > 29)
 		{
-			System.out.println("ENGINE - MOVING BALL: Ball is out of bounds and cannot move.  Teleporting instead.");
+			Logger.debug("ENGINE - MOVING BALL: Ball is out of bounds and cannot move.  Teleporting instead.");
 			return generateTeleportBallEvent();
 		}
 		
@@ -498,35 +502,35 @@ public class LegacyEngineImpl implements Engine
 		
 		boolean playerHere = true;
 		
-		System.out.println("\t moveBall 1");
+		Logger.info("\t moveBall 1");
 		
 		do
 		{
-			System.out.println("\t\t inner loop 1");
+			Logger.info("\t\t inner loop 1");
 			
 			newX = Randomizer.getRandomInt(-1, 1) + curX;
 			newY = Randomizer.getRandomInt(-1, 1) + curY;
 			
-			System.out.println("ENGINE - MOVING BALL: testing motion from (" + curX + ", " + curY + ") to (" + newX + ", " + newY + ")");
+			Logger.debug("ENGINE - MOVING BALL: testing motion from (" + curX + ", " + curY + ") to (" + newX + ", " + newY + ")");
 			
 			playerHere = localData.getArena().isObstructedForBall(newX, newY);
 			
-			System.out.println("\t\t inner loop 2");
+			Logger.info("\t\t inner loop 2");
 			
 			//standing still doesn't count
 			if (newX == curX && newY == curY)
 				playerHere = true;
 			
-			System.out.println("\t\t inner loop 3");
+			Logger.info("\t\t inner loop 3");
 			
 			if (localData.getPlayerAtLocation(new Point(newX, newY)) != null)
 				playerHere = true;
 			
-			System.out.println("\t\t inner loop 4");
+			Logger.info("\t\t inner loop 4");
 			
 		} while (playerHere);
 		
-		System.out.println("\t moveBall 1");
+		Logger.info("\t moveBall 1");
 		
 		return Event.moveBall(newX, newY);
 	}
@@ -535,12 +539,24 @@ public class LegacyEngineImpl implements Engine
 	//this only puts the ball back on the map; a moveBall event should probably be called after
 	private Event generateDropBallEvent()
 	{
-		System.out.println("ENGINE DROPPING BALL");
+		Logger.debug("ENGINE DROPPING BALL");
 		
 		Player carrier = localData.getBallCarrier();
 		Point coords = localData.getLocationOfPlayer(carrier);
 		
-		System.out.println("Drop coordinates are (" + coords.x + ", " + coords.y + ").");	//TODO: this threw a null pointer exception; perhaps if the ball carrier is injured/killed, he's gone, so this can't register?
+		if (coords == null && ejectedBallCarrierCoords == null)
+		{
+			Logger.warn("Cannot find coordinates to drop ball; warping ball instead");
+			return generateTeleportBallEvent();
+		}
+		else if (coords == null)
+		{
+			Logger.debug("Null coords for location of ball carrier; setting ball coords to saved coordinates instead.");
+			coords = new Point(ejectedBallCarrierCoords.x, ejectedBallCarrierCoords.y);
+			ejectedBallCarrierCoords = null;
+		}
+		
+		Logger.debug("Drop coordinates are (" + coords.x + ", " + coords.y + ").");
 		
 		Event toRet = Event.moveBall(coords.x, coords.y); 
 		
@@ -590,7 +606,7 @@ public class LegacyEngineImpl implements Engine
 			if (localData.getPlayerAtLocation(origin) != null && !isJumping)	//block routes that go through other players, until the player is jumping
 				return toRet;
 			
-			System.out.println("Engine - " + plyr + " to " + origin);
+			Logger.debug("Engine - Path creation for " + plyr + " to " + origin);
 			
 			toRet.add((Point)origin.clone());
 		}
@@ -667,7 +683,7 @@ public class LegacyEngineImpl implements Engine
 					if (p.hasSkill(Skill.GUARD))
 						toRet += 5;
 					
-					System.out.println("ENGINE - GET ASSIST: Teammate found; assist bonus is now " + toRet + ".");
+					Logger.debug("ENGINE - GET ASSIST: Teammate found; assist bonus is now " + toRet + ".");
 				}
 			}
 		}
@@ -720,28 +736,28 @@ public class LegacyEngineImpl implements Engine
 			//auto-injure 16% of the time with Doomstrike (manual says 25%)
 			if (attacker.hasSkill(Skill.DOOMSTRIKE) && Randomizer.getRandomInt(1, 6) == 1 && injLevel < Player.INJURY_TRIVIAL)
 			{
-				System.out.println("ENGINE - INJURY CALC: Doomstrike activated.");
+				Logger.debug("ENGINE - INJURY CALC: Doomstrike activated.");
 				injLevel = Player.INJURY_TRIVIAL;
 			}
 			
 			//auto-stun 16% of the time with Fist of Iron (manual says 25%)
 			if (attacker.hasSkill(Skill.FIST_OF_IRON) && Randomizer.getRandomInt(1, 6) == 1 && injLevel < Player.INJURY_STUN)
 			{
-				System.out.println("ENGINE - INJURY CALC: Fist of Iron activated.");
+				Logger.debug("ENGINE - INJURY CALC: Fist of Iron activated.");
 				injLevel = Player.INJURY_STUN;
 			}
 			
 			//Vicious adds to the injury type
 			if (attacker.hasSkill(Skill.VICIOUS))
 			{
-				System.out.println("ENGINE - INJURY CALC: Vicious activated.");
+				Logger.debug("ENGINE - INJURY CALC: Vicious activated.");
 				injLevel++;
 			}
 			
 			//Resilient subtracts from the injury type
 			if (defender.hasSkill(Skill.RESILIENT))
 			{
-				System.out.println("ENGINE - INJURY CALC: Resilient activated.");
+				Logger.debug("ENGINE - INJURY CALC: Resilient activated.");
 				injLevel--;
 			}
 		}
@@ -755,7 +771,7 @@ public class LegacyEngineImpl implements Engine
 		else
 			toRet = generateInjuryEvent(defender, injLevel, attacker);
 		
-		System.out.println("ENGINE - INJURY CALC: Player " + defender.name + " is being attacked.  Attacker's ST is " + ST + ", Defender's TG is " + TG + ", and the injury level is " + injLevel + ".");
+		Logger.debug("ENGINE - INJURY CALC: Player " + defender.name + " is being attacked.  Attacker's ST is " + ST + ", Defender's TG is " + TG + ", and the injury level is " + injLevel + ".");
 		
 		return toRet;	//we'll process this in the combat method
 	}
@@ -795,27 +811,30 @@ public class LegacyEngineImpl implements Engine
 			weeksOut = 0;
 		}
 		if (injLevel == Player.INJURY_MINOR); //do nothing; weeks out are already calculated, and no stat damage is applied
-		if (injLevel == Player.INJURY_CRIPPLE_10)
-		{
-			penalty[0] = 5;
-			penalty[1] = 5;
-		}
-		if (injLevel == Player.INJURY_CRIPPLE_15)
-		{
-			penalty[0] = 5;
-			penalty[1] = 5;
-			
-			penalty[Randomizer.getRandomInt(0, 1)] += 5;
-		}
-		if (injLevel == Player.INJURY_CRIPPLE_20)
+		if (injLevel == Player.INJURY_CRIPPLE_10)	//note that these injury penalties are cut in half with enhanced Surgery
 		{
 			penalty[0] = 10;
 			penalty[1] = 10;
+		}
+		if (injLevel == Player.INJURY_CRIPPLE_15)
+		{
+			penalty[0] = 10;
+			penalty[1] = 10;
+			
+			penalty[Randomizer.getRandomInt(0, 1)] += 10;
+		}
+		if (injLevel == Player.INJURY_CRIPPLE_20)
+		{
+			penalty[0] = 20;
+			penalty[1] = 20;
 		}
 		if (injLevel >= Player.INJURY_DEATH_1)
 		{
 			type = Event.EJECT_DEATH;
 		}
+		
+		if (injuredPlayer == localData.getBallCarrier())
+			ejectedBallCarrierCoords = localData.getLocationOfPlayer(injuredPlayer);
 		
 		return Event.eject(pIndex, causeIndex, type, stat1, penalty[0], stat2, penalty[1], weeksOut);
 	}
@@ -827,18 +846,27 @@ public class LegacyEngineImpl implements Engine
 		boolean reflex = (theCommand.flags[3] == 1);
 		
 		if (reflex)
-			System.out.println("ENGINE - CHECK: Reflex check!");
+			Logger.debug("ENGINE - CHECK: Reflex check!");
 		
-		System.out.println("ENGINE - CHECK: Flags var is: {" + theCommand.flags[0] + ", " + theCommand.flags[1] + ", " + theCommand.flags[2] + ", " + theCommand.flags[3] + "}");
+		Logger.debug("ENGINE - CHECK: Flags var is: {" + theCommand.flags[0] + ", " + theCommand.flags[1] + ", " + theCommand.flags[2] + ", " + theCommand.flags[3] + "}");
 		
 		Player attacker = localData.getPlayer(theCommand.flags[0]);
 		Player defender = localData.getPlayer(theCommand.flags[1]);
 		
-		System.out.println("\t\t" + attacker);
-		System.out.println("\t\t" + defender);
+		Logger.debug("\t\t" + attacker);
+		Logger.debug("\t\t" + defender);
 
-		int atk_CH = attacker.getAttributeWithModifiers(Player.ATT_CH) + getLocalAssistBonus(attacker, defender) + Randomizer.getRandomInt(1, RANDOMNESS);
-		int def_CH = defender.getAttributeWithModifiers(Player.ATT_CH) + getLocalAssistBonus(defender, attacker) + Randomizer.getRandomInt(1, RANDOMNESS);
+		int atk_base_CH = attacker.getAttributeWithModifiers(Player.ATT_CH);
+		int def_base_CH = defender.getAttributeWithModifiers(Player.ATT_CH);
+		
+		if (def_base_CH < atk_base_CH && defender.hasSkill(Skill.JUDO))
+		{
+			Logger.debug("ENGINE - CHECK: Defender uses Judo!");
+			def_base_CH = atk_base_CH;
+		}
+		
+		int atk_CH = atk_base_CH + getLocalAssistBonus(attacker, defender) + Randomizer.getRandomInt(1, RANDOMNESS);
+		int def_CH = def_base_CH + getLocalAssistBonus(defender, attacker) + Randomizer.getRandomInt(1, RANDOMNESS);
 		
 		int atk_ST = attacker.getAttributeWithModifiers(Player.ATT_ST) + Randomizer.getRandomInt(1, RANDOMNESS);
 		int def_ST = defender.getAttributeWithModifiers(Player.ATT_ST) + Randomizer.getRandomInt(1, RANDOMNESS);
@@ -849,18 +877,18 @@ public class LegacyEngineImpl implements Engine
 		int result = atk_CH - def_CH;
 		boolean dodge = skillCheck(defender.getAttributeWithModifiers(Player.ATT_DA));
 		
-		System.out.println("ENGINE - CHECK: Attacker rolls " + atk_CH + " and defender rolls " + def_CH + " for a total of " + result + ".");
+		Logger.debug("ENGINE - CHECK: Attacker rolls " + atk_CH + " and defender rolls " + def_CH + " for a total of " + result + ".");
 
 		if (localData.getBallCarrier() == attacker)
-			System.out.println("ENGINE - CHECK: Ball carrier is attacking.");
+			Logger.debug("ENGINE - CHECK: Ball carrier is attacking.");
 		
 		if (localData.getBallCarrier() == defender)
-			System.out.println("ENGINE - CHECK: Ball carrier is being attacked.");
+			Logger.debug("ENGINE - CHECK: Ball carrier is being attacked.");
 		
 		//dodge, but only if the attacker wouldn't have fallen down
 		if (dodge && result > -20)
 		{
-			System.out.println("...but the defender dodged the attack.");
+			Logger.debug("...but the defender dodged the attack.");
 			processAndOfferEvent(toRet, Event.check(theCommand.flags[0], theCommand.flags[1], Event.CHECK_DODGE, reflex));
 		}
 		else if (result < -20)
@@ -881,7 +909,7 @@ public class LegacyEngineImpl implements Engine
 			//note that repulsor gloves don't seem to activate on reflex checks
 			if (playerHasRepulsorGauntlets(attacker) && !playerHasMagneticBoots(defender) && !reflex)
 			{
-				System.out.println("  Repulsor gauntlets have activated!");
+				Logger.debug("  Repulsor gauntlets have activated!");
 				toRet = addEventChainToQueue(toRet, generatePushEvent(theCommand.flags[0], theCommand.flags[1], false));	//TODO
 			}
 		}
@@ -1038,12 +1066,12 @@ public class LegacyEngineImpl implements Engine
 	
 	private boolean skillCheck(int skillAmt)
 	{
-		System.out.println("Skill Check with value " + skillAmt);
+		Logger.debug("Skill Check with value " + skillAmt);
 		
 		if (skillAmt < Randomizer.getRandomInt(5, 95))
 			return false;
 		
-		System.out.println("Check passed!");
+		Logger.debug("Check passed!");
 		
 		return true;
 	}
@@ -1066,7 +1094,7 @@ public class LegacyEngineImpl implements Engine
 	//called after ball pickups, handoffs, moves, and (eventually) strips
 	private boolean checkForVictory()
 	{
-		System.out.println("ENGINE VICTORY CHECK");
+		Logger.debug("ENGINE VICTORY CHECK");
 		
 		Player ballCarrier = localData.getBallCarrier();
 		
@@ -1076,7 +1104,7 @@ public class LegacyEngineImpl implements Engine
 		Point coords = localData.getLocationOfPlayer(ballCarrier);
 		int playerTile = localData.getArena().getTile(coords);
 		
-		System.out.println("ENGINE VICTORY CHECK: tile is " + playerTile + " at point (" + coords.x + ", " + coords.y + ").");
+		Logger.debug("ENGINE VICTORY CHECK: tile is " + playerTile + " at point (" + coords.x + ", " + coords.y + ").");
 		
 		//check if the carrier's tile is a goal tile
 		if (playerTile == Arena.TILE_GOAL)
@@ -1088,7 +1116,7 @@ public class LegacyEngineImpl implements Engine
 
 	private int getFacing(Point lastCoords, Point playerMoveCoords)
 	{
-		Logger.warn("Engine: getting facing - Last Coords: " + lastCoords + ", Move Coords: " + playerMoveCoords);
+		Logger.debug("Engine: getting facing - Last Coords: " + lastCoords + ", Move Coords: " + playerMoveCoords);
 		
 		int x1 = lastCoords.x;
 		int y1 = lastCoords.y;

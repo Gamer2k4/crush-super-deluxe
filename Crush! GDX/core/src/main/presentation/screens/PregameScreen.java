@@ -45,10 +45,10 @@ public class PregameScreen extends MouseOverButtonScreen
 
 	public void newGame()
 	{
-		AudioManager.getInstance().playSound(SoundType.PREGAME);
 		startPreloadThread();
 		addArenaImage();
 		addPlayerImages();
+		AudioManager.getInstance().playSound(SoundType.PREGAME);		//done here because the screen won't show up until at least the player profile images are loaded
 		addTeamAndArenaNames();
 	}
 

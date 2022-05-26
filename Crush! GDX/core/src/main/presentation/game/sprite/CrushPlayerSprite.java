@@ -17,6 +17,7 @@ import main.data.entities.Team;
 import main.logic.Randomizer;
 import main.presentation.audio.AudioManager;
 import main.presentation.audio.SoundType;
+import main.presentation.common.Logger;
 
 public class CrushPlayerSprite extends CrushSprite implements ActionListener
 {
@@ -34,8 +35,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	private int currentAnimationFrame = 0;
 	private List<PlayerState> queuedAnimationStates = new ArrayList<PlayerState>();
 	
-	private double yMoveFraction = 0;
-	private static final double FRACTION_TOLERANCE = .01;
+	private int yPixelsMovedSinceXAdjustment = 0;
 	
 	private Point lastCoordCheckResult = new Point(-50, -50);
 	private int timesCoordCheckWasUnchanged = 0;
@@ -97,9 +97,9 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		
 		if (timesCoordCheckWasUnchanged > MAX_ITERATIONS_BEFORE_EASING_SPRITE)
 		{
-			System.out.println("Current coords have been " + coords + " for too long; easing sprite along to target: " + targetCoords);
+			Logger.warn("Current coords have been " + coords + " for too long; easing sprite along to target: " + targetCoords);
 			timesCoordCheckWasUnchanged = 0;
-			yMoveFraction = 0;
+			yPixelsMovedSinceXAdjustment = 0;
 			
 			if (coords.x < targetCoords.x)
 				coords.x++;
@@ -109,7 +109,6 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 				coords.y++;
 			if (coords.y > targetCoords.y)
 				coords.y--;
-			
 		}
 	}
 	
@@ -121,6 +120,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	public void setHasBall(boolean hasBall)
 	{
 		this.hasBall = hasBall;
+		setState(state);
 	}
 	
 	public void rotateClockwise()
@@ -166,6 +166,9 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	public void changeStatus(Event event)
 	{
 		int newStatus = event.flags[2];
+		
+		if (newStatus != Player.STS_OKAY)
+			hasBall = false;
 		
 		if (newStatus == Player.STS_OKAY)
 			setState(PlayerState.PASSIVE);
@@ -229,19 +232,20 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	{
 		targetCoords.x = getXValueForColumn(targetCol);
 		targetCoords.y = getYValueForRow(targetRow);
+		yPixelsMovedSinceXAdjustment = 0;
 	}
 	
-	public void receiveBall(Event event)
+	public void receiveBall()
 	{
-		//TODO: probably do all this if it's a handoff event
-//		int targetRow = event.flags[2];
-//		int targetCol = event.flags[3];
-//		targetCoords.x = getXValueForColumn(targetCol);
-//		targetCoords.y = getYValueForRow(targetRow);
-//		turnTowardPixelCoords(targetCoords);
-		
-		//otherwise assume facing is correct already
-		beginAnimation(PlayerState.RECEIVE_BALL);
+		setHasBall(true);
+		beginAnimation(PlayerState.BALL_RECEIVE);
+	}
+	
+	public void hurlBall()
+	{
+		setHasBall(false);
+		beginAnimation(PlayerState.BALL_HURL);
+		AudioManager.getInstance().playSound(SoundType.THROW);
 	}
 	
 	public void turnTowardArenaLocation(Point location)
@@ -341,10 +345,10 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 
 	protected void advanceSpriteByFacing(int positionPixelChange)
 	{
-		double xChange = positionPixelChange;
-		double yChange = positionPixelChange * (5.0 / 6.0);
+		int xChange = positionPixelChange;		//TODO: will need advance an additional pixel every 6 pixels
+		int yChange = positionPixelChange;
 		
-		yChange = adjustYChangeForFraction(yChange);
+		xChange = adjustXChangeForDistance(xChange);
 		
 		if (facing == Facing.SW || facing == Facing.S || facing == Facing.SE)
 			yChange *= -1;
@@ -365,10 +369,10 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		
 		Facing directionToMove = getDirectionTowardPixelCoords(targetCoords);
 		
-		double xChange = positionPixelChange;
-		double yChange = positionPixelChange * (5.0 / 6.0);
+		int xChange = positionPixelChange;		//TODO: will need advance an additional pixel every 6 pixels
+		int yChange = positionPixelChange;
 		
-		yChange = adjustYChangeForFraction(yChange);
+		xChange = adjustXChangeForDistance(xChange);
 		
 		if (directionToMove == Facing.SW || directionToMove == Facing.S || directionToMove == Facing.SE)
 			yChange *= -1;
@@ -383,20 +387,18 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		coords.y += yChange;
 	}
 
-	private int adjustYChangeForFraction(double yChange)
+	private int adjustXChangeForDistance(int xChange)
 	{
-		double fractionalAmount = yChange - (int)yChange;
+		yPixelsMovedSinceXAdjustment += xChange;
+		int xChangeModifier = 0;
 		
-		if (Math.abs(fractionalAmount) < FRACTION_TOLERANCE)
-			return (int)yChange;
+		while (yPixelsMovedSinceXAdjustment >= 5)
+		{
+			yPixelsMovedSinceXAdjustment -=5;
+			xChangeModifier++;
+		}
 		
-		yMoveFraction += fractionalAmount;
-		
-		if (Math.abs(yMoveFraction) + FRACTION_TOLERANCE < 1)
-			return ((int)yChange);
-		
-		yMoveFraction = 0;
-		return (int)yChange + 1;
+		return xChange + xChangeModifier;
 	}
 
 	@SuppressWarnings("incomplete-switch")
@@ -478,12 +480,10 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 
 	private void setState(PlayerState newState)
 	{
-		if (!hasBall)
-			state = newState;
-		else if (newState == PlayerState.CHECK_WEAK || newState == PlayerState.CHECK_STRONG || newState == PlayerState.PASSIVE || newState == PlayerState.WALK)
-			state = PlayerState.valueOf(newState.name() + "_BALL");
+		if (hasBall)
+			state = newState.withBall();
 		else
-			state = newState;
+			state = newState.withoutBall();
 		
 		currentSpriteImage = PlayerAnimationManager.getInstance().getSprite(team, race, PlayerSpriteType.getPlayerSpriteType(state, facing));
 	}

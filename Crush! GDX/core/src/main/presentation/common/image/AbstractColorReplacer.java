@@ -95,11 +95,32 @@ public abstract class AbstractColorReplacer
 			}
 		}
 		
+//		Texture newTexture = setTextureFromPixmap(targetPixmap);
 		Texture newTexture = new Texture(targetPixmap);
+		
 		textureData.disposePixmap();		//I think this might be unnecessary
 //	    originalPixmap.dispose();
 
 		return newTexture;
+	}
+	
+	private Texture setTextureFromPixmap(Pixmap pixmap)
+	{
+		Texture texture = null;
+		
+		while (texture == null)
+		{
+			try
+			{
+				texture = new Texture(pixmap);
+			} catch (RuntimeException re)
+			{
+				if (re.getMessage() != null && re.getMessage().contains("No OpenGL context found in the current thread"))
+					Logger.warn("AbstractColorReplacer - Hiding OpenGL exception and reattempting texture mapping.");
+			}
+		}
+		
+		return texture;
 	}
 	
 	//required because pixmaps store in RGBA format, while Color is in ARGB instead.

@@ -54,7 +54,7 @@ public class GameDataPreloader
 		for (PlayerState state : PlayerState.values())
 		{
 			if (state == PlayerState.INJURY || state == PlayerState.DOWN || state == PlayerState.SIT
-					|| state == PlayerState.GIVE_BALL)		//TODO: remove this line once the animation is defined
+					|| state == PlayerState.BALL_GIVE)		//TODO: remove this line once the animation is defined
 				continue;	//no animations defined for these
 			
 			PlayerAnimation.getAnimation(state, Facing.N);

@@ -82,7 +82,11 @@ public abstract class MedicalEjectionAlert extends EjectionAlert
 		}
 		
 		int weeksOut = event.flags[7];
-		text.add(new GameText(FontType.FONT_SMALL2, new Point(5, 63), LegacyUiConstants.COLOR_LEGACY_WHITE, "OUT FOR " + weeksOut + " GAMES"));
+		String games = " GAME";
+		if (weeksOut != 1)
+			games = " GAMES";
+		
+		text.add(new GameText(FontType.FONT_SMALL2, new Point(5, 63), LegacyUiConstants.COLOR_LEGACY_WHITE, "OUT FOR " + weeksOut + games));
 	}
 
 	@Override
