@@ -26,6 +26,7 @@ import main.presentation.game.ejectionalert.InjuryEjectionAlert;
 import main.presentation.game.ejectionalert.MutationEjectionAlert;
 import main.presentation.game.ejectionalert.NewTurnAlert;
 import main.presentation.game.ejectionalert.PopupAlert;
+import main.presentation.game.ejectionalert.VictoryAlert;
 import main.presentation.game.sprite.CrushAnimatedTile;
 import main.presentation.game.sprite.CrushPlayerSprite;
 import main.presentation.game.sprite.CrushSprite;
@@ -48,7 +49,6 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	private javax.swing.Timer bgNoiseTimer = new javax.swing.Timer(15000, this);		//TODO: stop this when victory happens
 	
 	private boolean delayTimerRunning = false;
-	
 	private boolean jumpQueued = false;
 	
 	private List<CrushAnimatedTile> activeOverlayAnimations = new ArrayList<CrushAnimatedTile>();
@@ -118,6 +118,7 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 			if (player == 3)
 				player = 0;
 			curTeamIndex = player;
+			ballCarrierHasActedAfterReceivingBall = false;
 			
 			sendCommand(Event.updateTurnPlayer(player));
 			break;
@@ -183,6 +184,11 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	{
 		Logger.debug("GUI received event: " + event);
 		
+		//don't process events if there's no active game
+		//this freezes debugging and the like (since the event handler can't catch any exceptions, i think), so it's commented out for now
+//		if (!gameStarted)
+//			return;
+		
 		if (event.getType() != Event.EVENT_MOVE)
 			lastPlayerCameraSnappedTo = null;
 		
@@ -206,9 +212,21 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 			handleCheckEvent(event);
 		else if (event.getType() == Event.EVENT_HANDOFF)
 			handleHandoffEvent(event);
+		else if (event.getType() == Event.EVENT_GETBALL)
+			handleBallPickupEvent(event);
+		else if (event.getType() == Event.EVENT_VICTORY)
+			handleVictoryEvent(event);
 		
 		checkForNextEvents();
 		gameScreen.refreshTextures();
+	}
+	
+	private void handleVictoryEvent(Event event)
+	{
+		getData().processEvent(event);
+		audioManager.playSound(SoundType.VICTORY);
+		activeAlert = new VictoryAlert(getData(), event);
+		startGameEndTimer();
 	}
 
 	private void handleTurnEvent(Event event)
@@ -224,7 +242,7 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		//TODO: this needs to pop up after all the recover events are done, not here
 		//		also it shouldn't pop up for CPU players
 		//		kept to remind myself that I've made the popup already
-		//showNewTurnAlert(event.flags[0]);
+//		showNewTurnAlert(event.flags[0]);
 	}
 	
 	private void handleRecoverEvent(Event event)
@@ -283,6 +301,9 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 			snapToPlayer(player);
 			lastPlayerCameraSnappedTo = player;
 		}
+		
+		if (player == getData().getBallCarrier() && event.flags[4] == 0 && event.flags[5] == 0 && event.flags[6] == 0)
+			ballCarrierHasActedAfterReceivingBall = true;
 		
 		CrushPlayerSprite playerSprite = eventTextureFactory.getPlayerSprite(player);
 		
@@ -446,6 +467,21 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		activeSpriteAnimations.add(sprite);
 		waitForAnimationsToConclude();
 		refreshInterface();
+	}
+
+	private void handleBallPickupEvent(Event event)
+	{
+		if (event.getType() != Event.EVENT_GETBALL)
+			return;
+		
+		if (event.flags[2] == 0)
+			return;
+		
+		Player player = getData().getPlayer(event.flags[0]);
+		snapToPlayer(player);
+		
+		CrushPlayerSprite playerSprite = eventTextureFactory.getPlayerSprite(player);
+		playerSprite.setHasBall(true);
 	}
 
 	@Override
@@ -642,8 +678,8 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	@Override
 	public void closeGUI()
 	{
-		// TODO Auto-generated method stub
-		
+		eventTextureFactory.endGame();
+		eventButtonBarFactory.endGame();
 	}
 	
 	private void clearHighlights()
@@ -656,6 +692,10 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	@Override
 	public void refreshInterface()
 	{
+		//don't refresh textures if the game isn't going
+		if (!gameStarted)
+			return;
+		
 		gameScreen.refreshTextures();
 	}
 
@@ -711,7 +751,8 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 			images.add(activeAlert.getImage());
 			images.add(activeAlert.getTextBox());
 		}
-			
+		
+//		if ()
 		
 		return images;
 	}
@@ -981,6 +1022,38 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		bgNoiseTimer.start();
 	}
 	
+	@Override
+	public void endGame()
+	{
+		super.endGame();
+		bgNoiseTimer.stop();
+		
+		closeGUI();
+		gameEndListener.actionPerformed(ScreenCommand.END_GAME.asActionEvent());
+		
+	}
+	
+	//auto-click the game end alert after the music concludes
+	private void startGameEndTimer()
+	{
+		final long timerDuration = 12000;	//victory music lasts 11 seconds
+		
+		final Timer gameEnd = new Timer();
+		
+		TimerTask task = new TimerTask() {
+			@Override
+			public void run() {
+	        	//no need to end the game if it's not currently running
+				if (!gameStarted)
+	        		return;
+				
+				confirmAlert();
+	        }
+	    };
+	    
+	    gameEnd.schedule(task, timerDuration);
+	}
+	
 	private void generateNewTurnAlerts()
 	{
 		for (int i = 0; i < 3; i++)
@@ -992,6 +1065,9 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 
 	public void confirmAlert()
 	{
+		if (activeAlert.getClass() == VictoryAlert.class)
+			endGame();
+		
 		activeAlert = null;
 		
 		//if we're only showing a new turn popup, we're done here

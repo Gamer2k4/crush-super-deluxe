@@ -4,16 +4,37 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+
+import main.presentation.ImageFactory;
+import main.presentation.ImageType;
 import main.presentation.game.GameText;
 import main.presentation.game.StaticImage;
 
 public abstract class PopupAlert
 {
+	protected Texture blackTexture = ImageFactory.getInstance().getTexture(ImageType.BLACK_SCREEN);
+	
 	protected StaticImage textBox;
 	protected StaticImage offsetTextBox;
 	
 	protected StaticImage image;
 	protected StaticImage offsetImage;
+	
+	protected PopupAlert(int textBoxWidth, int textBoxHeight)
+	{
+		Drawable singleBlackPixel = new TextureRegionDrawable(new TextureRegion(blackTexture, 0, 0, 1, 1));
+		image = new StaticImage(singleBlackPixel, new Point(-1, -1));
+		offsetImage = image;
+		
+		Drawable resizedTextBox = new TextureRegionDrawable(new TextureRegion(blackTexture, 0, 0, textBoxWidth, textBoxHeight));
+		
+		textBox = new StaticImage(resizedTextBox, new Point(getTextBoxCoords().x, getTextBoxCoords().y));
+		offsetTextBox = new StaticImage(resizedTextBox, new Point(getOffsetTextBoxCoords().x, getOffsetTextBoxCoords().y));
+	}
 	
 	public List<GameText> getInfoText()
 	{
@@ -68,8 +89,7 @@ public abstract class PopupAlert
 		return image;
 	}
 	
-	protected abstract List<GameText> getGameTexts();
-	
 	protected abstract Point getTextBoxCoords();
 	protected abstract Point getOffsetTextBoxCoords();
+	protected abstract List<GameText> getGameTexts();
 }

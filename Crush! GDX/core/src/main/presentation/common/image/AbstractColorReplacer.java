@@ -122,6 +122,36 @@ public abstract class AbstractColorReplacer
 		
 		return texture;
 	}
+
+	public Texture replaceColor(Texture source, Color oldColor, Color newColor)
+	{
+		TextureData textureData = source.getTextureData();
+	    if (!textureData.isPrepared())
+	    	textureData.prepare();
+	    
+	    Pixmap originalPixmap = textureData.consumePixmap();
+	    Pixmap targetPixmap = new Pixmap(originalPixmap.getWidth(), originalPixmap.getHeight(), originalPixmap.getFormat());
+
+		for (int i = 0; i < originalPixmap.getWidth(); i++)
+		{
+			for (int j = 0; j < originalPixmap.getHeight(); j++)
+			{
+				Color pixelColor = getColorFromPixmapPixel(originalPixmap, i, j);
+
+				if (ImageUtils.rgbEquals(pixelColor, oldColor))
+				{
+					pixelColor = newColor;
+				}
+
+				targetPixmap.drawPixel(i, j, ImageUtils.getRGBAfromColor(pixelColor));
+			}
+		}
+
+		Texture newTexture = new Texture(targetPixmap);
+		textureData.disposePixmap();		//this might be unnecessary
+
+		return newTexture;
+	}
 	
 	//required because pixmaps store in RGBA format, while Color is in ARGB instead.
 	private Color getColorFromPixmapPixel(Pixmap pixmap, int x, int y)

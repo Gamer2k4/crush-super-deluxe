@@ -33,6 +33,12 @@ public class BasicAI implements AI
 		
 		Player player = data.getPlayer(currentPlayerIndex);
 		Point destination = determineDestinationTile(player);
+		
+		if (destination.x == -1 && destination.y == -1)
+		{
+			throw new IllegalArgumentException("BasicAI - Destination was (-1, -1), which should NEVER happen - LOOK INTO THIS AND FIX IT.");
+		}
+		
 		Point target = getNextActionTarget(player, destination);
 		Event event = determineActionForTargetTile(player, target);
 		
@@ -114,6 +120,13 @@ public class BasicAI implements AI
 		Point playerCoords = data.getLocationOfPlayer(player);
 		Arena arena = data.getArena();
 		
+		//TODO: this shouldn't happen - if a player has no location, why are they getting AI requests?
+		if (playerCoords == null)
+		{
+			System.out.println("Null player coords!");
+			System.out.println(player);
+		}
+		
 		if (!arena.isBallFound())
 			return getNearestPadCoords(arena, playerCoords);
 		
@@ -136,7 +149,8 @@ public class BasicAI implements AI
 	{
 		return data.playersAreOpponents(player, data.getBallCarrier());
 	}
-
+	
+	//TODO: this CAN be correct, but often the pad with the shortest crow-flies distance actually requires one heck of a walk to get to
 	private Point getNearestPadCoords(Arena arena, Point playerCoords)
 	{
 		int shortestDistance = Arena.ARENA_DIMENSIONS;
@@ -170,6 +184,9 @@ public class BasicAI implements AI
 		
 		for (Player opponent : data.getAllPlayers())
 		{
+			if (opponent == null)
+				continue;
+			
 			if (!data.playersAreOpponents(player, opponent))
 				continue;
 			

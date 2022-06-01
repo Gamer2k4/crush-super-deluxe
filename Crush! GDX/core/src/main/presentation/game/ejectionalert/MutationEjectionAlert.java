@@ -1,7 +1,6 @@
 package main.presentation.game.ejectionalert;
 
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +19,7 @@ public class MutationEjectionAlert extends EjectionAlert
 	
 	public MutationEjectionAlert(Data data, Event event)
 	{
-		super(ImageType.EJECT_BLOB, new Rectangle(0, 0, 160, 35));
+		super(ImageType.EJECT_BLOB, 160, 35);
 		
 		Player player = data.getPlayer(event.flags[0]);
 		Team team = data.getTeamOfPlayer(player);

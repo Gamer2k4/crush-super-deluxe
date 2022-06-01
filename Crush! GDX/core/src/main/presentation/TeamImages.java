@@ -165,7 +165,7 @@ public class TeamImages
 	{
 		disposeHelmetImage();
 		
-//		helmetColoredImage = colorReplacer.setColors(imageFactory.getTexture(ImageType.EDITOR_HELMET), mainColor, trimColor, transparentBg);
+		helmetColoredImage = colorReplacer.setColors(imageFactory.getTexture(ImageType.EDITOR_HELMET), colorPairKey.getForeground(), colorPairKey.getBackground(), TRANSPARENT_BG);
 	}
 
 	public Texture getPlayerImage(Race race)

@@ -1,189 +1,150 @@
 package main.presentation.screens.teamselect;
 
-import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.Game;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+
 import main.data.entities.Team;
-import main.presentation.common.Logger;
+import main.data.factory.CpuTeamFactory;
+import main.presentation.ImageFactory;
 import main.presentation.ImageType;
-import main.presentation.enhanced.teameditor.draft.DraftManager;
-import main.presentation.legacy.framework.AbstractLegacyScreen;
-import main.presentation.legacy.framework.ClickableRegion;
-import main.presentation.legacy.framework.KeyCommand;
-import main.presentation.legacy.framework.ScreenCommand;
-import main.presentation.startupscreen.TeamRecordTracker;
-import main.presentation.teameditor.common.TeamImages;
+import main.presentation.game.FontType;
+import main.presentation.game.GameText;
+import main.presentation.legacy.common.LegacyUiConstants;
+import main.presentation.screens.StandardButtonScreen;
 import main.presentation.teameditor.common.TeamUpdater;
 
-public abstract class AbstractTeamSelectScreen
+public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 {
-	private static final int MAX_TEAMS = 12;
-	
-	protected Team[] teams;
-	protected BufferedImage[] helmetImages;
+	private int totalTeams;
+	protected TeamEntry[] teams;
 	protected TeamUpdater teamUpdater;
-	protected TeamRecordTracker teamRecordTracker;
-//	private DraftManager draftManager;
+	protected boolean teamsLockedForEditing = false;	//This just means the USER can't change anything anymore, include budget and the like.  The game is still free to do whatever.
+	protected int budget = 900;
 	
-	private BufferedImage foregroundImage;
+	protected AbstractTeamSelectScreen(Game sourceGame, ActionListener eventListener, int totalTeams)
+	{
+		super(sourceGame, eventListener);
+		
+		this.totalTeams = totalTeams;
+		teamUpdater = new TeamUpdater();
+		clearTeams();
+	}
 	
-	public AbstractTeamSelectScreen(ActionListener listener, ImageType backgroundImage, ImageType foregroundImage)
+	protected void clearTeams()
 	{
-		super(listener, backgroundImage);
+		teams = new TeamEntry[totalTeams];
 		
-		this.teamRecordTracker = new TeamRecordTracker();
-		this.foregroundImage = imageFactory.getImage(foregroundImage);
-		this.teamUpdater = new TeamUpdater();
-		this.teams = new Team[MAX_TEAMS];
-		this.helmetImages = new BufferedImage[MAX_TEAMS];
-//		this.draftManager = new DraftManager(getTotalTeams());
-		
-		resetScreen();
-	}
-
-	@Override
-	protected void paintComponent(Graphics2D g2)
-	{
-		g2.drawImage(foregroundImage, 0, 0, null);
-		paintHelmetImages(g2);
-	}
-
-	@Override
-	protected void defineClickableRegions()
-	{
-		int teamIndex = 0;
-		for (Point coords : getHelmetLocations())
+		for (int i = 0; i < totalTeams; i++)
 		{
-			ScreenCommand command = ScreenCommand.valueOf("EDIT_TEAM_" + teamIndex);
-			createClickZone(new Rectangle(coords, helmetDim), new ClickableRegion(coords, command));
-			teamIndex++;
+			teams[i] = new TeamEntry();
 		}
 	}
 
-	private void refreshHelmetImages()
+	@Override
+	public void reset()
 	{
-		for (int i = 0; i < MAX_TEAMS; i++)
+		teamsLockedForEditing = false;
+		stage.clear();
+		stage.addActor(new Image(ImageFactory.getInstance().getDrawable(getBackgroundImageType())));
+		stage.addActor(new Image(ImageFactory.getInstance().getDrawable(getSelectScreenImageType())));
+		paintHelmetImages();
+		
+		for (ImageButton button : getButtons())
 		{
-			if (helmetImages[i] == null)
-				helmetImages[i] = TeamImages.getHelmetImage(teams[i]);
+			stage.addActor(button);
 		}
 	}
-
-	private void paintHelmetImages(Graphics2D g2)
+	
+	public void lockTeams()
+	{
+		teamsLockedForEditing = true;
+	}
+	
+	public void unlockTeams()
+	{
+		teamsLockedForEditing = false;
+	}
+	
+	public int getBudget()
+	{
+		return budget;
+	}
+	
+	private void paintHelmetImages()
 	{
 		List<Point> helmetLocations = getHelmetLocations();
 		
 		for (int i = 0; i < helmetLocations.size(); i++)
 		{
 			Point coords = helmetLocations.get(i);
-			g2.drawImage(helmetImages[i], coords.x, coords.y, null);
+			Image helmetImage = new Image(teams[i].getHelmetImage());
+			helmetImage.setPosition(coords.x, coords.y);
+			stage.addActor(helmetImage);
 		}
 	}
 	
+	@Override
+	public List<GameText> getStaticText()
+	{
+		List<GameText> gameTexts = new ArrayList<GameText>();
+		
+		gameTexts.addAll(getScreenTexts());
+		gameTexts.addAll(getTeamAndCoachNames());
+		
+		return gameTexts;
+	}
+
+	private List<GameText> getTeamAndCoachNames()
+	{
+		List<GameText> nameTexts = new ArrayList<GameText>();
+		List<Point> nameLocations = getTeamNameLocations();
+		
+		for (int i = 0; i < nameLocations.size(); i++)
+		{
+			TeamEntry team = teams[i];
+			Point coachCoords = nameLocations.get(i);
+			Point teamCoords = new Point(coachCoords.x, coachCoords.y + 4);
+			nameTexts.add(new GameText(FontType.FONT_SMALL2, coachCoords, LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "Coach " + team.getCoachName()));
+			nameTexts.add(new GameText(FontType.FONT_SMALL, teamCoords, LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, team.getTeamName()));
+		}
+		
+		return nameTexts;
+	}
+
+	protected List<Team> getTeamsForGameStart(List<Team> rawTeams)
+	{
+		List<Team> preparedTeams = new ArrayList<Team>();
+
+		for (Team team : rawTeams)
+		{
+			if (team.isBlankTeam())
+				team = CpuTeamFactory.generatePopulatedCpuTeam(budget);
+
+			preparedTeams.add(team);
+
+			if (preparedTeams.size() == 3)
+				break;
+		}
+
+		while (preparedTeams.size() < 3)
+			preparedTeams.add(CpuTeamFactory.generatePopulatedCpuTeam(budget));
+
+		return preparedTeams;
+	}
+	
+	public abstract List<Team> getTeamsForNextGame();
+	public abstract void updateRecords(int gameWinner);
+	public abstract void updateTeam(int index, Team team);
+	
+	protected abstract ImageType getBackgroundImageType();
+	protected abstract ImageType getSelectScreenImageType();
 	protected abstract List<Point> getHelmetLocations();
-	
-	public void updateTeam(int index, Team team)
-	{
-		Logger.debug("Updating team with index [" + index + "], team is " + team);
-		
-		if (index < 0 || index >= MAX_TEAMS)
-		{
-			Logger.warn("Cannot update team at slot " + index + "; index is out of bounds.");
-			return;
-		}
-		
-		teams[index] = team;		//TODO: this doesn't QUITE work for the tournament screen, where the same team can be in both rounds
-		helmetImages[index] = null;
-		refreshHelmetImages();
-		updateScreenImage();
-	}
-
-//	public void updateTeamsFromDraft()
-//	{
-//		Logger.debug("Updating teams from draft.");
-//		List<Team> draftedTeams = draftManager.getAllTeams();
-//		
-//		for (int i = 0; i < draftedTeams.size(); i++)
-//			updateTeam(i, draftedTeams.get(i));
-//	}
-	
-	public Team getTeam(int index)
-	{
-		if (index < 0 || index >= MAX_TEAMS)
-		{
-			Logger.warn("Cannot get team at slot " + index + "; index is out of bounds.");
-			return null;
-		}
-		
-		return teams[index];
-	}
-	
-	public List<Team> getTeams()
-	{
-		List<Team> teamList = new ArrayList<Team>();
-		
-		for (int i = 0; i < getTotalTeams(); i++)
-			teamList.add(teams[i]);
-			
-		return teamList;
-	}
-	
-	public void setTeams(List<Team> newTeams)
-	{
-		for (int i = 0; i < newTeams.size(); i++)
-		{
-			teams[i] = newTeams.get(i);
-		}
-	}
-
-	public int getBudget()
-	{
-		return 900;
-	}
-
-	public int getGoal()
-	{
-		return 1;
-	}
-	
-	public boolean isSeasonStarted()
-	{
-		return teamRecordTracker.seasonStarted();
-	}
-	
-//	public DraftManager getDraftManager()
-//	{
-//		return draftManager;
-//	}
-	
-	public abstract boolean isGameReadyToStart();
-	protected abstract int getTotalTeams();
-	public abstract void updateTeamRecords(int winningTeamIndex);
-	public abstract int getSeasonWinner();
-	
-	@Override
-	public void resetScreen()
-	{
-		for (int i = 0; i < MAX_TEAMS; i++)
-		{
-			teams[i] = new Team();
-			helmetImages[i] = null;
-		}
-		
-		refreshHelmetImages();
-//		draftManager.setupNewDraft();
-		
-		//also reset budget, goal, editable, etc.
-	}
-
-	@Override
-	protected void handleCommand(ScreenCommand command) {}
-	
-	@Override
-	protected void handleKeyCommand(KeyCommand command) {}
+	protected abstract List<Point> getTeamNameLocations();
+	protected abstract List<GameText> getScreenTexts();
 }

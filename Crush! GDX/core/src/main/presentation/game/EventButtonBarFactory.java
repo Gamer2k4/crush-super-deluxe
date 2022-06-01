@@ -106,6 +106,12 @@ public class EventButtonBarFactory
 		generateTeamBanners();
 	}
 	
+	public void endGame()
+	{
+		data = null;
+		ballFound = false;
+	}
+	
 	public void setBallFound()
 	{
 		ballFound = true;
@@ -233,7 +239,7 @@ public class EventButtonBarFactory
 	{
 		for (Player player : data.getAllPlayers())
 		{
-			if (player.isInGame())
+			if (player != null && player.isInGame())
 			{
 				Color pointColor = data.getTeamOfPlayer(player).teamColors[0];	// TODO: see if the ball carrier is a different color
 				Point location = data.getLocationOfPlayer(player);

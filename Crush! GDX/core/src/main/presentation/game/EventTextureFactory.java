@@ -57,6 +57,16 @@ public class EventTextureFactory
 		refreshTileSprites();
 		generatePlayerSprites();
 	}
+	
+	public void endGame()
+	{
+		tileSpritesAtArenaLocation.clear();
+		playerSpritesAtArenaLocation.clear();
+		playerSpritesByPlayer.clear();
+		elevatedSprites.clear();
+		highlightsToDisplay.clear();
+		moveTrack.clear();
+	}
 
 	public void setMoveTrack(List<Point> movePossibilities)
 	{
@@ -226,6 +236,13 @@ public class EventTextureFactory
 		
 		for (Player player : players)
 		{
+			//I think this can happen if a team is incomplete when a game begins, which is fine - probably not even a warning, but it's fine for now
+			if (player == null)
+			{
+				Logger.warn("Null player passed in when generating sprites, skipping to next player.");
+				continue;
+			}
+			
 			CrushPlayerSprite sprite = new CrushPlayerSprite(data.getTeamOfPlayer(player), player.getRace());
 			sprite.setArenaPosition(OFFSCREEN_COORDS);
 			playerSpritesAtArenaLocation.put(OFFSCREEN_COORDS, sprite);
@@ -233,8 +250,8 @@ public class EventTextureFactory
 		}
 	}
 	
-	//TODO: concurrent modification exception is possible here, though I have no idea how
-	public List<CrushSprite> getPlayerSprites()
+	@Deprecated
+	public List<CrushSprite> getPlayerSprites_notConcurrentSafe()
 	{
 		List<CrushSprite> playerSpriteList = new ArrayList<CrushSprite>();
 		
@@ -248,6 +265,36 @@ public class EventTextureFactory
 			if (playerSprite != null)
 				playerSpriteList.add(playerSprite);
 		}
+		
+		return playerSpriteList;
+	}
+	
+	public List<CrushSprite> getPlayerSprites()
+	{
+		List<CrushSprite> playerSpriteList = new ArrayList<CrushSprite>();
+		
+		Iterator<Point> iter = null;
+		
+		do {
+			try {
+				iter = playerSpritesAtArenaLocation.keySet().iterator();
+		
+				while (iter.hasNext()) {
+					Point coords = iter.next();
+					
+					if (coords.x < 0 || coords.y < 0 || coords.x >= 30 || coords.y >= 30)
+						continue;
+					
+					CrushPlayerSprite playerSprite = playerSpritesAtArenaLocation.get(coords);
+					
+					if (playerSprite != null)
+						playerSpriteList.add(playerSprite);
+				}
+			} catch (ConcurrentModificationException cme)
+			{
+				iter = null;
+			}
+		} while (iter == null);
 		
 		return playerSpriteList;
 	}
@@ -339,6 +386,13 @@ public class EventTextureFactory
 		
 		for (Player player : data.getAllPlayers())
 		{
+			//I think this can happen if a team is incomplete when a game begins, which is fine - probably not even a warning, but it's fine for now
+			if (player == null)
+			{
+//				Logger.warn("Null player passed in when generating hovering sprites, skipping to next player.");
+				continue;
+			}
+			
 			if (player.status == Player.STS_STUN_DOWN || player.status == Player.STS_STUN_SIT)
 			{
 				CrushTile stunStars = CrushTile.createTile(OFFSCREEN_COORDS, TileSpriteType.STUN_STARS);
@@ -358,6 +412,32 @@ public class EventTextureFactory
 		return elevatedSprites;
 	}
 	
+	@Deprecated
+	public Point getSpriteCoordsOfPlayer_notConcurrentSafe(Player player)
+	{
+		if (player == null)
+		{
+			Logger.warn("Null player passed in for EventTextureFactory.getSpriteCoordsOfPlayer(); returning " + OFFSCREEN_COORDS);
+			return OFFSCREEN_COORDS;
+		}
+		
+		CrushPlayerSprite playerSprite = playerSpritesByPlayer.get(player);
+		
+		if (playerSprite == null)
+			throw new IllegalArgumentException("Could not get sprite arena coordinates for player [" + player + "]; no sprite was found");
+		
+		//can throw concurrentModificationException
+		for (Point key : playerSpritesAtArenaLocation.keySet())
+		{
+			CrushPlayerSprite spriteToCheck = playerSpritesAtArenaLocation.get(key);
+			
+			if (spriteToCheck == playerSprite)	//yes, we want actual object equality here, not just identical values
+				return key;
+		}
+		
+		return OFFSCREEN_COORDS;
+	}
+	
 	public Point getSpriteCoordsOfPlayer(Player player)
 	{
 		if (player == null)
@@ -371,13 +451,24 @@ public class EventTextureFactory
 		if (playerSprite == null)
 			throw new IllegalArgumentException("Could not get sprite arena coordinates for player [" + player + "]; no sprite was found");
 		
-		for (Point key : playerSpritesAtArenaLocation.keySet())
-		{
-			CrushPlayerSprite spriteToCheck = playerSpritesAtArenaLocation.get(key);
-			
-			if (spriteToCheck == playerSprite)	//yes, we want actual object equality here, not just identical values
-				return key;
-		}
+		Iterator<Point> iter = null;
+		
+		do {
+			try {
+				iter = playerSpritesAtArenaLocation.keySet().iterator();
+		
+				while (iter.hasNext()) {
+					Point key = iter.next();
+					CrushPlayerSprite spriteToCheck = playerSpritesAtArenaLocation.get(key);
+					
+					if (spriteToCheck == playerSprite)	//yes, we want actual object equality here, not just identical values
+						return key;
+				}
+			} catch (ConcurrentModificationException cme)
+			{
+				iter = null;
+			}
+		} while (iter == null);
 		
 		return OFFSCREEN_COORDS;
 	}
@@ -453,8 +544,8 @@ public class EventTextureFactory
 		playerSpritesAtArenaLocation.put(sprite.getArenaPosition(), sprite);
 	}
 	
-	//TODO: this can throw a concurrent modification exception
-	private boolean removePlayerSpriteFromCoordsMap(CrushPlayerSprite spriteToRemove)
+	@Deprecated
+	private boolean removePlayerSpriteFromCoordsMap_notConcurrentSafe(CrushPlayerSprite spriteToRemove)
 	{
 		Point locationOfSpriteToRemove = null;
 		
@@ -477,6 +568,40 @@ public class EventTextureFactory
 		playerSpritesAtArenaLocation.remove(locationOfSpriteToRemove);
 		return true;
 	}
+	
+	private boolean removePlayerSpriteFromCoordsMap(CrushPlayerSprite spriteToRemove)
+	{
+		Point locationOfSpriteToRemove = null;
+		Iterator<Point> iter = null;
+		
+		//the player sprite may not be in the coordinations map if it's offscreen; however, it if is there, remove it so it can be re-added.
+		do {
+			try {
+				iter = playerSpritesAtArenaLocation.keySet().iterator();
+				
+				while (iter.hasNext()) {
+					Point key = iter.next();
+					
+					CrushPlayerSprite spriteToCheck = playerSpritesAtArenaLocation.get(key);
+					
+					if (spriteToCheck == spriteToRemove)	//yes, we want actual object equality here, not just identical values
+					{
+						locationOfSpriteToRemove = key;
+						break;
+					}
+				}
+			} catch (ConcurrentModificationException cme)
+			{
+				iter = null;
+			}
+		} while (iter == null);
+		
+		if (locationOfSpriteToRemove == null)
+			return false;
+		
+		playerSpritesAtArenaLocation.remove(locationOfSpriteToRemove);
+		return true;
+	}	
 	
 	public Facing getBinSpriteFacing(Point coords)
 	{

@@ -16,6 +16,8 @@ public interface Data
 	public void newGame(List<Team> allThreeTeams);
 
 	public void newGame(List<Team> allThreeTeams, Integer fieldNum);
+	
+	public void endGame(int winningTeam);
 
 	public int getNextStateForRecoveringPlayer(Player player);
 	

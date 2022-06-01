@@ -2,7 +2,6 @@ package main.execute;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.Game;
@@ -12,8 +11,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
+import main.data.Data;
+import main.data.DataImpl;
 import main.data.entities.Team;
-import main.data.factory.CpuTeamFactory;
 import main.logic.Client;
 import main.logic.Randomizer;
 import main.logic.Server;
@@ -53,6 +53,7 @@ public class CrushGame extends Game implements ActionListener
 	private OrthographicCamera fixedCamera;
 	
 	private boolean gameIsActive = false;
+	private ScreenType gameSourceScreen = null;
 
 	@Override
 	public void create()
@@ -64,6 +65,11 @@ public class CrushGame extends Game implements ActionListener
 		GameScreenManager.getInstance().initializeScreens(this);
 		setScreen(GameScreenManager.getInstance().getScreen(ScreenType.GAME_SELECT));
 		AudioManager.getInstance().loopSound(SoundType.THEME);
+	}
+	
+	private void setScreen(ScreenType screen)
+	{
+		setScreen(GameScreenManager.getInstance().getScreen(screen));
 	}
 
 	@Override
@@ -185,17 +191,18 @@ public class CrushGame extends Game implements ActionListener
 		return (GameScreen) getScreen();
 	}
 
-	private void prepareNewGame(AbstractTeamSelectScreen sourceScreen)
+	private void prepareNewGame()
 	{
+		if (gameSourceScreen == null)
+		{
+			Logger.error("Cannot start a game without a source screen to return to!");
+			return;
+		}
+		
 		AudioManager.getInstance().stopSound(SoundType.THEME);
 		
-//		List<Team> gameTeams = getTeamsForGameStart(sourceScreen.getTeams(), sourceScreen.getBudget());
-		List<Team> rawTeams = new ArrayList<Team>();
-		rawTeams.add(new Team());
-		rawTeams.add(new Team());
-		rawTeams.add(new Team());
-		
-		List<Team> gameTeams = getTeamsForGameStart(rawTeams, 900);
+		AbstractTeamSelectScreen sourceScreen = (AbstractTeamSelectScreen)GameScreenManager.getInstance().getScreen(gameSourceScreen);
+		List<Team> gameTeams = sourceScreen.getTeamsForNextGame();
 		int arenaIndex = gameTeams.get(0).homeField;		//TODO: update this for playoffs
 		
 		if (DebugConstants.ARENA_OVERRIDE != -1)
@@ -229,10 +236,47 @@ public class CrushGame extends Game implements ActionListener
 		host.newGame(EventDetails.getTeams(), EventDetails.getArenaIndex());
 
 		//TODO: set this elsewhere
+		/* DEBUG */ EventDetails.getTeams().get(0).humanControlled = false;
 		/* DEBUG */ EventDetails.getTeams().get(1).humanControlled = false;
 		/* DEBUG */ EventDetails.getTeams().get(2).humanControlled = false;
 		
 		client.getGui().beginGame();
+	}
+
+	private void endCurrentGame()
+	{
+		gameIsActive = false;
+		host.endGame();
+		Data data = host.getData();
+		int gameWinner = data.getWinningTeamIndex();
+		
+		if (gameWinner == DataImpl.GAME_IN_PROGRESS)
+		{
+			gameWinner = DataImpl.GAME_CANCELLED;
+			data.endGame(gameWinner);
+		}
+		
+		Logger.output("Game is done, winning team is: " + data.getWinningTeamIndex());
+		
+		if (gameSourceScreen == null)
+		{
+			Logger.error("No source screen to return to; exiting game.");
+			Gdx.app.exit();
+		}
+		
+		AbstractTeamSelectScreen sourceScreen = (AbstractTeamSelectScreen)GameScreenManager.getInstance().getScreen(gameSourceScreen);
+		sourceScreen.updateRecords(gameWinner);
+		
+		if (gameWinner != DataImpl.GAME_CANCELLED)
+		{
+			//I'll probably need to update this if Data shuffles the teams at the start of the game
+			sourceScreen.updateTeam(0, data.getTeam(0));
+			sourceScreen.updateTeam(1, data.getTeam(1));
+			sourceScreen.updateTeam(2, data.getTeam(2));
+		}
+		
+		setScreen(gameSourceScreen);
+		gameSourceScreen = null;
 	}
 
 	private void randomizeEventBackgroundImage()
@@ -245,27 +289,6 @@ public class CrushGame extends Game implements ActionListener
 			eventScreen.setBackgroundImage(ImageType.MAP_LAVA_BG);
 		else
 			eventScreen.setBackgroundImage(ImageType.MAP_STARS_BG);
-	}
-
-	private List<Team> getTeamsForGameStart(List<Team> rawTeams, int budget)
-	{
-		List<Team> preparedTeams = new ArrayList<Team>();
-
-		for (Team team : rawTeams)
-		{
-			if (team.isBlankTeam())
-				team = CpuTeamFactory.generatePopulatedCpuTeam(budget);
-
-			preparedTeams.add(team);
-
-			if (preparedTeams.size() == 3)
-				break;
-		}
-
-		while (preparedTeams.size() < 3)
-			preparedTeams.add(null);
-
-		return preparedTeams;
 	}
 
 	@Override
@@ -283,15 +306,30 @@ public class CrushGame extends Game implements ActionListener
 		case EXIT:
 			Gdx.app.exit();
 			break;
-		case EXHIBITION_PREGAME:
-			setScreen(GameScreenManager.getInstance().getScreen(ScreenType.EXHIBITION_PREGAME_SCREEN));
+		case MAIN_SCREEN:
 			activeScreen.reset();
-			prepareNewGame(null);
+			setScreen(ScreenType.GAME_SELECT);
+			activeScreen.reset();
+			break;
+		case EXHIBITION_TEAM_SELECT:
+			setScreen(ScreenType.EXHIBITION_TEAM_SELECT);
+			break;
+		case EXHIBITION_PREGAME:
+			gameSourceScreen = ScreenType.EXHIBITION_TEAM_SELECT; 
+			setScreen(ScreenType.EXHIBITION_PREGAME_SCREEN);
+			activeScreen.reset();
+			prepareNewGame();
 			break;
 		case BEGIN_GAME:
 			AudioManager.getInstance().stopSound(SoundType.PREGAME);
 			AudioManager.getInstance().loopSound(SoundType.CROUD);
 			beginNewGame();
+			break;
+		case END_GAME:
+			AudioManager.getInstance().stopSound(SoundType.VICTORY);
+			AudioManager.getInstance().stopSound(SoundType.CROUD);
+			AudioManager.getInstance().loopSound(SoundType.THEME);
+			endCurrentGame();
 			break;
 		}
 	}

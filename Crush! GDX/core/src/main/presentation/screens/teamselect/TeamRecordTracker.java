@@ -70,6 +70,7 @@ public class TeamRecordTracker
 	}
 	
 	//returns true if there is at least one team and that team has at least one win, loss, or tie
+	//TODO: this isn't actually correct; the season can be started (and teams made uneditable) without any games finished
 	public boolean seasonStarted()
 	{
 		if (teamRecords.size() > 0)

@@ -7,6 +7,9 @@ import java.util.Map;
 import com.badlogic.gdx.Game;
 
 import main.presentation.ImageType;
+import main.presentation.screens.teamselect.ExhibitionTeamSelectScreen;
+import main.presentation.screens.teamselect.LeagueTeamSelectScreen;
+import main.presentation.screens.teamselect.TournamentTeamSelectScreen;
 
 public class GameScreenManager
 {
@@ -33,7 +36,7 @@ public class GameScreenManager
 	{
 		allScreens.clear();
 		allScreens.put(ScreenType.GAME_SELECT, new GameSelectScreen(game, (ActionListener) game));
-		allScreens.put(ScreenType.EXHIBITION_TEAM_SELECT, new ExhibitionTeamSelectScreen(game));
+		allScreens.put(ScreenType.EXHIBITION_TEAM_SELECT, new ExhibitionTeamSelectScreen(game, (ActionListener) game));
 		allScreens.put(ScreenType.TOURNAMENT_TEAM_SELECT, new TournamentTeamSelectScreen(game));
 		allScreens.put(ScreenType.LEAGUE_TEAM_SELECT, new LeagueTeamSelectScreen(game));
 		allScreens.put(ScreenType.EXHIBITION_PREGAME_SCREEN, new PregameScreen(game, (ActionListener) game, ImageType.SCREEN_EXHIBITION_PREGAME));

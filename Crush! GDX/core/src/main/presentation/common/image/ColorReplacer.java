@@ -74,8 +74,8 @@ public class ColorReplacer extends AbstractColorReplacer
 		
 		int darken = 7 - level;
 		
-		if (level < 4)
-			darken = 8 - level;
+//		if (level < 4)
+//			darken = 8 - level;
 		
 		if (!TeamColorType.isValidLegacyTeamColor(color))
 			return super.darkenColor(color, level);		//darken mathematically, rather than using specific replacement colors

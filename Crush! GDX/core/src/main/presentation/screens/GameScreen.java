@@ -15,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
 import main.presentation.CursorManager;
+import main.presentation.common.Logger;
 import main.presentation.game.GameText;
 import main.presentation.game.StaticImage;
 import main.presentation.game.sprite.CrushSprite;
@@ -44,7 +45,20 @@ public abstract class GameScreen implements Screen
 	@Override
 	public void resize(int width, int height)
 	{
-		stage.getViewport().update(width, height, true);
+		try
+		{
+			stage.getViewport().update(width, height, true);
+		}
+		catch (RuntimeException re)
+		{
+			if (re.getMessage() != null && re.getMessage().contains("No OpenGL context found in the current thread"))
+			{
+				Logger.warn("GameScreen - Hiding OpenGL exception.");
+				return;
+			}
+			
+			throw re;
+		}
 	}
 
 	@Override

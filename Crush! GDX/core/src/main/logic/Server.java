@@ -16,6 +16,7 @@ import main.data.Event;
 import main.data.entities.Team;
 import main.logic.AI.AI;
 import main.logic.AI.BasicAI;
+import main.presentation.common.Logger;
 
 //TODO: the AI timer is probably in the wrong place, but it should be done on the server, and it doesn't really quite fit into the
 //		engine (whose only job is to act on received events)
@@ -41,7 +42,7 @@ public class Server implements ActionListener
 		
 		ai = new BasicAI(dataLayer);
 		aiTimer = new Timer(250, this);
-		aiTimer.start();
+		aiTimer.stop();
 	}
 	
 	public void newGame(List<Team> teams)
@@ -53,6 +54,7 @@ public class Server implements ActionListener
 	{
 //		presentationLayer = new ServerJFrameGUI(this);		//TODO: put this someplace else
 		
+		aiTimer.start();
 		dataLayer.newGame(teams, fieldnum);
 		
 		for (Client c : connectedClients)
@@ -65,6 +67,9 @@ public class Server implements ActionListener
 	
 	public void endGame()
 	{
+		aiTimer.stop();
+		//probably should send "end game" commands to connected clients
+		connectedClients.clear();
 //		presentationLayer.closeGUI();
 	}
 	
@@ -131,7 +136,7 @@ public class Server implements ActionListener
 			return;
 		
 		Event event = ai.generateEvent();
-		System.out.println("AI has generated an event: " + event);
+		Logger.debug("AI has generated an event: " + event);
 		
 		if (event != null)
 			receiveCommand(event);

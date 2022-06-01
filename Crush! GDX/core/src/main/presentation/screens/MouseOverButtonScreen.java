@@ -40,7 +40,7 @@ public abstract class MouseOverButtonScreen extends GameScreen
 
 			@Override
 			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button)
-			{				
+			{
 				return true;
 			}
 		});

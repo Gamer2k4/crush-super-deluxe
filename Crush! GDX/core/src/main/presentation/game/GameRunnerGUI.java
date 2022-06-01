@@ -312,7 +312,7 @@ public abstract class GameRunnerGUI extends GameGUI
 		if (!canCurrentPlayerAct())
 			return false;
 
-		System.out.println("CLIENT - HANDOFF CHECK: acted bool has a value of " + ballCarrierHasActedAfterReceivingBall);
+		Logger.debug("CLIENT - HANDOFF CHECK: acted bool has a value of " + ballCarrierHasActedAfterReceivingBall);
 		if (!ballCarrierHasActedAfterReceivingBall && getData().getBallCarrier() == currentPlayer && currentPlayer.currentAP >= 10)
 			return true;
 		return false;

@@ -44,7 +44,7 @@ public class Arena implements Serializable
 	
 	public static final int ARENA_DIMENSIONS = 30;
 	
-	private static boolean ballFound = false;	//TODO: i really don't like that this is static
+	private boolean ballFound = false;
 	private int index;
 	private String name;
 	

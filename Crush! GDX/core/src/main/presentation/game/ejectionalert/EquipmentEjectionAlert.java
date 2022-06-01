@@ -1,7 +1,6 @@
 package main.presentation.game.ejectionalert;
 
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +20,7 @@ public class EquipmentEjectionAlert extends EjectionAlert
 	
 	public EquipmentEjectionAlert(Data data, Event event)
 	{
-		super(ImageType.EJECT_REF, new Rectangle(0, 0, 160, 65));
+		super(ImageType.EJECT_REF, 160, 65);
 		
 		Player player = data.getPlayer(event.flags[0]);
 		Team team = data.getTeamOfPlayer(player);

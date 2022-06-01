@@ -1,7 +1,6 @@
 package main.presentation.game.ejectionalert;
 
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +20,7 @@ public abstract class MedicalEjectionAlert extends EjectionAlert
 	
 	protected MedicalEjectionAlert(ImageType imageType, Data data, Event event)
 	{
-		super(imageType, new Rectangle(0, 0, 160, 83));
+		super(imageType, 160, 83);
 		defineGameTexts(data, event);
 	}
 

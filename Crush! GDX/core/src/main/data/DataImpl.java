@@ -34,6 +34,7 @@ public class DataImpl implements Data
 	
 	public static final int TIE_GAME = -1;
 	public static final int GAME_IN_PROGRESS = -2;
+	public static final int GAME_CANCELLED = -3;
 	public static final int TEAM_SIZE = 9;
 	
 	public static final int AP_MOVE_COST = 10;
@@ -229,13 +230,17 @@ public class DataImpl implements Data
 		if (player == null)
 			return null;
 		
-		if (player.getStatus() == Player.STS_OKAY || player.getStatus() == Player.STS_DOWN || player.getStatus() == Player.STS_STUN_DOWN)
+		if (player.getStatus() == Player.STS_OKAY || player.getStatus() == Player.STS_DOWN
+				|| player.getStatus() == Player.STS_STUN_DOWN || player.getStatus() == Player.STS_STUN_SIT)
 			player.status = Player.STS_DECK;
+		else
+			player.recoverInjuries(1);	//okay to do it here, because if the game is cancelled, it all gets undone anyway
 		
 		return player;
 	}
 
-	private void endGame(int winningTeam)
+	@Override
+	public void endGame(int winningTeam)
 	{
 		gameActive = false;
 		
@@ -278,9 +283,6 @@ public class DataImpl implements Data
 					
 					player = null;						//TODO: if halls of fame exist, keep track of the player still
 				}
-				
-				if (player != null)
-					player.recoverInjuries(1);
 				
 				team.setPlayer(j - startingIndex, player);
 			}

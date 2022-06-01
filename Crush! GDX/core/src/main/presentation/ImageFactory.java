@@ -1,5 +1,6 @@
 package main.presentation;
 
+import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,7 +11,10 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
+import main.presentation.common.image.AbstractColorReplacer;
+import main.presentation.common.image.ColorReplacer;
 import main.presentation.common.image.ImageUtils;
+import main.presentation.legacy.common.LegacyUiConstants;
 
 public class ImageFactory
 {
@@ -19,6 +23,8 @@ public class ImageFactory
 	private Map<ImageType, Drawable> images = null;
 	private Map<ImageType, Texture> textures = null;
 	private Map<ImageType, Pixmap> cursorImages = null;
+	
+	private AbstractColorReplacer colorReplacer = ColorReplacer.getInstance();
 	
 	protected ImageFactory()
 	{
@@ -55,6 +61,7 @@ public class ImageFactory
 		textures = new HashMap<ImageType, Texture>();
 		cursorImages = new HashMap<ImageType, Pixmap>();
 		
+		addBackgrounds();
 		addScreens();
 		addArenas();
 		addMainButtons();
@@ -65,15 +72,37 @@ public class ImageFactory
 		addPopupImages();
 		addSprites();
 		addProfiles();
+		addScreenButtons();
+//		extractButtonHighlights();
 		
 		addImage(ImageType.GEAR_ALLGEAR, "general/gear.png");
+//		addImage(ImageType.EDITOR_HELMET, "screens/editor_helmet.png");
+//		images.put(ImageType.EDITOR_HELMET, new TextureRegionDrawable(new TextureRegion(textures.get(ImageType.SCREEN_EXHIBITION_TEAM_SELECT), 305, 142, 30, 30)));
+		
+		Pixmap editorHelmet = ImageUtils.extractPixmapFromTextureRegion(new TextureRegion(textures.get(ImageType.SCREEN_EXHIBITION_TEAM_SELECT), 305, 142, 30, 30));
+		textures.put(ImageType.EDITOR_HELMET, new Texture(editorHelmet));
+	}
+
+	private void addBackgrounds()
+	{
+		addImage(ImageType.BG_BG1, "screens/backgrounds/bg1.png");
+		addImage(ImageType.BG_BG2, "screens/backgrounds/bg2.png");
+		addImage(ImageType.BG_BG3, "screens/backgrounds/bg3.png");
+		addImage(ImageType.BG_BG4, "screens/backgrounds/bg4.png");
+		addImage(ImageType.BG_BG5, "screens/backgrounds/bg5.png");
+		addImage(ImageType.BG_BG6, "screens/backgrounds/bg6.png");
+		addImage(ImageType.BG_BG7, "screens/backgrounds/bg7.png");
+		addImage(ImageType.BG_BG8, "screens/backgrounds/bg8.png");
 	}
 
 	private void addScreens()
 	{
 		addImage(ImageType.MAIN_MENU, "screens/main.png");
+		addImage(ImageType.SCREEN_EXHIBITION_TEAM_SELECT, "screens/mexb.png");
 		addImage(ImageType.SCREEN_EXHIBITION_PREGAME, "screens/pregamee.png");
+		addImage(ImageType.SCREEN_TOURNAMENT_TEAM_SELECT, "screens/tourn2.png");
 		addImage(ImageType.SCREEN_TOURNAMENT_PREGAME, "screens/pregamet.png");
+		addImage(ImageType.SCREEN_LEAGUE_TEAM_SELECT, "screens/league1.png");
 		addImage(ImageType.SCREEN_LEAGUE_PREGAME, "screens/pregamel.png");
 	}
 
@@ -163,12 +192,11 @@ public class ImageFactory
 
 	private void addPopupImages()
 	{
+		addImage(ImageType.BLACK_SCREEN, "eventoverlays/black_screen.png");
 		addImage(ImageType.EJECT_INJURY, "eventoverlays/doctor.png");
 		addImage(ImageType.EJECT_KILL, "eventoverlays/death.png");
 		addImage(ImageType.EJECT_BLOB, "eventoverlays/mutation.png");
 		addImage(ImageType.EJECT_REF, "eventoverlays/ref.png");
-		addImage(ImageType.EJECT_TEXTBOX, "eventoverlays/ejection_textbox.png");
-		addImage(ImageType.NEW_TURN_TEXTBOX, "eventoverlays/new_turn_textbox.png");
 	}
 
 	private void extractStatusLabels()
@@ -232,6 +260,45 @@ public class ImageFactory
 		addImage(ImageType.PROFILE_NYNAX, "profiles/nynax.png");
 		addImage(ImageType.PROFILE_SLITH, "profiles/slith.png");
 		addImage(ImageType.PROFILE_XJS9000, "profiles/xjs9000.png");
+	}
+	
+	private void addScreenButtons()
+	{
+		addImage(ImageType.BUTTON_72x17_NORMAL, "screens/buttons/button_72x17_normal.png");
+		addImage(ImageType.BUTTON_72x17_CLICKED, "screens/buttons/button_72x17_clicked.png");
+		addImage(ImageType.BUTTON_37x17_NORMAL, "screens/buttons/button_37x17_normal.png");
+		addImage(ImageType.BUTTON_37x17_CLICKED, "screens/buttons/button_37x17_clicked.png");
+	}
+	
+	private void extractButtonHighlights()
+	{
+		Color buttonColor = new Color(103, 120, 143);
+		Color lightColor = new Color(159, 159, 159);
+		Color darkColor = new Color(40, 48, 56);
+		
+		Texture sourceExhibImage = textures.get(ImageType.SCREEN_EXHIBITION_TEAM_SELECT);
+		
+		Pixmap smallButton2Pixmap = ImageUtils.extractPixmapFromTextureRegion(new TextureRegion(sourceExhibImage, 585, 342, 37, 17));
+		Texture smallButton2 = new Texture(smallButton2Pixmap);
+		smallButton2 = colorReplacer.replaceColor(smallButton2, buttonColor, LegacyUiConstants.COLOR_LEGACY_TRANSPARENT);
+		textures.put(ImageType.BUTTON_SMALL2_NORMAL, smallButton2);
+		textures.put(ImageType.BUTTON_SMALL2_CLICKED, swapColors(smallButton2, lightColor, darkColor));
+	}
+	
+	private Texture swapColors(Texture image, Color color1, Color color2)
+	{
+		Color swapColor = new Color(mid(color1.getRed(), color2.getRed()), mid(color1.getGreen(), color2.getGreen()), mid(color1.getBlue(), color2.getBlue()));
+		
+		Texture returnImage = colorReplacer.replaceColor(image, color1, swapColor);
+		returnImage = colorReplacer.replaceColor(returnImage, color2, color1);
+		returnImage = colorReplacer.replaceColor(returnImage, swapColor, color2);
+		
+		return returnImage;
+	}
+	
+	private int mid(int a, int b)
+	{
+		return (a + b) / 2;
 	}
 
 	private void generateCursorPixmap(ImageType imageType, String path)

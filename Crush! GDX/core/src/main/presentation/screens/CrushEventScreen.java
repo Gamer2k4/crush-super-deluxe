@@ -1,12 +1,8 @@
 package main.presentation.screens;
 
 import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.Timer;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -22,6 +18,8 @@ import com.badlogic.gdx.utils.SnapshotArray;
 import main.presentation.CursorManager;
 import main.presentation.ImageFactory;
 import main.presentation.ImageType;
+import main.presentation.audio.AudioManager;
+import main.presentation.audio.SoundType;
 import main.presentation.common.Logger;
 import main.presentation.common.ScreenCommand;
 import main.presentation.game.EventButtonBarFactory;
@@ -55,9 +53,11 @@ public class CrushEventScreen extends GameScreen
 	private boolean showStatsPanel = false;
 	private boolean showHelpPanel = false;
 	
+	private boolean escapeRegistered = false;
 	private boolean touchRegistered = false;
 	
 	private GdxGUI gui = null;
+	private Object currentMenu = null;
 
 	protected CrushEventScreen(Game sourceGame)
 	{
@@ -73,6 +73,13 @@ public class CrushEventScreen extends GameScreen
 
 	public void refreshTextures()
 	{
+		if (!isActive)
+		{
+			activeSprites.clear();
+			Logger.warn("CrushEventScreen is being asked to refresh textures when it's not active.");
+			return;
+		}
+		
 		Logger.info("Refreshing textures...");
 		activeSprites = gui.getActiveSprites();
 	}
@@ -104,8 +111,19 @@ public class CrushEventScreen extends GameScreen
 			camera.position.x = mapWidth - widthOffset;
 		if (camera.position.y > mapHeight - heightOffset)
 			camera.position.y = mapHeight - heightOffset;
+		
+		if (!escapeRegistered && Gdx.input.isKeyPressed(Keys.ESCAPE))
+			escapeRegistered = true;
+		
+		//TODO: this will never register in an all-CPU game 
+		if (escapeRegistered && gui.inputOkay())
+		{
+			escapeRegistered = false;
+			gui.endGame();
+			return;
+		}
 	}
-	
+
 	private void updateCursor()
 	{
 		if (gui.inputOkay())
@@ -148,6 +166,13 @@ public class CrushEventScreen extends GameScreen
 			touchRegistered = true;
 			
 			Point cursorCoords = convertMouseCoordinates(Gdx.input.getX(), Gdx.input.getY());
+
+			if (currentMenu != null)
+			{
+				//TODO: currentMenu.handleClick(cursorCoords)
+				touchRegistered = true;
+				return;
+			}
 			
 			if (cursorCoords.y > VIEWPORT_HEIGHT)
 				clickButtonBar(cursorCoords.x, cursorCoords.y - VIEWPORT_HEIGHT);
