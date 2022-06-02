@@ -74,7 +74,7 @@ public class LegacyTeamLoader extends ByteFileReader
 				Player.ATT_DA };
 		int[] injuryMap = { Player.INJURY_NONE, Player.INJURY_TRIVIAL, Player.INJURY_MINOR, Player.INJURY_CRIPPLING };
 
-		Player player = PlayerFactory.createEmptyPlayer();
+		Player player = PlayerFactory.getInstance().createEmptyPlayer();
 
 		int totalValue = readShortBytes(dis);
 		int skillPointsAvailable = readShortBytes(dis);

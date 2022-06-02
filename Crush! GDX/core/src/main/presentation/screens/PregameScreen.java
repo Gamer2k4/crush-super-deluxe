@@ -11,21 +11,22 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 
 import main.data.GameDataPreloader;
-import main.data.entities.Player;
 import main.data.entities.Team;
 import main.presentation.ImageFactory;
 import main.presentation.ImageType;
-import main.presentation.TeamColorsManager;
 import main.presentation.audio.AudioManager;
 import main.presentation.audio.SoundType;
 import main.presentation.common.ScreenCommand;
+import main.presentation.common.image.TeamLineupGenerator;
 import main.presentation.game.ArenaImageGenerator;
 import main.presentation.game.GameText;
+import main.presentation.game.StaticImage;
 
 public class PregameScreen extends MouseOverButtonScreen
 {
 	private ImageType backgroundImage;
 	private List<GameText> names = new ArrayList<GameText>();
+	private List<StaticImage> playerImages = new ArrayList<StaticImage>();
 
 	protected PregameScreen(Game sourceGame, ActionListener eventListener, ImageType backgroundImage)
 	{
@@ -47,7 +48,7 @@ public class PregameScreen extends MouseOverButtonScreen
 	{
 		startPreloadThread();
 		addArenaImage();
-		addPlayerImages();
+		definePlayerImages();
 		AudioManager.getInstance().playSound(SoundType.PREGAME);		//done here because the screen won't show up until at least the player profile images are loaded
 		addTeamAndArenaNames();
 	}
@@ -99,42 +100,27 @@ public class PregameScreen extends MouseOverButtonScreen
 		stage.addActor(arenaImage);
 	}
 
-	private void addPlayerImages()
+	private void definePlayerImages()
 	{
 		List<Team> teams = EventDetails.getTeams();
+		playerImages.clear();
 		
 		for (int t = 0; t < teams.size(); t++)
 		{
 			Team team = teams.get(t);
-			
-			for (int i = 8; i >= 0; i--)
-			{
-				Player player = team.getPlayer(i);
-				
-				if (player == null)
-					continue;
-				
-				if (player.getWeeksOut() > 0)	//I think the original game shows players that have one week left as well, though that may be a mistake on their part
-					continue;
-				
-				Image playerImage = new Image(TeamColorsManager.getInstance().getPlayerImage(team, player.getRace()));
-				
-				int positionIndex = (i + 1) / 2;	//integer division rounds this down
-				int indexMultiplier = 1;
-				
-				if (i % 2 == 0)
-					indexMultiplier = -1;
-				
-				playerImage.setPosition(275 + (indexMultiplier * 45 * positionIndex), (129 * (3 - t) - 108));
-				stage.addActor(playerImage);
-			}
-		}
-			
+			playerImages.addAll(TeamLineupGenerator.getLineup(team, new Point(275, 129 * (3 - t) - 108), false));
+		}	
 	}
 	
 	@Override
 	public List<GameText> getStaticText()
 	{
 		return names;
+	}
+	
+	@Override
+	public List<StaticImage> getStaticImages()
+	{
+		return playerImages;
 	}
 }

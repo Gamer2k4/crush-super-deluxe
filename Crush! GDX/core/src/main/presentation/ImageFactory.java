@@ -73,9 +73,15 @@ public class ImageFactory
 		addSprites();
 		addProfiles();
 		addScreenButtons();
+		addAdjustableColorImages();
 //		extractButtonHighlights();
-		
+	}
+
+	private void addAdjustableColorImages()
+	{
 		addImage(ImageType.GEAR_ALLGEAR, "general/gear.png");
+		addImage(ImageType.COACH, "screens/coach.png");
+		
 //		addImage(ImageType.EDITOR_HELMET, "screens/editor_helmet.png");
 //		images.put(ImageType.EDITOR_HELMET, new TextureRegionDrawable(new TextureRegion(textures.get(ImageType.SCREEN_EXHIBITION_TEAM_SELECT), 305, 142, 30, 30)));
 		
@@ -104,6 +110,10 @@ public class ImageFactory
 		addImage(ImageType.SCREEN_TOURNAMENT_PREGAME, "screens/pregamet.png");
 		addImage(ImageType.SCREEN_LEAGUE_TEAM_SELECT, "screens/league1.png");
 		addImage(ImageType.SCREEN_LEAGUE_PREGAME, "screens/pregamel.png");
+		addImage(ImageType.SCREEN_VICTORY_EXHIBITION, "screens/victorye.png");
+		addImage(ImageType.SCREEN_VICTORY_TOURNAMENT, "screens/victoryt.png");
+		addImage(ImageType.SCREEN_VICTORY_LEAGUE, "screens/victoryl.png");
+		addImage(ImageType.SCREEN_CHAMPS, "screens/champs.png");
 	}
 
 	private void addArenas()

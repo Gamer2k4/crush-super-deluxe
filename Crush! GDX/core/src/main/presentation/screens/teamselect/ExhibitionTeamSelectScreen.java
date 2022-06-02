@@ -16,27 +16,57 @@ import main.presentation.common.ScreenCommand;
 import main.presentation.game.FontType;
 import main.presentation.game.GameText;
 import main.presentation.legacy.common.LegacyUiConstants;
+import main.presentation.screens.GameScreenManager;
+import main.presentation.screens.ScreenType;
+import main.presentation.screens.victory.ExhibitionVictoryScreen;
 
 public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 {
-	private List<ImageButton> buttons;
+	private static final int SETTINGS_Y = 366;
+	
+	private List<ImageButton> buttons = new ArrayList<ImageButton>();
+	private ImageButton startButton = null;
+	private ImageButton eventButton;
+	private ImageButton victoryButton;
+	
+	private GameText winRequirementText;
+	
+	private GameText winReq1;
+	private GameText winReq2;
+	private GameText winReq4;
+	private GameText winReqNA;
+	
+	private int winsNeeded = 1;
 	
 	public ExhibitionTeamSelectScreen(Game sourceGame, ActionListener eventListener)
 	{
 		super(sourceGame, eventListener, 3);
 		
-		buttons = new ArrayList<ImageButton>();
-		buttons.add(addButton(37, 585, 41, false, ScreenCommand.MAIN_SCREEN));
-		buttons.add(addButton(72, 486, 21, false, ScreenCommand.EXHIBITION_PREGAME));
+		eventButton = addButton(72, 486, 362, false, ScreenCommand.EXHIBITION_PREGAME);
+		victoryButton = addButton(72, 486, 362, false, ScreenCommand.EXHIBITION_VICTORY);
+		startButton = eventButton;
+		
+		buttons.add(addButton(37, 585, 342, false, ScreenCommand.MAIN_SCREEN));
+		buttons.add(addClickZone(198, 369, 45, 9, ScreenCommand.CHANGE_WIN_REQUIREMENT));
+		buttons.add(addClickZone(265, 369, 45, 9, ScreenCommand.CHANGE_BUDGET));
+		buttons.add(addClickZone(331, 369, 61, 9, ScreenCommand.CHANGE_PACE));
+		buttons.add(addClickZone(413, 369, 45, 9, ScreenCommand.CHANGE_TURNS));
+		
+		defineSettingsTexts();
 		
 		reset();
 	}
-	
+
 	@Override
 	public void reset()
 	{
 		clearTeams();
+		startButton = eventButton;
 		super.reset();
+		
+		winsNeeded = 1;
+		winRequirementText = winReq1;
+		eventCompleted = false;
 	}
 
 	@Override
@@ -56,9 +86,7 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 			teams[i].setTeam(teamsPlaying.get(i).clone());		//clone is important, so they don't get updated if the game is quit midway through
 		}
 		
-		super.reset();	//should refresh the helmet images
-		//TODO: THE ABOVE LINE CLEARS OUT THE BUTTONS!
-		//		figure out a way to reset the screen without clearing the teams
+		super.paintHelmetImages();	//not perfect, because it just paints them on top of the existing helmet actors, but it should be fine for now
 		
 		lockTeams();
 		return teamsPlaying;
@@ -94,9 +122,61 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 	}
 
 	@Override
-	protected ImageType getSelectScreenImageType()
+	protected ImageType getTeamSelectScreenImageType()
 	{
 		return ImageType.SCREEN_EXHIBITION_TEAM_SELECT;
+	}
+	
+	@Override
+	protected void defineSettingsTexts()
+	{
+		super.defineSettingsTexts();
+		
+		winReq1 = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "1 WIN");
+		int width = winReq1.getStringPixelLength();
+		winReq1.setCoords(new Point(198 + ((45 - width) / 2), SETTINGS_Y));
+
+		winReq2 = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "2 WINS");
+		width = winReq2.getStringPixelLength();
+		winReq2.setCoords(new Point(198 + ((45 - width) / 2), SETTINGS_Y));
+		
+		winReq4 = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "4 WINS");
+		width = winReq4.getStringPixelLength();
+		winReq4.setCoords(new Point(198 + ((45 - width) / 2), SETTINGS_Y));
+		
+		winReqNA = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "NA");
+		width = winReqNA.getStringPixelLength();
+		winReqNA.setCoords(new Point(198 + ((45 - width) / 2), SETTINGS_Y));
+		
+		winRequirementText = winReq1;
+	}
+
+	@Override
+	protected void setBudgetTextPosition()
+	{
+		budget600.setCoords(new Point(279, SETTINGS_Y));
+		budget900.setCoords(new Point(279, SETTINGS_Y));
+	}
+
+	@Override
+	protected void setPaceTextPosition()
+	{
+		int width = paceRelaxed.getStringPixelLength();
+		paceRelaxed.setCoords(new Point(331 + ((62 - width) / 2), SETTINGS_Y));
+		
+		width = paceStandard.getStringPixelLength();
+		paceStandard.setCoords(new Point(331 + ((62 - width) / 2), SETTINGS_Y));
+		
+		width = paceFrenzied.getStringPixelLength();
+		paceFrenzied.setCoords(new Point(331 + ((62 - width) / 2), SETTINGS_Y));
+	}
+
+	@Override
+	protected void setTurnsTextPosition()
+	{
+		turns20.setCoords(new Point(430, SETTINGS_Y));
+		turns25.setCoords(new Point(430, SETTINGS_Y));
+		turns15.setCoords(new Point(430, SETTINGS_Y));
 	}
 
 	@Override
@@ -112,6 +192,11 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 		
 		if (teamsLockedForEditing)
 			getTeamRecords(screenTexts);
+		
+		screenTexts.add(winRequirementText);
+		screenTexts.add(budgetText);
+		screenTexts.add(paceText);
+		screenTexts.add(turnsText);
 		
 		return screenTexts;
 	}
@@ -178,9 +263,55 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
-		//TODO: for now do nothing
-//		ScreenCommand command = ScreenCommand.fromActionEvent(e);
+		//if we're locked, no self-contained actions (that is, actions that apply only to this screen) should register
+		if (teamsLockedForEditing)
+			return;
+		
+		ScreenCommand command = ScreenCommand.fromActionEvent(e);
+		
+		switch(command)
+		{
+		case CHANGE_WIN_REQUIREMENT:
+			changeWinRequirement();
+			break;
+		case CHANGE_BUDGET:
+			changeBudget();
+			break;
+		case CHANGE_PACE:
+			changePace();
+			break;
+		case CHANGE_TURNS:
+			changeTurns();
+			break;
+		}
 	}
+
+	private void changeWinRequirement()
+	{
+		if (winsNeeded == 1)
+		{
+			winsNeeded = 2;
+			winRequirementText = winReq2;
+		}
+		else if (winsNeeded == 2)
+		{
+			winsNeeded = 4;
+			winRequirementText = winReq4;
+		}
+		else if (winsNeeded == 4)
+		{
+			winsNeeded = 0;
+			winRequirementText = winReqNA;
+		}
+		else if (winsNeeded == 0)
+		{
+			winsNeeded = 1;
+			winRequirementText = winReq1;
+		}
+	}
+
+	@Override
+	protected void setSimulationTextPosition() {}	//nothing to do on this screen
 
 	@Override
 	public void updateRecords(int gameWinner)
@@ -196,9 +327,21 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 				teams[i].addWin();
 			else
 				teams[i].addLoss();
+			
+			if (teams[i].isWinner(winsNeeded))
+				updateVictoryScreen(teams[i].getTeam());
 		}
-		
-		//TODO: record that the match has concluded, show a victory screen immediately, and show one every time the player tries to click "start game"
+	}
+
+	private void updateVictoryScreen(Team team)
+	{
+		ExhibitionVictoryScreen victoryScreen = (ExhibitionVictoryScreen) GameScreenManager.getInstance().getScreen(ScreenType.EXHIBITION_VICTORY);
+		victoryScreen.reset();
+		victoryScreen.setTeam(team);
+		startButton = victoryButton;
+		super.reset();	//to get the correct start button on the screen
+		lockTeams();	//to undo the unlock from reseting the parent screen
+		eventCompleted = true;
 	}
 
 	@Override
@@ -208,8 +351,21 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 	}
 
 	@Override
+	public ScreenType getVictoryScreenType()
+	{
+		return ScreenType.EXHIBITION_VICTORY;
+	}
+
+	@Override
 	protected List<ImageButton> getButtons()
 	{
-		return buttons;
+		List<ImageButton> allButtons = new ArrayList<ImageButton>();
+		
+		allButtons.addAll(buttons);
+		
+		if (startButton != null)
+			allButtons.add(startButton);
+		
+		return allButtons;
 	}
 }

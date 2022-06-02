@@ -7,9 +7,11 @@ import java.util.Map;
 import com.badlogic.gdx.Game;
 
 import main.presentation.ImageType;
+import main.presentation.common.ScreenCommand;
 import main.presentation.screens.teamselect.ExhibitionTeamSelectScreen;
 import main.presentation.screens.teamselect.LeagueTeamSelectScreen;
 import main.presentation.screens.teamselect.TournamentTeamSelectScreen;
+import main.presentation.screens.victory.ExhibitionVictoryScreen;
 
 public class GameScreenManager
 {
@@ -39,7 +41,8 @@ public class GameScreenManager
 		allScreens.put(ScreenType.EXHIBITION_TEAM_SELECT, new ExhibitionTeamSelectScreen(game, (ActionListener) game));
 		allScreens.put(ScreenType.TOURNAMENT_TEAM_SELECT, new TournamentTeamSelectScreen(game));
 		allScreens.put(ScreenType.LEAGUE_TEAM_SELECT, new LeagueTeamSelectScreen(game));
-		allScreens.put(ScreenType.EXHIBITION_PREGAME_SCREEN, new PregameScreen(game, (ActionListener) game, ImageType.SCREEN_EXHIBITION_PREGAME));
+		allScreens.put(ScreenType.EXHIBITION_PREGAME, new PregameScreen(game, (ActionListener) game, ImageType.SCREEN_EXHIBITION_PREGAME));
+		allScreens.put(ScreenType.EXHIBITION_VICTORY, new ExhibitionVictoryScreen(game, (ActionListener) game, ScreenCommand.EXHIBITION_TEAM_SELECT));
 		allScreens.put(ScreenType.GAME_PLAY, new CrushEventScreen(game));
 	}
 	

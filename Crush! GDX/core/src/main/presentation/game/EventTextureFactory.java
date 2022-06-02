@@ -449,7 +449,10 @@ public class EventTextureFactory
 		CrushPlayerSprite playerSprite = playerSpritesByPlayer.get(player);
 		
 		if (playerSprite == null)
-			throw new IllegalArgumentException("Could not get sprite arena coordinates for player [" + player + "]; no sprite was found");
+		{
+			Logger.warn("Could not get sprite arena coordinates for player [" + player + "]; no sprite was found. Returning " + OFFSCREEN_COORDS);
+			return OFFSCREEN_COORDS;
+		}
 		
 		Iterator<Point> iter = null;
 		

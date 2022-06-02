@@ -83,7 +83,7 @@ public class PlayerTextFactory
 	{
 		Color color = defaultColor;
 
-		Player basePlayer = PlayerFactory.createPlayerWithDefinedName(currentPlayer.getRace(), "BASE");
+		Player basePlayer = PlayerFactory.getInstance().createPlayerWithDefinedName(currentPlayer.getRace(), "BASE");
 		int baseAttribute = basePlayer.getAttributeWithoutModifiers(attribute);
 		int modifiedAttribute = currentPlayer.getAttributeWithModifiers(attribute);
 
@@ -103,7 +103,7 @@ public class PlayerTextFactory
 	{
 		Color color = defaultColor;
 
-		Player basePlayer = PlayerFactory.createPlayerWithDefinedName(currentPlayer.getRace(), "BASE");
+		Player basePlayer = PlayerFactory.getInstance().createPlayerWithDefinedName(currentPlayer.getRace(), "BASE");
 
 		int baseCost = basePlayer.getSalary();
 		int currentCost = currentPlayer.getSalary();

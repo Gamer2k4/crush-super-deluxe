@@ -42,7 +42,6 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	
 	private EventTextureFactory eventTextureFactory = EventTextureFactory.getInstance();
 	private EventButtonBarFactory eventButtonBarFactory = EventButtonBarFactory.getInstance();
-	private AudioManager audioManager = AudioManager.getInstance();
 	
 	private Timer eventPoller;
 	private Timer delayTimer;
@@ -224,8 +223,11 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	private void handleVictoryEvent(Event event)
 	{
 		getData().processEvent(event);
-		audioManager.playSound(SoundType.VICTORY);
 		activeAlert = new VictoryAlert(getData(), event);
+		
+		if (event.flags[0] != -1)	//don't play the victory theme if it was a tie
+			playSound(SoundType.VICTORY);
+		
 		startGameEndTimer();
 	}
 
@@ -273,6 +275,13 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		Player player = getData().getPlayer(event.flags[0]);
 		
 		CrushPlayerSprite playerSprite = eventTextureFactory.getPlayerSprite(player);
+		
+		if (playerSprite == null)
+		{
+			Logger.warn("Cannot change status of sprite for player " + player + "; EventTextureFactory returned null sprite.");
+			return;
+		}
+		
 		playerSprite.changeStatus(event);
 	}
 
@@ -552,10 +561,13 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	
 	private void showWarpAnimation(Point portalCoords)
 	{
+		if (CrushPlayerSprite.isAbstract)
+			return;
+		
 		CrushAnimatedTile warpAnimation = CrushAnimatedTile.warpAnimation();
 		warpAnimation.setArenaPosition(portalCoords);
 		activeOverlayAnimations.add(warpAnimation);
-		audioManager.playSound(SoundType.TP);
+		playSound(SoundType.TP);
 		refreshInterface();
 	}
 	
@@ -585,13 +597,13 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		if (result == 1)
 		{
 			eventButtonBarFactory.setBallFound();
-			audioManager.playSound(SoundType.SIREN);
+			playSound(SoundType.SIREN);
 			delay(250);
 			playerSprite.receiveBall();
 		}
 		else
 		{
-			audioManager.playSound(SoundType.HORN);
+			playSound(SoundType.HORN);
 			delay(1500);
 		}
 	}
@@ -601,6 +613,9 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		Facing binFacing = eventTextureFactory.getBinSpriteFacing(binLocation);
 		
 		if (binFacing == null)
+			return;
+		
+		if (CrushPlayerSprite.isAbstract)
 			return;
 		
 		animateBinPhase(binLocation, binFacing, 1);
@@ -630,7 +645,7 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 			
 			@Override
 			public void run() {
-	        	audioManager.playSound(SoundType.DING);
+	        	playSound(SoundType.DING);
 	        	dingSoundsPlayed++;
 	        	
 	        	if (dingSoundsPlayed >= frames)
@@ -651,26 +666,30 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		if (event.getType() != Event.EVENT_EJECT)
 			return;
 		
+		//don't show alerts in an abstract simulation
+		if (CrushPlayerSprite.isAbstract)
+			return;
+		
 		activeEjectEvent = event;
 		
 		if (event.flags[2] == Event.EJECT_BLOB)
 		{
-			audioManager.playSound(SoundType.MUTATE);
+			playSound(SoundType.MUTATE);
 			activeAlert = new MutationEjectionAlert(getData(), event);
 		}
 		else if (event.flags[2] == Event.EJECT_DEATH)
 		{
-			audioManager.playSound(SoundType.FATAL);
+			playSound(SoundType.FATAL);
 			activeAlert = new FatalityEjectionAlert(getData(), event);
 		}
 		else if (event.flags[2] == Event.EJECT_SERIOUS || event.flags[2] == Event.EJECT_TRIVIAL)
 		{
-			audioManager.playSound(SoundType.INJVOC);
+			playSound(SoundType.INJVOC);
 			activeAlert = new InjuryEjectionAlert(getData(), event);
 		}
 		else if (event.flags[2] == Event.EJECT_REF)
 		{
-			audioManager.playSound(SoundType.WHISTLE);
+			playSound(SoundType.WHISTLE);
 			activeAlert = new EquipmentEjectionAlert(getData(), event);
 		}
 	}
@@ -751,8 +770,6 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 			images.add(activeAlert.getImage());
 			images.add(activeAlert.getTextBox());
 		}
-		
-//		if ()
 		
 		return images;
 	}
@@ -851,7 +868,22 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		
 		for (int i = 0; i < activeSpriteAnimations.size(); i++)
 		{
-			CrushPlayerSprite animation = activeSpriteAnimations.get(i);
+			CrushPlayerSprite animation = null;
+			
+			try {
+				animation = activeSpriteAnimations.get(i);
+			} catch (IndexOutOfBoundsException ioobe)
+			{
+				Logger.warn("Index out of bounds exception when removing player animation!");
+				return;
+			}
+			
+			if (animation == null)
+			{
+				Logger.warn("Null animation found when removing finished animations; removing the null value.");
+				animation = new CrushPlayerSprite(null, null);	//this SHOULD cause it to hit the next if block, removing it
+				System.out.println(animation.isActive());
+			}
 			
 			if (!animation.isActive())
 			{
@@ -1117,6 +1149,9 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	
 	private void delay(int durationInMs)
 	{
+		if (CrushPlayerSprite.isAbstract)
+			return;
+		
 		TimerTask task = new TimerTask() {
 	        @Override
 			public void run() {
@@ -1131,6 +1166,14 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		while (delayTimerRunning)
 			refreshInterface();
 	}
+	
+	private void playSound(SoundType sound)
+	{
+		if (CrushPlayerSprite.isAbstract)
+			return;
+		
+		AudioManager.getInstance().playSound(sound);
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent e)
@@ -1143,16 +1186,16 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		int backgroundTrack = Randomizer.getRandomInt(1, 6);
 		
 		if (backgroundTrack == 1)
-			audioManager.playSound(SoundType.ORGAN1);
+			playSound(SoundType.ORGAN1);
 		else if (backgroundTrack == 2)
-			audioManager.playSound(SoundType.ORGAN2);
+			playSound(SoundType.ORGAN2);
 		else if (backgroundTrack == 3)
-			audioManager.playSound(SoundType.ORGAN3);
+			playSound(SoundType.ORGAN3);
 		else if (backgroundTrack == 4)
-			audioManager.playSound(SoundType.HOTDOGS);
+			playSound(SoundType.HOTDOGS);
 		else if (backgroundTrack == 5)
-			audioManager.playSound(SoundType.DRINKS);
+			playSound(SoundType.DRINKS);
 		else if (backgroundTrack == 6)
-			audioManager.playSound(SoundType.CLAP);
+			playSound(SoundType.CLAP);
 	}
 }

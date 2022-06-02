@@ -100,6 +100,12 @@ public class TeamColorsManager
 		return teamImageSource.getHelmetImage();
 	}
 	
+	public Texture getCoachImage(Team team)
+	{
+		TeamImages teamImageSource = getTeamImages(team);
+		return teamImageSource.getCoachImage();
+	}
+	
 	public Texture getSpriteSheet(ColorPairKey colorPair, Race race)
 	{
 		TeamImages teamImageSource = getTeamImages(colorPair);

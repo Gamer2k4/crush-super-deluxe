@@ -79,6 +79,13 @@ public class LegacyEngineImpl implements Engine
 		{
 			processAndOfferEvent(toRet, theCommand);
 			
+			//moving back to player 0 but there are no turns left
+			if (localData.getTurnsRemaining() == 0 && theCommand.flags[0] == 0)
+			{
+				toRet.offer(Event.victory(-1));
+				return toRet;
+			}
+			
 			int turnUser = theCommand.flags[0];
 			int startingIndex = turnUser * 9;
 			
@@ -415,7 +422,7 @@ public class LegacyEngineImpl implements Engine
 		//Check to see if the ball is at the goal in someone's control after this chain of events.
 		if (checkForVictory())
 		{
-			System.out.println("SOMEHOW checkForVictory() returned true.");
+			Logger.debug("checkForVictory() returned true.");
 			
 			int currentTeam = localData.getCurrentTeam();
 			toRet.offer(Event.victory(currentTeam));	//no need to process this one locally, since nothing can happen afterward

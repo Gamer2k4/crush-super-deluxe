@@ -9,6 +9,8 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 
+import main.data.entities.Pace;
+import main.data.entities.Simulation;
 import main.data.entities.Team;
 import main.data.factory.CpuTeamFactory;
 import main.presentation.ImageFactory;
@@ -16,6 +18,7 @@ import main.presentation.ImageType;
 import main.presentation.game.FontType;
 import main.presentation.game.GameText;
 import main.presentation.legacy.common.LegacyUiConstants;
+import main.presentation.screens.ScreenType;
 import main.presentation.screens.StandardButtonScreen;
 import main.presentation.teameditor.common.TeamUpdater;
 
@@ -25,7 +28,30 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 	protected TeamEntry[] teams;
 	protected TeamUpdater teamUpdater;
 	protected boolean teamsLockedForEditing = false;	//This just means the USER can't change anything anymore, include budget and the like.  The game is still free to do whatever.
-	protected int budget = 900;
+	protected int budget = 600;
+	protected Pace pace = Pace.RELAXED;
+	protected int turns = 20;
+	protected Simulation simulation = Simulation.ABSTRACT;
+	protected boolean eventCompleted = false;
+
+	protected GameText budgetText;
+	protected GameText paceText;
+	protected GameText turnsText;
+	protected GameText simulationText;
+	
+	protected GameText budget600;
+	protected GameText budget900;
+
+	protected GameText paceRelaxed;
+	protected GameText paceStandard;
+	protected GameText paceFrenzied;
+	
+	protected GameText turns20;
+	protected GameText turns25;
+	protected GameText turns15;
+	
+	protected GameText simulationAbstract;
+	protected GameText simulationDetailed;
 	
 	protected AbstractTeamSelectScreen(Game sourceGame, ActionListener eventListener, int totalTeams)
 	{
@@ -36,6 +62,31 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 		clearTeams();
 	}
 	
+	protected void defineSettingsTexts()
+	{
+		budget600 = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "600");
+		budget900 = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "900");
+		setBudgetTextPosition();
+		budgetText = budget600;
+		
+		paceRelaxed = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "RELAXED");
+		paceStandard = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "STANDARD");
+		paceFrenzied = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "FRENZIED");
+		setPaceTextPosition();
+		paceText = paceRelaxed;
+		
+		turns20 = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "20");
+		turns25 = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "25");
+		turns15 = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "15");
+		setTurnsTextPosition();
+		turnsText = turns20;
+		
+		simulationAbstract = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "ABSTRACT");
+		simulationDetailed = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "DETAILED");
+		setSimulationTextPosition();
+		simulationText = simulationAbstract;
+	}
+
 	protected void clearTeams()
 	{
 		teams = new TeamEntry[totalTeams];
@@ -49,10 +100,20 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 	@Override
 	public void reset()
 	{
+		//league will need to default this to 900 instead
+		budget = 600;
+		budgetText = budget600;
+		pace = Pace.RELAXED;
+		paceText = paceRelaxed;
+		turns = 20;
+		turnsText = turns20;
+		simulation = Simulation.ABSTRACT;
+		simulationText = simulationAbstract;
+		
 		teamsLockedForEditing = false;
 		stage.clear();
 		stage.addActor(new Image(ImageFactory.getInstance().getDrawable(getBackgroundImageType())));
-		stage.addActor(new Image(ImageFactory.getInstance().getDrawable(getSelectScreenImageType())));
+		stage.addActor(new Image(ImageFactory.getInstance().getDrawable(getTeamSelectScreenImageType())));
 		paintHelmetImages();
 		
 		for (ImageButton button : getButtons())
@@ -76,7 +137,17 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 		return budget;
 	}
 	
-	private void paintHelmetImages()
+	public Pace getPace()
+	{
+		return pace;
+	}
+	
+	public int getTurns()
+	{
+		return turns;
+	}
+	
+	protected void paintHelmetImages()
 	{
 		List<Point> helmetLocations = getHelmetLocations();
 		
@@ -124,7 +195,7 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 		for (Team team : rawTeams)
 		{
 			if (team.isBlankTeam())
-				team = CpuTeamFactory.generatePopulatedCpuTeam(budget);
+				team = CpuTeamFactory.getInstance().generatePopulatedCpuTeam(budget);
 
 			preparedTeams.add(team);
 
@@ -133,18 +204,81 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 		}
 
 		while (preparedTeams.size() < 3)
-			preparedTeams.add(CpuTeamFactory.generatePopulatedCpuTeam(budget));
+			preparedTeams.add(CpuTeamFactory.getInstance().generatePopulatedCpuTeam(budget));
 
 		return preparedTeams;
+	}
+
+	protected void changeBudget()
+	{
+		if (budget == 600)
+		{
+			budget = 900;
+			budgetText = budget900;
+		}
+		else if (budget == 900)
+		{
+			budget = 600;
+			budgetText = budget600;
+		}
+	}
+
+	protected void changePace()
+	{
+		if (pace == Pace.RELAXED)
+		{
+			pace = Pace.STANDARD;
+			paceText = paceStandard;
+		}
+		else if (pace == Pace.STANDARD)
+		{
+			pace = Pace.FRENZIED;
+			paceText = paceFrenzied;
+		}
+		else if (pace == Pace.FRENZIED)
+		{
+			pace = Pace.RELAXED;
+			paceText = paceRelaxed;
+		}
+	}
+
+	protected void changeTurns()
+	{
+		if (turns == 20)
+		{
+			turns = 25;
+			turnsText = turns25;
+		}
+		else if (turns == 25)
+		{
+			turns = 15;
+			turnsText = turns15;
+		}
+		else if (turns == 15)
+		{
+			turns = 20;
+			turnsText = turns20;
+		}
+	}
+
+	public boolean isEventCompleted()
+	{
+		return eventCompleted;
 	}
 	
 	public abstract List<Team> getTeamsForNextGame();
 	public abstract void updateRecords(int gameWinner);
 	public abstract void updateTeam(int index, Team team);
+	public abstract ScreenType getVictoryScreenType();
 	
 	protected abstract ImageType getBackgroundImageType();
-	protected abstract ImageType getSelectScreenImageType();
+	protected abstract ImageType getTeamSelectScreenImageType();
 	protected abstract List<Point> getHelmetLocations();
 	protected abstract List<Point> getTeamNameLocations();
 	protected abstract List<GameText> getScreenTexts();
+	
+	protected abstract void setBudgetTextPosition();
+	protected abstract void setPaceTextPosition();
+	protected abstract void setTurnsTextPosition();
+	protected abstract void setSimulationTextPosition();
 }

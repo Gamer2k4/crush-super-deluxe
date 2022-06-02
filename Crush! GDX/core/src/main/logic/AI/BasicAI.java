@@ -34,16 +34,23 @@ public class BasicAI implements AI
 		Player player = data.getPlayer(currentPlayerIndex);
 		Point destination = determineDestinationTile(player);
 		
-		if (destination.x == -1 && destination.y == -1)
+		if (destination == null || (destination.x == -1 && destination.y == -1))
 		{
-			throw new IllegalArgumentException("BasicAI - Destination was (-1, -1), which should NEVER happen - LOOK INTO THIS AND FIX IT.");
+			Logger.error("BasicAI - Destination was " + destination + ", which should NEVER happen - LOOK INTO THIS AND FIX IT.");
+			System.out.println("\tBall coords: " + data.getBallLocation());
+			System.out.println("\tBallcarrier: " + data.getBallCarrier());
+			
+			if (data.getBallCarrier() != null)
+				System.out.println("\tBallcarrier location: " + data.getLocationOfPlayer(data.getBallCarrier()));
+				
+			destination = new Point(1, 1);
 		}
 		
 		Point target = getNextActionTarget(player, destination);
 		Event event = determineActionForTargetTile(player, target);
 		
 		//if we would ever repeat a move event, something went wrong, so just kill the turn and move along
-		if (event.getType() == Event.EVENT_MOVE && event.equals(lastEvent))
+		if (event != null && event.getType() == Event.EVENT_MOVE && event.equals(lastEvent))
 		{
 			Logger.warn("Move event would be repeated; ending turn instead.");
 			lastEvent = null;
@@ -179,7 +186,7 @@ public class BasicAI implements AI
 	private Point getNearestOpponentCoords(Player player)
 	{
 		int shortestDistance = Arena.ARENA_DIMENSIONS;
-		Point nearestOpponentCoords = null;
+		Point nearestOpponentCoords = new Point(29, 29);
 		Point playerCoords = data.getLocationOfPlayer(player);
 		
 		for (Player opponent : data.getAllPlayers())
@@ -206,6 +213,7 @@ public class BasicAI implements AI
 			nearestOpponentCoords = new Point(opponentCoords.x, opponentCoords.y);
 		}
 		
+		Logger.debug("BasicAI.getNearestOpponentCoords() - No opponents found; moving to SE corner instead.");
 		return nearestOpponentCoords;
 	}
 
@@ -263,6 +271,7 @@ public class BasicAI implements AI
 		if (target == null)
 		{
 			Logger.warn("AI - no destination found for player " + player.name + "; adding player to ignore list.");
+			playersThatCannotAct.add(player);
 			return null;
 		}
 		

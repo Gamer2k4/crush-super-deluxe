@@ -281,7 +281,7 @@ public class Team extends SaveableEntity
 		for (Player p : players)
 		{
 			if (p == null)
-				p = PlayerFactory.createEmptyPlayer();
+				p = PlayerFactory.getInstance().createEmptyPlayer();
 			
 			String playerUid = p.getUniqueId();
 

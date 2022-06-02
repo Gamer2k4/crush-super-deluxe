@@ -3,29 +3,57 @@ package main.data.factory;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import main.data.entities.Team;
 import main.data.load.NameLoader;
 import main.logic.Randomizer;
-import main.presentation.common.image.TeamColorType;
 
-public class CpuTeamFactory
+public class CpuTeamFactory extends RandomlyNamedEntityFactory
 {
-	private static List<String> teamNames = NameLoader.loadNames("team");
-	private static List<String> coachNames = NameLoader.loadNames("coach");
+	private List<String> TEAM_NAMES = new ArrayList<String>();
+	private List<String> COACH_NAMES = new ArrayList<String>();
 	
-	public static Team generateEmptyCpuTeam(int budget)
+	private List<String> assignableTeamNames = new ArrayList<String>();
+	private List<String> assignableCoachNames = new ArrayList<String>();
+	
+	private static CpuTeamFactory instance = null;
+	
+	private CpuTeamFactory()
+	{
+		List<String> rawNames = NameLoader.loadNames("team");
+		
+		for (String rawName : rawNames)
+		{
+			TEAM_NAMES.add(normalizeName(rawName));
+		}
+		
+		rawNames = NameLoader.loadNames("coach");
+		
+		for (String rawName : rawNames)
+		{
+			COACH_NAMES.add(normalizeName(rawName));
+		}
+	}
+	
+	public static CpuTeamFactory getInstance()
+	{
+		if (instance == null)
+			instance = new CpuTeamFactory();
+		
+		return instance;
+	}
+	
+	public Team generateEmptyCpuTeam(int budget)
 	{
 		return updateTeamWithRandomElements(new Team());
 	}
 	
-	public static Team generatePopulatedCpuTeam(int budget)
+	public Team generatePopulatedCpuTeam(int budget)
 	{
 		return updateTeamWithRandomElements(generateNewTeamWithPlayers());
 	}
 		
-	public static Team updateTeamWithRandomElements(Team cpuTeam)
+	public Team updateTeamWithRandomElements(Team cpuTeam)
 	{
 		//TODO: this is certainly incomplete
 		cpuTeam.teamName = generateRandomTeamName();
@@ -36,17 +64,17 @@ public class CpuTeamFactory
 		return cpuTeam;
 	}
 	
-	private static Team generateNewTeamWithPlayers()
+	private Team generateNewTeamWithPlayers()
 	{
 		Team team = new Team();
 		
 		for (int i = 0; i < 9; i++)
-			team.addPlayer(PlayerFactory.createRandomPlayer());
+			team.addPlayer(PlayerFactory.getInstance().createRandomPlayer());
 		
 		return team;
 	}
 	
-	private static Color[] generateRandomTeamColors()
+	private Color[] generateRandomTeamColors()
 	{
 		Color[] teamColors = new Color[2];
 		
@@ -59,47 +87,18 @@ public class CpuTeamFactory
 		return teamColors;
 	}
 
-	private static String generateRandomTeamName()
+	private String generateRandomTeamName()
 	{
-		Random r = new Random();
-		int index = r.nextInt(teamNames.size());
-		return normalizeName(teamNames.get(index));
+		return safeGetRandomName(TEAM_NAMES, assignableTeamNames);
 	}
 
-	private static String generateRandomCoachName()
+	private String generateRandomCoachName()
 	{
-		Random r = new Random();
-		int index = r.nextInt(coachNames.size());
-		return normalizeName(coachNames.get(index));
-	}
-
-	private static String normalizeName(String name)
-	{
-		if (name.isEmpty())
-			return "";
-
-		String normalizedName = "_" + name;
-
-		while (normalizedName.contains("_"))
-		{
-			int index = normalizedName.indexOf("_");
-			if (index == normalizedName.length() - 1)
-			{
-				normalizedName = normalizedName.substring(0, index);
-				break;
-			}
-
-			String half1 = normalizedName.substring(0, index);
-			String half2 = normalizedName.substring(index + 2);
-			String nextChar = normalizedName.substring(index + 1, index + 2);
-
-			normalizedName = half1 + " " + nextChar.toUpperCase() + half2;
-		}
-
-		return normalizedName.substring(1);
+		return safeGetRandomName(COACH_NAMES, assignableCoachNames);
 	}
 	
-	private static List<String> generateRandomTeamNames()
+	/*
+	private List<String> generateRandomTeamNames()
 	{
 		List<String> names = new ArrayList<String>();
 
@@ -156,4 +155,5 @@ public class CpuTeamFactory
 
 		return names;
 	}
+	*/
 }

@@ -8,56 +8,64 @@ import main.data.entities.Race;
 import main.data.load.NameLoader;
 import main.logic.Randomizer;
 
-public class PlayerFactory
+public class PlayerFactory extends RandomlyNamedEntityFactory
 {
-	private static boolean namesDefined = false;
-
-	private static List<String> NAMES_CURMIAN = null;
-	private static List<String> NAMES_DRAGORAN = null;
-	private static List<String> NAMES_GRONK = null;
-	private static List<String> NAMES_HUMAN = null;
-	private static List<String> NAMES_KURGAN = null;
-	private static List<String> NAMES_NYNAX = null;
-	private static List<String> NAMES_SLITH = null;
-	private static List<String> NAMES_XJS9000 = null;
+	private List<String> NAMES_CURMIAN = null;
+	private List<String> NAMES_DRAGORAN = null;
+	private List<String> NAMES_GRONK = null;
+	private List<String> NAMES_HUMAN = null;
+	private List<String> NAMES_KURGAN = null;
+	private List<String> NAMES_NYNAX = null;
+	private List<String> NAMES_SLITH = null;
+	private List<String> NAMES_XJS9000 = null;
 	
-	private static List<String> assignableCurmianNames = new ArrayList<String>();
-	private static List<String> assignableDragoranNames = new ArrayList<String>();
-	private static List<String> assignableGronkNames = new ArrayList<String>();
-	private static List<String> assignableHumanNames = new ArrayList<String>();
-	private static List<String> assignableKurganNames = new ArrayList<String>();
-	private static List<String> assignableNynaxNames = new ArrayList<String>();
-	private static List<String> assignableSlithNames = new ArrayList<String>();
-	private static List<String> assignableXjs9000Names = new ArrayList<String>();
+	private List<String> assignableCurmianNames = new ArrayList<String>();
+	private List<String> assignableDragoranNames = new ArrayList<String>();
+	private List<String> assignableGronkNames = new ArrayList<String>();
+	private List<String> assignableHumanNames = new ArrayList<String>();
+	private List<String> assignableKurganNames = new ArrayList<String>();
+	private List<String> assignableNynaxNames = new ArrayList<String>();
+	private List<String> assignableSlithNames = new ArrayList<String>();
+	private List<String> assignableXjs9000Names = new ArrayList<String>();
 	
-	private PlayerFactory(){}
+	private static PlayerFactory instance = null;
 	
-	public static Player createEmptyPlayer()
+	private PlayerFactory()
+	{
+		defineNames();
+	}
+	
+	public static PlayerFactory getInstance()
+	{
+		if (instance == null)
+			instance = new PlayerFactory();
+		
+		return instance;
+	}
+	
+	public Player createEmptyPlayer()
 	{
 		return new Player(null, "EMPTY");
 	}
 	
-	public static Player createRandomPlayer()
+	public Player createRandomPlayer()
 	{
 		return createPlayerWithRandomName(Race.getRace(Randomizer.getRandomInt(0, 7)));
 	}
 	
-	public static Player createPlayerWithRandomName(Race race)
+	public Player createPlayerWithRandomName(Race race)
 	{
 		return new Player(race, randomName(race));
 	}
 	
-	public static Player createPlayerWithDefinedName(Race race, String name)
+	public Player createPlayerWithDefinedName(Race race, String name)
 	{
 		return new Player(race, name);
 	}
 	
 	// ensures that the same names don't get picked twice
-	private static String randomName(Race race)
+	private String randomName(Race race)
 	{
-		if (!namesDefined)
-			defineNames();
-		
 		switch(race)
 		{
 		case CURMIAN:
@@ -80,48 +88,9 @@ public class PlayerFactory
 
 		return "NO NAME";
 	}
-	
-	private static String safeGetRandomName(List<String> all, List<String> available)
-	{
-		if (available.isEmpty())
-		{
-			available.addAll(randomNameFill(all));
-		}
-		
-		int nameIndex = Randomizer.getRandomInt(0, available.size() - 1);
-		return available.remove(nameIndex);
-	}
 
-	private static List<String> randomNameFill(List<String> source)
+	private void defineNames()
 	{
-		List<String> shuffledList = new ArrayList<String>();
-		List<String> unshuffledList = deepCopyList(source);
-		
-		while (!unshuffledList.isEmpty())
-		{
-			int index = Randomizer.getRandomInt(0, unshuffledList.size() - 1);
-			shuffledList.add(unshuffledList.remove(index));
-		}
-		
-		return shuffledList;
-	}
-	
-	private static List<String> deepCopyList(List<String> toCopy)
-	{
-		List<String> copy = new ArrayList<String>();
-		
-		for (String s : toCopy)
-		{
-			copy.add(new String(s));
-		}
-		
-		return copy;
-	}
-
-	private static void defineNames()
-	{
-		namesDefined = true;
-		
 		NAMES_CURMIAN = NameLoader.loadNames("curmian");
 		NAMES_DRAGORAN = NameLoader.loadNames("dragoran");
 		NAMES_GRONK = NameLoader.loadNames("gronk");

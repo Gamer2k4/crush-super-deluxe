@@ -34,6 +34,7 @@ public class TeamImages
 	private Texture smallTeamBanner = null;
 	private Texture largeTeamBanner = null;
 	private Texture helmetColoredImage = null;
+	private Texture coachColoredImage = null;
 	private Texture darkGoalTiles = null;
 	private Texture litGoalTiles = null;
 
@@ -168,6 +169,13 @@ public class TeamImages
 		helmetColoredImage = colorReplacer.setColors(imageFactory.getTexture(ImageType.EDITOR_HELMET), colorPairKey.getForeground(), colorPairKey.getBackground(), TRANSPARENT_BG);
 	}
 
+	private void updateCoachImage()
+	{
+		disposeCoachImage();
+		
+		coachColoredImage = colorReplacer.setColors(imageFactory.getTexture(ImageType.COACH), colorPairKey.getForeground(), colorPairKey.getBackground(), TRANSPARENT_BG);
+	}
+
 	public Texture getPlayerImage(Race race)
 	{
 		if (raceColoredProfiles.isEmpty())
@@ -231,6 +239,14 @@ public class TeamImages
 		
 		return helmetColoredImage;
 	}
+
+	public Texture getCoachImage()
+	{
+		if (coachColoredImage == null)
+			updateCoachImage();
+		
+		return coachColoredImage;
+	}
 	
 	public void dispose()
 	{
@@ -240,6 +256,7 @@ public class TeamImages
 		disposeBanners();
 		disposeGoalTiles();
 		disposeHelmetImage();
+		disposeCoachImage();
 	}
 	
 	private void disposeProfiles()
@@ -301,5 +318,11 @@ public class TeamImages
 	{
 		if (helmetColoredImage != null)
 			helmetColoredImage.dispose();
+	}
+	
+	private void disposeCoachImage()
+	{
+		if (coachColoredImage != null)
+			coachColoredImage.dispose();
 	}
 }

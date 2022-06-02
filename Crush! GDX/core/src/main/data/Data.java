@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.util.List;
 
 import main.data.entities.Arena;
+import main.data.entities.Pace;
 import main.data.entities.Player;
 import main.data.entities.Stats;
 import main.data.entities.Team;
@@ -15,7 +16,9 @@ public interface Data
 
 	public void newGame(List<Team> allThreeTeams);
 
-	public void newGame(List<Team> allThreeTeams, Integer fieldNum);
+	public void newGame(List<Team> allThreeTeams, int fieldNum);
+
+	public void newGame(List<Team> allThreeTeams, int fieldNum, Pace pace, int turns);
 	
 	public void endGame(int winningTeam);
 
@@ -42,6 +45,8 @@ public interface Data
 	public int getNumberOfPlayer(Player player);
 
 	public int getCurrentTeam();
+	
+	public int getTurnsRemaining();
 
 	public Arena getArena();
 

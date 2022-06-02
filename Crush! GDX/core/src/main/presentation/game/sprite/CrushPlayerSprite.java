@@ -14,6 +14,7 @@ import main.data.Event;
 import main.data.entities.Player;
 import main.data.entities.Race;
 import main.data.entities.Team;
+import main.execute.DebugConstants;
 import main.logic.Randomizer;
 import main.presentation.audio.AudioManager;
 import main.presentation.audio.SoundType;
@@ -21,6 +22,9 @@ import main.presentation.common.Logger;
 
 public class CrushPlayerSprite extends CrushSprite implements ActionListener
 {
+	public static boolean isAbstract = DebugConstants.ABSTRACT_SIMULATION;		//TODO: this should be somewhere else
+																				//		also, ultimately don't show stats if it's abstract, but of course I'll want them now for testing
+	
 	private PlayerState state;
 	protected Facing facing;
 	private final Team team;
@@ -66,7 +70,18 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	
 	private void refreshSpriteImage()
 	{
-		currentSpriteImage = PlayerAnimationManager.getInstance().getSprite(team, race, PlayerSpriteType.getPlayerSpriteType(state, facing));
+		try
+		{
+			currentSpriteImage = PlayerAnimationManager.getInstance().getSprite(team, race, PlayerSpriteType.getPlayerSpriteType(state, facing));
+		}
+		catch (IllegalArgumentException e)
+		{
+			if (!e.getMessage().contains("No enum constant"))
+				throw e;
+			
+			currentSpriteImage = PlayerAnimationManager.getInstance().getSprite(team, race, PlayerSpriteType.getPlayerSpriteType(PlayerState.PASSIVE, facing));
+			Logger.warn("CrushPlayerSprite - Caught 'no enum constant' expression for state " + state + "; using PASSIVE instead.");
+		}
 	}
 	
 	public boolean isActive()
@@ -143,7 +158,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	
 	public void dodge()
 	{
-		AudioManager.getInstance().playSound(SoundType.DODGE);
+		playSound(SoundType.DODGE);
 		
 		if (hasBall)
 			beginAnimation(PlayerState.DODGE_BALL);
@@ -293,6 +308,13 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	
 	private void beginAnimation(PlayerState animation)
 	{
+		if (isAbstract)
+		{
+			coords.x = targetCoords.x;
+			coords.y = targetCoords.y;
+			return;
+		}
+		
 		if (isAnimating())
 		{
 			queuedAnimationStates.add(animation);
@@ -431,7 +453,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		else if (race == Race.GRONK)
 			walkSound = SoundType.LOWWALK;
 			
-		AudioManager.getInstance().playSound(walkSound);
+		playSound(walkSound);
 	}
 	
 	private void playOohSound()
@@ -453,7 +475,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		else if (race == Race.KURGAN)
 			walkSound = SoundType.BEVOOH;
 			
-		AudioManager.getInstance().playSound(walkSound);
+		playSound(walkSound);
 	}
 	
 	private void playHurtSound()
@@ -475,7 +497,15 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 		else if (race == Race.KURGAN)
 			walkSound = SoundType.KURDEAT;
 			
-		AudioManager.getInstance().playSound(walkSound);
+		playSound(walkSound);
+	}
+	
+	private void playSound(SoundType sound)
+	{
+		if (isAbstract)
+			return;
+		
+		AudioManager.getInstance().playSound(sound);
 	}
 
 	private void setState(PlayerState newState)

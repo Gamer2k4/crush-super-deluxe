@@ -13,6 +13,7 @@ import javax.swing.Timer;
 import main.data.Data;
 import main.data.DataImpl;
 import main.data.Event;
+import main.data.entities.Pace;
 import main.data.entities.Team;
 import main.logic.AI.AI;
 import main.logic.AI.BasicAI;
@@ -41,25 +42,25 @@ public class Server implements ActionListener
 		IPs = new HashMap<Client, String>();
 		
 		ai = new BasicAI(dataLayer);
-		aiTimer = new Timer(250, this);
+		aiTimer = new Timer(5, this);		//probably doesn't need to be this fast, but when doing an abstract simulation, this is the bottleneck (was 250ms)
 		aiTimer.stop();
 	}
 	
 	public void newGame(List<Team> teams)
 	{
-		newGame(teams, null);
+		newGame(teams, null, Pace.RELAXED, 20);
 	}
 	
-	public void newGame(List<Team> teams, Integer fieldnum)
+	public void newGame(List<Team> teams, Integer fieldnum, Pace pace, int turns)
 	{
 //		presentationLayer = new ServerJFrameGUI(this);		//TODO: put this someplace else
 		
 		aiTimer.start();
-		dataLayer.newGame(teams, fieldnum);
+		dataLayer.newGame(teams, fieldnum, pace, turns);
 		
 		for (Client c : connectedClients)
 		{
-			c.newGame(teams, fieldnum);
+			c.newGame(teams, fieldnum, pace, turns);
 		}
 		
 		receiveCommand(Event.updateTurnPlayer(0));

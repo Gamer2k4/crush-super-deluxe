@@ -57,6 +57,9 @@ public class EventButtonBarFactory
 	public static final int PLAYER_STATUS_X_START = 10;
 	public static final int PLAYER_STATUS_Y_START = 58;
 	
+	private static final int TURNS_LEFT_X_START = 462;
+	private static final int TURNS_LEFT_Y_START = 368;
+	private static final int TURNS_LEFT_MAX_WIDTH = 15;
 	private static final int PADS_LEFT_BALL_ON_X_START = 494;
 	private static final int PADS_LEFT_BALL_ON_Y_START = 368;
 	private static final int PADS_LEFT_BALL_ON_MAX_WIDTH = 15;
@@ -164,12 +167,21 @@ public class EventButtonBarFactory
 		names.add(playerNumbers[playerIndex - 1]);
 		names.add(teamNames[teamIndex]);
 		names.add(arenaName);
+		names.add(getTurnsRemaining());
 		names.add(getPadsLeftOrBallOnValue());
 		
 //		if (currentPlayer.isInGame())			//apparently the way the original game worked was to display the stats anyway
 			names.add(playerNames[teamIndex][playerIndex - 1]);
 		
 		return names;
+	}
+
+	private GameText getTurnsRemaining()
+	{
+		String turnsRemaining = String.valueOf(data.getTurnsRemaining() + 1);
+		int startX = GameText.getStringStartX(GameText.small2, TURNS_LEFT_X_START, TURNS_LEFT_MAX_WIDTH, turnsRemaining); 
+		return GameText.small2(new Point(startX, TURNS_LEFT_Y_START), LegacyUiConstants.COLOR_LEGACY_BLUE, turnsRemaining);
+		
 	}
 
 	private GameText getPadsLeftOrBallOnValue()
@@ -220,6 +232,12 @@ public class EventButtonBarFactory
 	
 	private void darkenPadsAndGoals()
 	{
+		if (data == null)
+		{
+			Logger.warn("EventButtonBarFactory - Unable to darken pads/goals because data is null!");
+			return;
+		}
+		
 		List<Point> failedPadLocations = data.getArena().getDimPadLocations();
 		
 		for (Point padCoords : failedPadLocations)
@@ -237,6 +255,12 @@ public class EventButtonBarFactory
 
 	private void addPlayerMinimapPoints()
 	{
+		if (data == null)
+		{
+			Logger.warn("EventButtonBarFactory - Unable to add player minimap points because data is null!");
+			return;
+		}
+		
 		for (Player player : data.getAllPlayers())
 		{
 			if (player != null && player.isInGame())
@@ -258,6 +282,12 @@ public class EventButtonBarFactory
 	public List<StaticImage> getTeamBanners()
 	{
 		List<StaticImage> banners = new ArrayList<StaticImage>();
+		
+		if (data == null)
+		{
+			Logger.warn("EventButtonBarFactory - Unable to add team banners because data is null!");
+			return banners;
+		}
 		
 		for (int i = 0; i < 3; i++)
 		{
@@ -308,6 +338,12 @@ public class EventButtonBarFactory
 	public List<StaticImage> getPlayerStatuses()
 	{
 		List<StaticImage> images = new ArrayList<StaticImage>();
+		
+		if (data == null)
+		{
+			Logger.warn("EventButtonBarFactory - Unable to add player statuses because data is null!");
+			return images;
+		}
 		
 		int startingIndex = data.getCurrentTeam() * 9;
 

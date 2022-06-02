@@ -109,6 +109,7 @@ public class CrushGame extends Game implements ActionListener
 		if (backgroundImage != null)
 		{
 			spriteBatch.setProjectionMatrix(fixedCamera.combined);
+			spriteBatch.setColor(DebugConstants.BG_TINT);		//this doesn't actually do what I want it to, but it's a cool in-game effect
 			spriteBatch.begin();
 			spriteBatch.draw(backgroundImage, 0, 0);
 			spriteBatch.end();
@@ -210,6 +211,8 @@ public class CrushGame extends Game implements ActionListener
 		
 		EventDetails.setTeams(gameTeams);
 		EventDetails.setArena(arenaIndex);
+		EventDetails.setPace(sourceScreen.getPace());
+		EventDetails.setTurns(sourceScreen.getTurns());
 		
 		PregameScreen pregameScreen = (PregameScreen) activeScreen;
 		pregameScreen.newGame();
@@ -233,12 +236,12 @@ public class CrushGame extends Game implements ActionListener
 		GdxGUI gui = (GdxGUI) client.getGui();
 		gui.setGameScreen(activeScreen);
 
-		host.newGame(EventDetails.getTeams(), EventDetails.getArenaIndex());
+		host.newGame(EventDetails.getTeams(), EventDetails.getArenaIndex(), EventDetails.getPace(), EventDetails.getTurns());
 
 		//TODO: set this elsewhere
-		/* DEBUG */ EventDetails.getTeams().get(0).humanControlled = false;
-		/* DEBUG */ EventDetails.getTeams().get(1).humanControlled = false;
-		/* DEBUG */ EventDetails.getTeams().get(2).humanControlled = false;
+		/* DEBUG */ EventDetails.getTeams().get(0).humanControlled = DebugConstants.PLAYER0_IS_HUMAN;
+		/* DEBUG */ EventDetails.getTeams().get(1).humanControlled = DebugConstants.PLAYER1_IS_HUMAN;
+		/* DEBUG */ EventDetails.getTeams().get(2).humanControlled = DebugConstants.PLAYER2_IS_HUMAN;
 		
 		client.getGui().beginGame();
 	}
@@ -256,7 +259,7 @@ public class CrushGame extends Game implements ActionListener
 			data.endGame(gameWinner);
 		}
 		
-		Logger.output("Game is done, winning team is: " + data.getWinningTeamIndex());
+		Logger.debug("Game is done, winning team is: " + data.getWinningTeamIndex());
 		
 		if (gameSourceScreen == null)
 		{
@@ -275,7 +278,11 @@ public class CrushGame extends Game implements ActionListener
 			sourceScreen.updateTeam(2, data.getTeam(2));
 		}
 		
-		setScreen(gameSourceScreen);
+		if (sourceScreen.isEventCompleted())
+			setScreen(sourceScreen.getVictoryScreenType());
+		else
+			setScreen(gameSourceScreen);
+		
 		gameSourceScreen = null;
 	}
 
@@ -316,9 +323,12 @@ public class CrushGame extends Game implements ActionListener
 			break;
 		case EXHIBITION_PREGAME:
 			gameSourceScreen = ScreenType.EXHIBITION_TEAM_SELECT; 
-			setScreen(ScreenType.EXHIBITION_PREGAME_SCREEN);
+			setScreen(ScreenType.EXHIBITION_PREGAME);
 			activeScreen.reset();
 			prepareNewGame();
+			break;
+		case EXHIBITION_VICTORY:
+			setScreen(ScreenType.EXHIBITION_VICTORY);
 			break;
 		case BEGIN_GAME:
 			AudioManager.getInstance().stopSound(SoundType.PREGAME);

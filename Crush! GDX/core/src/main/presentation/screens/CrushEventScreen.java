@@ -18,8 +18,6 @@ import com.badlogic.gdx.utils.SnapshotArray;
 import main.presentation.CursorManager;
 import main.presentation.ImageFactory;
 import main.presentation.ImageType;
-import main.presentation.audio.AudioManager;
-import main.presentation.audio.SoundType;
 import main.presentation.common.Logger;
 import main.presentation.common.ScreenCommand;
 import main.presentation.game.EventButtonBarFactory;
@@ -339,12 +337,24 @@ public class CrushEventScreen extends GameScreen
 	@Override
 	public List<GameText> getStaticText()
 	{
+		if (!isActive)
+		{
+			Logger.warn("CrushEventScreen is being asked to refresh static texts when it's not active.");
+			return new ArrayList<GameText>();
+		}
+		
 		return gui.getGameText();
 	}
 
 	@Override
 	public List<StaticImage> getStaticImages()
 	{
+		if (!isActive)
+		{
+			Logger.warn("CrushEventScreen is being asked to refresh static images when it's not active.");
+			return new ArrayList<StaticImage>();
+		}
+		
 		return gui.getStaticImages();
 	}
 

@@ -207,7 +207,7 @@ public class TeamLoader
 
 		try
 		{
-			player = PlayerFactory.createEmptyPlayer();
+			player = PlayerFactory.getInstance().createEmptyPlayer();
 			String key = player.loadFromText(saveString);
 
 			EntityMap.put(key, player);

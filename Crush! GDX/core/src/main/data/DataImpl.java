@@ -8,6 +8,7 @@ import java.util.Map;
 
 import main.data.entities.Arena;
 import main.data.entities.Equipment;
+import main.data.entities.Pace;
 import main.data.entities.Player;
 import main.data.entities.Skill;
 import main.data.entities.Stats;
@@ -30,7 +31,9 @@ public class DataImpl implements Data
 	protected Arena arena;
 
 	protected int currentTeam;
-	private int gameWinner;		//keeps track if the teams have been saved once the game has concluded
+	private int turnsRemaining;
+	private int gameWinner;
+	private Pace pace;
 	
 	public static final int TIE_GAME = -1;
 	public static final int GAME_IN_PROGRESS = -2;
@@ -56,7 +59,9 @@ public class DataImpl implements Data
 		DataImpl toRet = new DataImpl(name + "[clone]");
 		toRet.ball = new Point(ball.x, ball.y);
 		toRet.currentTeam = currentTeam;
+		toRet.turnsRemaining = turnsRemaining;
 		toRet.gameWinner = gameWinner;
+		toRet.pace = pace;
 		
 		if (arena != null)
 			toRet.arena = arena.clone();
@@ -157,16 +162,25 @@ public class DataImpl implements Data
 		ballCarrier = null;
 		arena = null;
 		currentTeam = 0;
+		turnsRemaining = 20;
+		gameWinner = GAME_IN_PROGRESS;
+		pace = Pace.RELAXED;
 	}
 	
 	@Override
 	public void newGame(List<Team> allThreeTeams)
 	{
-		newGame(allThreeTeams, null);
+		newGame(allThreeTeams, -1);
 	}
 	
 	@Override
-	public void newGame(List<Team> allThreeTeams, Integer fieldNum)
+	public void newGame(List<Team> allThreeTeams, int fieldNum)
+	{
+		newGame(allThreeTeams, fieldNum, Pace.RELAXED, 20);
+	}
+	
+	@Override
+	public void newGame(List<Team> allThreeTeams, int fieldNum, Pace gamePace, int turns)
 	{
 		if (allThreeTeams.size() != 3)
 			throw new IllegalArgumentException("There must be three teams in a game!");	//no more; no less.  Empty teams are okay; missing teams are not.
@@ -206,21 +220,13 @@ public class DataImpl implements Data
 		
 		int fieldIndex = allThreeTeams.get(0).homeField;	// home field advantage
 		
-		if (fieldNum != null)								// but there is no such thing in the playoffs 
+		if (fieldNum != -1)								// but there is no such thing in the playoffs 
 			fieldIndex = fieldNum;
-		
-//		fieldIndex = Arena.ARENA_SAVANNA;		//TODO: currently always savannah for testing
-//		fieldIndex = Arena.ARENA_ABYSS;
-//		fieldIndex = Arena.ARENA_THE_VOID;
-//		fieldIndex = Arena.ARENA_JACKALS_LAIR;
-//		fieldIndex = Arena.ARENA_FULCRUM;
-//		fieldIndex = Arena.ARENA_SPACECOM;
-//		fieldIndex = Arena.ARENA_EYES;
-		
-//		fieldIndex = RandomGeneratorSingletonImpl.getInstance().getRandomInt(0, 19);
 		
 		createMap(fieldIndex);
 		
+		turnsRemaining = turns;
+		pace = gamePace;
 		gameWinner = GAME_IN_PROGRESS;
 		gameActive = true;
 	}
@@ -230,8 +236,10 @@ public class DataImpl implements Data
 		if (player == null)
 			return null;
 		
+		//TODO: technically, this should be updated at the end of the game, not the beginning
 		if (player.getStatus() == Player.STS_OKAY || player.getStatus() == Player.STS_DOWN
-				|| player.getStatus() == Player.STS_STUN_DOWN || player.getStatus() == Player.STS_STUN_SIT)
+				|| player.getStatus() == Player.STS_STUN_DOWN || player.getStatus() == Player.STS_STUN_SIT
+				|| player.getWeeksOut() <= 0)
 			player.status = Player.STS_DECK;
 		else
 			player.recoverInjuries(1);	//okay to do it here, because if the game is cancelled, it all gets undone anyway
@@ -283,6 +291,14 @@ public class DataImpl implements Data
 					
 					player = null;						//TODO: if halls of fame exist, keep track of the player still
 				}
+				else if (player.status == Player.STS_LATE ||
+						 player.status == Player.STS_OKAY || 
+						 player.status == Player.STS_DOWN ||
+						 player.status == Player.STS_STUN_DOWN || 
+						 player.status == Player.STS_STUN_SIT || 
+						 player.status == Player.STS_BLOB || 
+						 player.status == Player.STS_OUT)
+					player.status = Player.STS_DECK;	//note that doing this here DOES clear out the statuses when the victory screen is being displayed
 				
 				team.setPlayer(j - startingIndex, player);
 			}
@@ -325,7 +341,7 @@ public class DataImpl implements Data
 		} else if (theEvent.getType() == Event.EVENT_VICTORY)
 		{
 			int winningTeam = theEvent.flags[0];
-			setWinningStats(winningTeam);
+			setGameResultStats(winningTeam);
 			endGame(winningTeam);
 		} else if (theEvent.getType() == Event.EVENT_RECVR)
 		{
@@ -569,6 +585,9 @@ public class DataImpl implements Data
 	
 	private void processNewTurn(int newTurnPlayerIndex)
 	{
+		if (newTurnPlayerIndex == 0)
+			turnsRemaining--;
+		
 		//clear the AP of everyone on the team whose turn is ending
 		int startingIndex = currentTeam * TEAM_SIZE;
 		for (int j = startingIndex; j < startingIndex + TEAM_SIZE; j++)
@@ -633,18 +652,30 @@ public class DataImpl implements Data
 	}
 
 	//note that (as in the original game), this gives everyone the points, whether they were ejected or not
-	private void setWinningStats(int winningTeam)
+	private void setGameResultStats(int winningTeam)
 	{
-		int startingIndex = winningTeam * TEAM_SIZE;
-		
-		for (int i = startingIndex; i < startingIndex + TEAM_SIZE; i++)
+		for (int i = 0; i < 3; i++)
 		{
-			Player p = allPlayers.get(i);
+			int startingIndex = i * TEAM_SIZE;
 			
-			if (p == ballCarrier)
-				statsOfPlayer.get(p).score();
-			else if (p != null)
-				statsOfPlayer.get(p).teamWon();
+			for (int j = startingIndex; j < startingIndex + TEAM_SIZE; j++)
+			{
+				Player p = allPlayers.get(i);
+				
+				if (p == null)
+					continue;
+				
+				//if it's not a tie, the player with the ball when the game ended must have scored the goal
+				if (p == ballCarrier && winningTeam != TIE_GAME)
+					statsOfPlayer.get(p).score();
+				
+				if (winningTeam == TIE_GAME)
+					statsOfPlayer.get(p).teamTied();
+				else if (i == winningTeam)
+					statsOfPlayer.get(p).teamWon();
+				else
+					statsOfPlayer.get(p).teamLost();
+			}
 		}
 	}
 
@@ -820,6 +851,12 @@ public class DataImpl implements Data
 	{
 		Team team = teams.get(currentTeam);
 		return team.humanControlled;
+	}
+	
+	@Override
+	public int getTurnsRemaining()
+	{
+		return turnsRemaining;
 	}
 
 	@Override

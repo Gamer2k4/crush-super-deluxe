@@ -81,4 +81,12 @@ public class TeamEntry
 	{
 		return TeamColorsManager.getInstance().getHelmetImage(team);
 	}
+	
+	public boolean isWinner(int winRequirement)
+	{
+		if (winRequirement == 0)
+			return false;
+		
+		return (wins >= winRequirement);
+	}
 }

@@ -10,6 +10,7 @@ import java.util.Queue;
 import main.data.Data;
 import main.data.DataImpl;
 import main.data.Event;
+import main.data.entities.Pace;
 import main.data.entities.Team;
 import main.presentation.common.Logger;
 import main.presentation.game.GameGUI;
@@ -61,9 +62,9 @@ public class Client
 		presentationLayer = new GdxGUI(this, host, gameEndListener);
 	}
 
-	public void newGame(List<Team> teams, Integer fieldnum)
+	public void newGame(List<Team> teams, Integer fieldnum, Pace pace, int turns)
 	{
-		dataLayer.newGame(teams, fieldnum);
+		dataLayer.newGame(teams, fieldnum, pace, turns);
 	}
 
 	public void queueEventsForProcessing(Queue<Event> eventQueue)
