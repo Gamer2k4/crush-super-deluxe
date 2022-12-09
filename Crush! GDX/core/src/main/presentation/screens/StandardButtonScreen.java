@@ -31,19 +31,20 @@ public abstract class StandardButtonScreen extends GameScreen implements ActionL
 		this.eventListener = eventListener;
 	}
 	
-	protected ImageButton addClickZone(int xPos, int yPos, int width, int height, final ScreenCommand command)
+	public ImageButton addClickZone(int xPos, int yPos, int width, int height, final ScreenCommand command)
 	{
 		return addButton(xPos, yPos, width, height, false, command, false);
 	}
 	
-	protected ImageButton addButton(int size, int xPos, int yPos, final boolean remainPressed, final ScreenCommand command)
+	public ImageButton addButton(int size, int xPos, int yPos, final boolean remainPressed, final ScreenCommand command)
 	{
 		return addButton(xPos, yPos, size, 17, remainPressed, command, true);
 	}
 	
-	protected ImageButton addButton(int xPos, int yPos, int width, int height, final boolean remainPressed, final ScreenCommand command, final boolean isVisible)
+	public ImageButton addButton(int xPos, int yPos, int width, int height, final boolean remainPressed, final ScreenCommand command, final boolean isVisible)
 	{
-		Logger.debug("Adding button with command " + command);
+		Logger.debug("Adding button with command [" + command + "] to (" + xPos + ", " + yPos + ").");
+		Logger.debug("width: " + width + ", height: " + height);
 		
 		final ImageButton imageButton;
 		
@@ -62,6 +63,7 @@ public abstract class StandardButtonScreen extends GameScreen implements ActionL
 		}
 		
 		imageButton.setPosition(xPos, 400 - yPos - height);
+		Logger.debug("Button position is (" + imageButton.getX() + ", " + imageButton.getY() + ")");
 		imageButton.addListener(new InputListener()
 		{
 			@Override

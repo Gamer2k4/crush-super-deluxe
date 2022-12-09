@@ -10,6 +10,7 @@ public class DebugConstants
 //	public static final int ARENA_OVERRIDE = Arena.ARENA_MAELSTROM;
 	public static final int ARENA_OVERRIDE = Arena.ARENA_SAVANNA;
 //	public static final int ARENA_OVERRIDE = Arena.ARENA_NEXUS;
+//	public static final int ARENA_OVERRIDE = Arena.ARENA_JACKALS_LAIR;
 //	public static final int ARENA_OVERRIDE = -1;
 	public static final boolean ALWAYS_BIN_SUCCESS = false;
 	public static final boolean HIDE_EVENT_EXCEPTIONS = false;

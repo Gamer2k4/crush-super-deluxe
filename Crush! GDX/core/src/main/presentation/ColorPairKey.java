@@ -76,6 +76,6 @@ public class ColorPairKey
 	@Override
 	public String toString()
 	{
-		return "CPK[" + foreground.getRGB() + "," + background.getRGB() + "]";
+		return "CPK[" + foreground.toString() + "," + background.toString() + "]";
 	}
 }

@@ -146,11 +146,16 @@ public class CrushEventScreen extends GameScreen
 	//	LegacyGraphicsGUI (getMapCoordsFromCursorLocation())
 	private void processMouseClick()
 	{
+		if (Gdx.input.isTouched())
+			System.out.println("Mouse click processed! InputOkay = " + gui.inputOkay());
+		
 		if (!gui.inputOkay())
 			return;
 		
 		if (Gdx.input.isTouched())
 		{
+			System.out.println("From CrushEventScreen - input processor is " + Gdx.input.getInputProcessor());
+			
 			if (touchRegistered)
 				return;
 			

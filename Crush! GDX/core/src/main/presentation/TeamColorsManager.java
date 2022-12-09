@@ -118,6 +118,12 @@ public class TeamColorsManager
 		return teamImageSource.getSpriteSheet(race);
 	}
 	
+	public void refresh(Team team)
+	{
+		TeamImages teamImageSource = getTeamImages(team);
+		teamImageSource.refresh();
+	}
+	
 	public void dispose()
 	{
 		for (ColorPairKey key : teamImages.keySet())

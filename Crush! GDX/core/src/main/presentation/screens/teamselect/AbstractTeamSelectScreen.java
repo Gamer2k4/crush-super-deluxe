@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 
@@ -15,12 +16,13 @@ import main.data.entities.Team;
 import main.data.factory.CpuTeamFactory;
 import main.presentation.ImageFactory;
 import main.presentation.ImageType;
+import main.presentation.common.ScreenCommand;
 import main.presentation.game.FontType;
 import main.presentation.game.GameText;
 import main.presentation.legacy.common.LegacyUiConstants;
 import main.presentation.screens.ScreenType;
 import main.presentation.screens.StandardButtonScreen;
-import main.presentation.teameditor.common.TeamUpdater;
+import main.presentation.screens.teameditor.utilities.TeamUpdater;
 
 public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 {
@@ -62,6 +64,21 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 		clearTeams();
 	}
 	
+	protected void addHelmetClickZones(List<ImageButton> buttons)
+	{
+		Texture helmetTexture = ImageFactory.getInstance().getTexture(ImageType.EDITOR_HELMET);
+		int width = helmetTexture.getWidth();
+		int height = helmetTexture.getHeight();
+		
+		List<Point> helmetLocations = getHelmetLocations();
+		
+		for (int i = 0; i < helmetLocations.size(); i++)
+		{
+			Point origin = helmetLocations.get(i);
+			buttons.add(addClickZone(origin.x, 400 - height - origin.y, width, height, ScreenCommand.editTeam(i)));
+		}
+	}
+
 	protected void defineSettingsTexts()
 	{
 		budget600 = new GameText(FontType.FONT_SMALL2, new Point(), LegacyUiConstants.COLOR_LEGACY_DULL_WHITE, "600");
@@ -96,6 +113,13 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 			teams[i] = new TeamEntry();
 		}
 	}
+	
+	@Override
+	public void activate()
+	{
+		super.activate();
+		refreshStage();
+	}
 
 	@Override
 	public void reset()
@@ -111,6 +135,12 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 		simulationText = simulationAbstract;
 		
 		teamsLockedForEditing = false;
+		
+		refreshStage();
+	}
+	
+	private void refreshStage()
+	{
 		stage.clear();
 		stage.addActor(new Image(ImageFactory.getInstance().getDrawable(getBackgroundImageType())));
 		stage.addActor(new Image(ImageFactory.getInstance().getDrawable(getTeamSelectScreenImageType())));
@@ -130,6 +160,11 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 	public void unlockTeams()
 	{
 		teamsLockedForEditing = false;
+	}
+	
+	public boolean areTeamsLockedForEditing()
+	{
+		return teamsLockedForEditing;
 	}
 	
 	public int getBudget()
@@ -264,6 +299,11 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 	public boolean isEventCompleted()
 	{
 		return eventCompleted;
+	}
+	
+	public Team getTeam(int index)
+	{
+		return teams[index].getTeam();
 	}
 	
 	public abstract List<Team> getTeamsForNextGame();

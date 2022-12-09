@@ -2,6 +2,8 @@ package main.presentation.common;
 
 import java.awt.event.ActionEvent;
 
+import main.presentation.screens.ScreenType;
+
 public enum ScreenCommand
 {	
 	MAIN_SCREEN,
@@ -105,6 +107,18 @@ public enum ScreenCommand
 	TEAM_COLOR_50,
 	TEAM_COLOR_51,
 	TEAM_COLOR_52,
+	
+	DOCBOT_UP,
+	DOCBOT_DOWN,
+	
+	DOCBOT_00,
+	DOCBOT_01,
+	DOCBOT_10,
+	DOCBOT_11,
+	DOCBOT_20,
+	DOCBOT_21,
+	DOCBOT_30,
+	DOCBOT_31,
 
 	SWAP_PLAYERS,
 	
@@ -192,15 +206,35 @@ public enum ScreenCommand
 	DRAFT_SELECT_PLAYER_9,
 	DRAFT_SELECT_PLAYER_10;
 	
-	public static ScreenCommand fromActionEvent(ActionEvent ae)
+	public static ScreenCommand fromValue(String string)
 	{
 		for (ScreenCommand command : values())
 		{
-			if (command.name().equals(ae.getActionCommand()))
+			if (command.name().equals(string))
 				return command;
 		}
 		
-		throw new IllegalArgumentException("No ScreenCommand exists for action command [" + ae.getActionCommand() + "]");
+		throw new IllegalArgumentException("No ScreenCommand exists for value [" + string + "]");
+	}
+	
+	public static ScreenCommand fromActionEvent(ActionEvent ae)
+	{
+		return fromValue(ae.getActionCommand());
+	}
+
+	public static ScreenCommand fromScreenType(ScreenType screenType)
+	{
+		return fromValue(screenType.name());
+	}
+	
+	public static ScreenCommand editTeam(int teamIndex)
+	{
+		return ScreenCommand.fromValue("EDIT_TEAM_" + teamIndex);
+	}
+	
+	public static ScreenCommand changeDocbotOption(int option, int level)
+	{
+		return ScreenCommand.valueOf("DOCBOT_" + option + "" + level);
 	}
 	
 	public ActionEvent asActionEvent()

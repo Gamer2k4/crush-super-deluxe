@@ -248,6 +248,19 @@ public class TeamImages
 		return coachColoredImage;
 	}
 	
+	public void refresh()
+	{
+		getPlayerImage(Race.CURMIAN);
+		getSpriteSheet(Race.CURMIAN);
+		getEquipmentImage(Equipment.EQUIP_REINFORCED_ARMOR);
+		getLargeTeamBanner();
+		getSmallTeamBanner();
+		getLitGoalTiles();
+		getDarkGoalTiles();
+		getHelmetImage();
+		getCoachImage();
+	}
+	
 	public void dispose()
 	{
 		disposeProfiles();

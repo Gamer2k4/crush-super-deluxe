@@ -69,8 +69,18 @@ public class Client
 
 	public void queueEventsForProcessing(Queue<Event> eventQueue)
 	{
-		queuedEvents.addAll(eventQueue);
-		Logger.debug("\t\tClient received new events; total event queue size is " + queuedEvents.size());
+		try {
+			queuedEvents.addAll(eventQueue);
+			Logger.debug("\t\tClient received new events; total event queue size is " + queuedEvents.size());
+		} catch (IndexOutOfBoundsException e)
+		{
+			Logger.warn("Client - Index out of bounds exception when adding events to queue.");
+			System.out.println("Queued events size: " + queuedEvents.size());
+			System.out.println("New event queue size: " + eventQueue.size());
+			queuedEvents.clear();
+			queuedEvents.addAll(eventQueue);
+			System.out.println("Event queue cleared and new events added; new size: " + queuedEvents.size());
+		}
 	}
 	
 	public Event getNextEvent()

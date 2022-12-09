@@ -7,12 +7,15 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 
 import main.execute.DebugConstants;
+import main.presentation.common.Logger;
 
 public class AudioManager
 {
 	private static AudioManager instance = null;
 	
 	private Map<SoundType, Sound> sounds;
+	
+	private SoundType loopingSound = null;
 	
 	private AudioManager()
 	{
@@ -38,6 +41,12 @@ public class AudioManager
 		if (!DebugConstants.AUDIO_ON)
 			return -1;
 		
+		if (loopingSound == soundType)	//already looping this sound
+			return -1;
+		
+		stopSound(loopingSound);
+		loopingSound = soundType;
+		
 		Sound sound = sounds.get(soundType);
 		
 		if (sound != null)
@@ -61,6 +70,12 @@ public class AudioManager
 	
 	public void stopSound(SoundType soundType)
 	{
+		if (soundType == null)
+			return;
+		
+		if (soundType == loopingSound)
+			loopingSound = null;
+		
 		Sound sound = sounds.get(soundType);
 		sound.stop();
 	}

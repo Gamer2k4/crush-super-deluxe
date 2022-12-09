@@ -38,6 +38,8 @@ import main.presentation.screens.GameScreen;
 import main.presentation.screens.GameScreenManager;
 import main.presentation.screens.PregameScreen;
 import main.presentation.screens.ScreenType;
+import main.presentation.screens.teameditor.TeamEditor;
+import main.presentation.screens.teameditor.utilities.TeamUpdater;
 import main.presentation.screens.teamselect.AbstractTeamSelectScreen;
 
 //I believe this is the equivalent of GameWindow in the original project
@@ -76,16 +78,8 @@ public class CrushGame extends Game implements ActionListener
 	public void setScreen(Screen screen)
 	{
 		GameScreen gamescreen = (GameScreen) screen;
-		
-		super.setScreen(screen);
-
 		updateActiveScreen(gamescreen);
-
-		if (screen == null)
-			return;
-		
-		//TODO: don't do this just yet, even though it would be nice
-//		AudioManager.getInstance().updateBackground(ScreenType.GAME_SELECT);
+		super.setScreen(screen);
 	}
 
 	private void updateActiveScreen(GameScreen newActiveScreen)
@@ -151,7 +145,7 @@ public class CrushGame extends Game implements ActionListener
 		List<StaticImage> images = getCurrentScreen().getStaticImages(); 
 		
 		for (StaticImage image : images)
-		{
+		{			
 			getCurrentScreen().getStage().addActor(image.getImage());
 		}
 		
@@ -278,10 +272,11 @@ public class CrushGame extends Game implements ActionListener
 			sourceScreen.updateTeam(2, data.getTeam(2));
 		}
 		
+		//done via screen commands to make the audio change appropriately
 		if (sourceScreen.isEventCompleted())
-			setScreen(sourceScreen.getVictoryScreenType());
+			executeScreenCommand(ScreenCommand.fromScreenType(sourceScreen.getVictoryScreenType()));
 		else
-			setScreen(gameSourceScreen);
+			executeScreenCommand(ScreenCommand.fromScreenType(gameSourceScreen));
 		
 		gameSourceScreen = null;
 	}
@@ -307,6 +302,12 @@ public class CrushGame extends Game implements ActionListener
 
 	private void executeScreenCommand(ScreenCommand command)
 	{
+		if (command.isEditTeam())
+		{
+			flowToTeamEditorForTeamIndex(command.getCommandIndex());
+			return;
+		}
+		
 		// This is where screen swaps happen
 		switch (command)
 		{
@@ -319,15 +320,19 @@ public class CrushGame extends Game implements ActionListener
 			activeScreen.reset();
 			break;
 		case EXHIBITION_TEAM_SELECT:
+			AudioManager.getInstance().stopSound(SoundType.PREGAME);
+			AudioManager.getInstance().loopSound(SoundType.THEME);
 			setScreen(ScreenType.EXHIBITION_TEAM_SELECT);
 			break;
 		case EXHIBITION_PREGAME:
-			gameSourceScreen = ScreenType.EXHIBITION_TEAM_SELECT; 
+			gameSourceScreen = ScreenType.EXHIBITION_TEAM_SELECT;
 			setScreen(ScreenType.EXHIBITION_PREGAME);
 			activeScreen.reset();
 			prepareNewGame();
 			break;
 		case EXHIBITION_VICTORY:
+			AudioManager.getInstance().stopSound(SoundType.THEME);
+			AudioManager.getInstance().playSound(SoundType.PREGAME);
 			setScreen(ScreenType.EXHIBITION_VICTORY);
 			break;
 		case BEGIN_GAME:
@@ -341,6 +346,39 @@ public class CrushGame extends Game implements ActionListener
 			AudioManager.getInstance().loopSound(SoundType.THEME);
 			endCurrentGame();
 			break;
+		case EXIT_TEAM_EDITOR_DONE:
+			flowToTeamSelectFromTeamEditor();
+			break;
 		}
+	}
+
+	private void flowToTeamEditorForTeamIndex(int teamIndex)
+	{
+		Logger.debug("Flowing to team editor for team index [" + teamIndex + "].");
+		
+		AbstractTeamSelectScreen sourceScreen = (AbstractTeamSelectScreen) activeScreen;
+		Team teamToEdit = sourceScreen.getTeam(teamIndex);
+		int budget = sourceScreen.getBudget();
+		setScreen(ScreenType.TEAM_EDITOR);
+		TeamEditor editorScreen = (TeamEditor) activeScreen;
+		editorScreen.setTeamIndex(teamIndex);
+		editorScreen.setTeam(teamToEdit);
+		editorScreen.setBudget(budget);
+		editorScreen.setOriginScreen(GameScreenManager.getInstance().getScreenType(sourceScreen));
+		activeScreen.reset();
+	}
+
+	private void flowToTeamSelectFromTeamEditor()
+	{
+		activeScreen.reset();
+		TeamEditor editorScreen = (TeamEditor) activeScreen;
+		setScreen(editorScreen.getOriginScreen());
+		AbstractTeamSelectScreen teamSelectScreen = (AbstractTeamSelectScreen) activeScreen;
+		
+		TeamUpdater teamUpdater = editorScreen.getTeamUpdater();
+		int teamIndex = editorScreen.getTeamIndex();
+		Team team = teamUpdater.getTeam();
+		
+		teamSelectScreen.updateTeam(teamIndex, team);
 	}
 }

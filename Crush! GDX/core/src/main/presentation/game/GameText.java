@@ -14,6 +14,7 @@ public class GameText
 	public static BitmapFont big = new BitmapFont(Gdx.files.internal("fonts/big.fnt"), Gdx.files.internal("fonts/gdx_big.png"), true);
 	public static BitmapFont huge = new BitmapFont(Gdx.files.internal("fonts/huge.fnt"), Gdx.files.internal("fonts/gdx_huge.png"), true);
 	public static BitmapFont small = new BitmapFont(Gdx.files.internal("fonts/small.fnt"), Gdx.files.internal("fonts/gdx_small.png"), true);
+	public static BitmapFont smallSpread = new BitmapFont(Gdx.files.internal("fonts/small_spread.fnt"), Gdx.files.internal("fonts/gdx_small.png"), true);
 	public static BitmapFont small2 = new BitmapFont(Gdx.files.internal("fonts/small2.fnt"), Gdx.files.internal("fonts/gdx_small2.png"), true);
 	
 	private BitmapFont font;
@@ -21,12 +22,19 @@ public class GameText
 	private String text;
 	private com.badlogic.gdx.graphics.Color color;
 	
+	private static final Point OFFSCREEN_COORDS = new Point(-10, -10);
+	
 	public GameText(FontType fontType, Point coords, Color color, String text)
 	{
 		setFont(fontType);
 		this.color = ImageUtils.gdxColor(color);
 		this.coords = new Point(coords.x, coords.y);
 		this.text = text.toUpperCase();
+	}
+	
+	public GameText(FontType fontType, Color color, String text)
+	{
+		this(fontType, OFFSCREEN_COORDS, color, text);
 	}
 
 	private void setFont(FontType fontType)
@@ -45,13 +53,20 @@ public class GameText
 		case FONT_SMALL2:
 			font = small2;
 			return;
-		case FONT_SMALL_TIGHT:
+		case FONT_SMALL_SPREAD:
+			font = smallSpread;
+			return;
 		default:
 			font = small2;
 			break;
 		}
 		
 		font = small2;	//TODO: remove this once I've created more fonts
+	}
+	
+	public boolean isEmpty()
+	{
+		return text == null || text.isEmpty();
 	}
 	
 	@Override
@@ -148,9 +163,19 @@ public class GameText
 		return new GameText(FontType.FONT_BIG, coords, color, text);
 	}
 	
+	public static GameText big(Color color, String text)
+	{
+		return big(OFFSCREEN_COORDS, color, text);
+	}
+	
 	public static GameText huge(Point coords, String text)
 	{
 		return new GameText(FontType.FONT_HUGE, coords, Color.WHITE, text);
+	}
+	
+	public static GameText huge(String text)
+	{
+		return huge(OFFSCREEN_COORDS, text);
 	}
 	
 	public static GameText small(Point coords, Color color, String text)
@@ -158,8 +183,18 @@ public class GameText
 		return new GameText(FontType.FONT_SMALL, coords, color, text);
 	}
 	
+	public static GameText small(Color color, String text)
+	{
+		return small(OFFSCREEN_COORDS, color, text);
+	}
+	
 	public static GameText small2(Point coords, Color color, String text)
 	{
 		return new GameText(FontType.FONT_SMALL2, coords, color, text);
+	}
+	
+	public static GameText small2(Color color, String text)
+	{
+		return small2(OFFSCREEN_COORDS, color, text);
 	}
 }

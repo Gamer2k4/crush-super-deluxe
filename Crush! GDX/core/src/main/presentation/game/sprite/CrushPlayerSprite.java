@@ -22,9 +22,6 @@ import main.presentation.common.Logger;
 
 public class CrushPlayerSprite extends CrushSprite implements ActionListener
 {
-	public static boolean isAbstract = DebugConstants.ABSTRACT_SIMULATION;		//TODO: this should be somewhere else
-																				//		also, ultimately don't show stats if it's abstract, but of course I'll want them now for testing
-	
 	private PlayerState state;
 	protected Facing facing;
 	private final Team team;
@@ -308,7 +305,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	
 	private void beginAnimation(PlayerState animation)
 	{
-		if (isAbstract)
+		if (DebugConstants.ABSTRACT_SIMULATION)
 		{
 			coords.x = targetCoords.x;
 			coords.y = targetCoords.y;
@@ -502,7 +499,7 @@ public class CrushPlayerSprite extends CrushSprite implements ActionListener
 	
 	private void playSound(SoundType sound)
 	{
-		if (isAbstract)
+		if (DebugConstants.ABSTRACT_SIMULATION)
 			return;
 		
 		AudioManager.getInstance().playSound(sound);

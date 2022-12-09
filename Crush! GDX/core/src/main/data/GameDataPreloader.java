@@ -2,7 +2,6 @@ package main.data;
 
 import java.util.List;
 
-import main.data.entities.Race;
 import main.data.entities.Team;
 import main.presentation.TeamColorsManager;
 import main.presentation.common.Logger;
@@ -39,7 +38,8 @@ public class GameDataPreloader
 		long startTime = System.currentTimeMillis();
 		
 		for (Team team: gameTeams)
-			TeamColorsManager.getInstance().getPlayerImage(team, Race.HUMAN);
+			TeamColorsManager.getInstance().refresh(team);
+		
 		Logger.debug("Team colors loaded in " + (System.currentTimeMillis() - startTime) + "ms.");
 		
 		CrushArenaImageManager.getInstance().getArenaForHomeTeam(arenaIndex, gameTeams.get(0));
@@ -47,6 +47,7 @@ public class GameDataPreloader
 		
 		for (Team team : gameTeams)
 			PlayerAnimationManager.getInstance().generateAndMapPlayerSprites(team);
+		
 		Logger.debug("Load time including sprite coloring was " + (System.currentTimeMillis() - startTime) + "ms.");
 		
 		CrushAnimatedTile.warpAnimation();		//this should generate all the static animations

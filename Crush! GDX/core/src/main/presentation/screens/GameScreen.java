@@ -136,6 +136,11 @@ public abstract class GameScreen implements Screen
 	{
 		isActive = false;
 	}
+	
+	public boolean isActive()
+	{
+		return isActive;
+	}
 
 	public List<GameText> getStaticText()
 	{

@@ -15,13 +15,13 @@ import main.presentation.legacy.common.LegacyUiConstants;
 
 public class NewTurnAlert extends PopupAlert
 {
-	private static Point TEXTBOX_COORDS = new Point(198, 220);
+	private static Point TEXTBOX_COORDS = new Point(188, 220);
 	
 	private List<GameText> newTurnMessage;
 	
 	public NewTurnAlert(String teamName)
 	{
-		super(224, 20);
+		super(244, 20);
 		Drawable singleBlackPixel = new TextureRegionDrawable(new TextureRegion(blackTexture, 0, 0, 1, 1));
 		image = new StaticImage(singleBlackPixel, TEXTBOX_COORDS);
 		offsetImage = image;

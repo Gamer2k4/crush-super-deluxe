@@ -40,6 +40,7 @@ public class EventButtonBarFactory
 	private StaticImage[][] teamBanners = new StaticImage[3][2];
 	
 	private boolean ballFound = false;
+	private boolean isActive = false;
 	
 	public static final int MINIMAP_X_START = 567;
 	public static final int MINIMAP_Y_START = 11;
@@ -85,6 +86,11 @@ public class EventButtonBarFactory
 
 		return instance;
 	}
+	
+	public boolean isActive()
+	{
+		return isActive;
+	}
 
 	private void createDepressedButtons()
 	{
@@ -105,13 +111,15 @@ public class EventButtonBarFactory
 	{
 		data = clientData;
 		ballFound = false;
+		isActive = true;
 		generateNames();
 		generateTeamBanners();
 	}
 	
 	public void endGame()
 	{
-		data = null;
+		//data = null;	//no sense in nulling it out, since it just gets refreshed when there's a new game anyway, and some screens may try to grab some last bits of data after the game concludes
+		isActive = false;
 		ballFound = false;
 	}
 	
@@ -160,6 +168,12 @@ public class EventButtonBarFactory
 		
 		if (currentPlayer == null)
 			return names;
+		
+		if (!isActive)
+		{
+			Logger.warn("EventButtonBarFactory - Unable to get player text info because factory is inactive.");
+			return names;
+		}
 		
 		int teamIndex = data.getCurrentTeam();
 		int playerIndex = data.getNumberOfPlayer(currentPlayer);
@@ -219,6 +233,12 @@ public class EventButtonBarFactory
 	{
 		List<StaticImage> minimap = new ArrayList<StaticImage>();
 		
+		if (!isActive)
+		{
+			Logger.warn("EventButtonBarFactory - Unable to generate minimap because factory is inactive.");
+			return minimap;
+		}
+		
 		ArenaImageGenerator.generateArenaImage(data.getArena(), ARENA_SIDE_LENGTH, TILE_SIZE);
 		darkenPadsAndGoals();
 		addPlayerMinimapPoints();
@@ -232,12 +252,6 @@ public class EventButtonBarFactory
 	
 	private void darkenPadsAndGoals()
 	{
-		if (data == null)
-		{
-			Logger.warn("EventButtonBarFactory - Unable to darken pads/goals because data is null!");
-			return;
-		}
-		
 		List<Point> failedPadLocations = data.getArena().getDimPadLocations();
 		
 		for (Point padCoords : failedPadLocations)
@@ -255,12 +269,6 @@ public class EventButtonBarFactory
 
 	private void addPlayerMinimapPoints()
 	{
-		if (data == null)
-		{
-			Logger.warn("EventButtonBarFactory - Unable to add player minimap points because data is null!");
-			return;
-		}
-		
 		for (Player player : data.getAllPlayers())
 		{
 			if (player != null && player.isInGame())
@@ -283,9 +291,9 @@ public class EventButtonBarFactory
 	{
 		List<StaticImage> banners = new ArrayList<StaticImage>();
 		
-		if (data == null)
+		if (!isActive)
 		{
-			Logger.warn("EventButtonBarFactory - Unable to add team banners because data is null!");
+			Logger.warn("EventButtonBarFactory - Unable to add team banners because factory is inactive.");
 			return banners;
 		}
 		
@@ -309,6 +317,12 @@ public class EventButtonBarFactory
 	{
 		List<StaticImage> button = new ArrayList<StaticImage>();
 		
+		if (!isActive)
+		{
+			Logger.warn("EventButtonBarFactory - Unable to get selected action button because factory is inactive.");
+			return button;
+		}
+		
 		button.add(depressedButtons.get(currentAction));
 		
 		return button;
@@ -317,6 +331,12 @@ public class EventButtonBarFactory
 	public List<StaticImage> getSelectedTeamAndPlayerIndicators(Player currentPlayer)
 	{
 		List<StaticImage> images = new ArrayList<StaticImage>();
+		
+		if (!isActive)
+		{
+			Logger.warn("EventButtonBarFactory - Unable to add team and player indicators because factory is inactive.");
+			return images;
+		}
 		
 		StaticImage selectedPlayerIndicator = overlays.get(ImageType.GAME_OVERLAY_SELECTEDPLAYER);
 		selectedPlayerIndicator.setPosition(new Point((28 * data.getNumberOfPlayer(currentPlayer)) - 16, 8));
@@ -339,9 +359,9 @@ public class EventButtonBarFactory
 	{
 		List<StaticImage> images = new ArrayList<StaticImage>();
 		
-		if (data == null)
+		if (!isActive)
 		{
-			Logger.warn("EventButtonBarFactory - Unable to add player statuses because data is null!");
+			Logger.warn("EventButtonBarFactory - Unable to add player statuses because factory is inactive.");
 			return images;
 		}
 		

@@ -42,17 +42,36 @@ public class ImageFactory
 	
 	public Drawable getDrawable(ImageType imageType)
 	{
+		if (images.get(imageType) == null)
+			throw new IllegalArgumentException("No image loaded for ImageType [" + imageType.name() + "].");
+		
 		return images.get(imageType);
 	}
 	
 	public Pixmap getPixMap(ImageType imageType)
 	{
+		if (cursorImages.get(imageType) == null)
+			throw new IllegalArgumentException("No cursor image loaded for ImageType [" + imageType.name() + "].");
+		
 		return cursorImages.get(imageType);
 	}
 	
 	public Texture getTexture(ImageType imageType)
 	{
+		if (textures.get(imageType) == null)
+			throw new IllegalArgumentException("No texture loaded for ImageType [" + imageType.name() + "].");
+		
 		return textures.get(imageType);
+	}
+	
+	public int getImageWidth(ImageType imageType)
+	{
+		return getTexture(imageType).getWidth();
+	}
+	
+	public int getImageHeight(ImageType imageType)
+	{
+		return getTexture(imageType).getHeight();
 	}
 
 	private void loadImages()
@@ -114,6 +133,22 @@ public class ImageFactory
 		addImage(ImageType.SCREEN_VICTORY_TOURNAMENT, "screens/victoryt.png");
 		addImage(ImageType.SCREEN_VICTORY_LEAGUE, "screens/victoryl.png");
 		addImage(ImageType.SCREEN_CHAMPS, "screens/champs.png");
+		
+		addImage(ImageType.SCREEN_TEAM_EDITOR_START, "screens/editor/rostbar.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_SETTINGS, "screens/editor/settings.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_ACQUIRE, "screens/editor/acquire.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_OUTFIT, "screens/editor/outfit.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_DRAFT, "screens/editor/stock.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_POOL_DRAFT_GENERAL, "screens/editor/draftg.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_POOL_DRAFT_DETAILED, "screens/editor/draftd.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_DOCBOT, "screens/editor/docbot.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_POWER, "screens/editor/power.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_AGILITY, "screens/editor/agility.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_PSYCHE, "screens/editor/psyche.png");
+//		fillTeamColorDiamonds();
+		
+		addImage(ImageType.SCREEN_TEAM_EDITOR_ROSTER_GENERAL, "screens/editor/rosterg.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_ROSTER_DETAILED, "screens/editor/rosterd.png");
 	}
 
 	private void addArenas()
@@ -278,6 +313,8 @@ public class ImageFactory
 		addImage(ImageType.BUTTON_72x17_CLICKED, "screens/buttons/button_72x17_clicked.png");
 		addImage(ImageType.BUTTON_37x17_NORMAL, "screens/buttons/button_37x17_normal.png");
 		addImage(ImageType.BUTTON_37x17_CLICKED, "screens/buttons/button_37x17_clicked.png");
+		addImage(ImageType.BUTTON_39x20_NORMAL, "screens/buttons/button_39x20_normal.png");
+		addImage(ImageType.BUTTON_39x20_CLICKED, "screens/buttons/button_39x20_clicked.png");
 	}
 	
 	private void extractButtonHighlights()

@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.TextureData;
 
+import main.presentation.ImageFactory;
+import main.presentation.ImageType;
 import main.presentation.common.Logger;
 
 public abstract class AbstractColorReplacer
@@ -95,8 +97,8 @@ public abstract class AbstractColorReplacer
 			}
 		}
 		
-//		Texture newTexture = setTextureFromPixmap(targetPixmap);
-		Texture newTexture = new Texture(targetPixmap);
+		Texture newTexture = setTextureFromPixmap(targetPixmap);
+//		Texture newTexture = new Texture(targetPixmap);
 		
 		textureData.disposePixmap();		//I think this might be unnecessary
 //	    originalPixmap.dispose();
@@ -116,7 +118,9 @@ public abstract class AbstractColorReplacer
 			} catch (RuntimeException re)
 			{
 				if (re.getMessage() != null && re.getMessage().contains("No OpenGL context found in the current thread"))
-					Logger.warn("AbstractColorReplacer - Hiding OpenGL exception and reattempting texture mapping.");
+					Logger.warn("AbstractColorReplacer - Hiding OpenGL exception and returning null Texture.");
+				
+				return null;
 			}
 		}
 		

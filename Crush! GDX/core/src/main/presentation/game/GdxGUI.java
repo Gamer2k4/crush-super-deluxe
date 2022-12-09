@@ -58,6 +58,7 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	private Player lastPlayerCameraSnappedTo = null;
 	
 	private NewTurnAlert[] newTurnAlerts = new NewTurnAlert[3];
+	private boolean newTurnAlertReady = false;
 	
 	public GdxGUI(Client client, ActionListener gameEndListener)
 	{
@@ -240,11 +241,7 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		currentAction = Action.ACTION_MOVE;
 		curPlayerIndex = getFirstEligiblePlayer();
 		snapToPlayer(getData().getPlayer(curPlayerIndex));
-		
-		//TODO: this needs to pop up after all the recover events are done, not here
-		//		also it shouldn't pop up for CPU players
-		//		kept to remind myself that I've made the popup already
-//		showNewTurnAlert(event.flags[0]);
+		newTurnAlertReady = true;
 	}
 	
 	private void handleRecoverEvent(Event event)
@@ -561,7 +558,7 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	
 	private void showWarpAnimation(Point portalCoords)
 	{
-		if (CrushPlayerSprite.isAbstract)
+		if (DebugConstants.ABSTRACT_SIMULATION)
 			return;
 		
 		CrushAnimatedTile warpAnimation = CrushAnimatedTile.warpAnimation();
@@ -615,7 +612,7 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		if (binFacing == null)
 			return;
 		
-		if (CrushPlayerSprite.isAbstract)
+		if (DebugConstants.ABSTRACT_SIMULATION)
 			return;
 		
 		animateBinPhase(binLocation, binFacing, 1);
@@ -667,7 +664,7 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 			return;
 		
 		//don't show alerts in an abstract simulation
-		if (CrushPlayerSprite.isAbstract)
+		if (DebugConstants.ABSTRACT_SIMULATION)
 			return;
 		
 		activeEjectEvent = event;
@@ -699,6 +696,7 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	{
 		eventTextureFactory.endGame();
 		eventButtonBarFactory.endGame();
+		refreshInterface();
 	}
 	
 	private void clearHighlights()
@@ -745,6 +743,12 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	{
 		List<GameText> texts = new ArrayList<GameText>();
 		
+		if (!gameStarted)
+		{
+			Logger.warn("GdxGUI - Game is not active; no game texts will be generated.");
+			return texts;
+		}
+		
 		texts.addAll(eventButtonBarFactory.getPlayerTextInfo(currentPlayer));
 		texts.addAll(eventButtonBarFactory.getPlayerAttributes(currentPlayer));
 		texts.addAll(eventButtonBarFactory.getPlayerApStatuses(getData().getCurrentTeam()));
@@ -758,6 +762,12 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	public List<StaticImage> getStaticImages()
 	{
 		List<StaticImage> images = new ArrayList<StaticImage>();
+		
+		if (!gameStarted || !gameScreen.isActive() || !eventButtonBarFactory.isActive())
+		{
+			Logger.warn("GdxGUI - Event is not active; no static images will be generated.");
+			return images;
+		}
 		
 		images.addAll(eventButtonBarFactory.getSelectedButton(currentAction));
 		images.addAll(eventButtonBarFactory.getMinimap());
@@ -829,8 +839,13 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		
 		if (nextEvent == null)
 		{
-//			snapToPlayer(getData().getPlayer(curPlayerIndex));	//TODO: seems like this would be a good idea but the original game doesn't do it
 			resumeEventPoller();
+			
+			if (!DebugConstants.ABSTRACT_SIMULATION && getData().isCurrentTeamHumanControlled() && newTurnAlertReady)
+			{
+				newTurnAlertReady = false;
+				showNewTurnAlert(getData().getCurrentTeam());
+			}
 		}
 		else
 		{
@@ -1059,16 +1074,35 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	{
 		super.endGame();
 		bgNoiseTimer.stop();
-		
 		closeGUI();
-		gameEndListener.actionPerformed(ScreenCommand.END_GAME.asActionEvent());
 		
+		//this is intended to give the GUI enough time to close before sending the game end listener the command to end the game
+		sendEndGameActionAfterDelay(50);
+	}
+	
+	private void sendEndGameActionAfterDelay(int durationInMs)
+	{
+		TimerTask task = new TimerTask() {
+	        @Override
+			public void run()
+	        {
+	        	gameEndListener.actionPerformed(ScreenCommand.END_GAME.asActionEvent());
+	        	System.out.println("Done!");
+	        }
+	    };
+	    
+	    System.out.println("Closing GUI...");
+	    Timer endGameDelayTimer = new Timer();
+		endGameDelayTimer.schedule(task, durationInMs);
 	}
 	
 	//auto-click the game end alert after the music concludes
 	private void startGameEndTimer()
 	{
-		final long timerDuration = 12000;	//victory music lasts 11 seconds
+		long timerDuration = 12000;	//victory music lasts 11 seconds
+		
+		if (DebugConstants.ABSTRACT_SIMULATION)
+			timerDuration = 500;	//but the screen transitions quite quickly during abstract simulation
 		
 		final Timer gameEnd = new Timer();
 		
@@ -1079,6 +1113,7 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 				if (!gameStarted)
 	        		return;
 				
+				gameEnd.cancel();
 				confirmAlert();
 	        }
 	    };
@@ -1098,7 +1133,11 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	public void confirmAlert()
 	{
 		if (activeAlert.getClass() == VictoryAlert.class)
+		{
 			endGame();
+			activeAlert = null;
+			return;
+		}
 		
 		activeAlert = null;
 		
@@ -1149,7 +1188,7 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	
 	private void delay(int durationInMs)
 	{
-		if (CrushPlayerSprite.isAbstract)
+		if (DebugConstants.ABSTRACT_SIMULATION)
 			return;
 		
 		TimerTask task = new TimerTask() {
@@ -1169,7 +1208,7 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 	
 	private void playSound(SoundType sound)
 	{
-		if (CrushPlayerSprite.isAbstract)
+		if (DebugConstants.ABSTRACT_SIMULATION)
 			return;
 		
 		AudioManager.getInstance().playSound(sound);

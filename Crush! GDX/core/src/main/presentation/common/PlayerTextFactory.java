@@ -1,7 +1,6 @@
 package main.presentation.common;
 
 import java.awt.Color;
-import java.awt.Point;
 
 import main.data.Data;
 import main.data.entities.Player;
@@ -16,8 +15,6 @@ public class PlayerTextFactory
 	private static Data currentGameDataImpl = null;
 	private static Player currentPlayer;
 	private static Stats currentGameStatsForPlayer;
-
-	private static final Point OFFSCREEN_COORDS = new Point(-10, -10);
 
 	public static void setPlayer(Player player)
 	{
@@ -52,13 +49,13 @@ public class PlayerTextFactory
 
 	public static GameText getRushAttempts()
 	{
-		return GameText.small2(OFFSCREEN_COORDS, LegacyUiConstants.COLOR_LEGACY_DULL_GREEN,
+		return GameText.small2(LegacyUiConstants.COLOR_LEGACY_DULL_GREEN,
 				getIntAsText(currentGameStatsForPlayer.getStat(Stats.STATS_RUSHING_ATTEMPTS), 3));
 	}
 
 	public static GameText getRushTiles()
 	{
-		return GameText.small2(OFFSCREEN_COORDS, LegacyUiConstants.COLOR_LEGACY_DULL_GREEN,
+		return GameText.small2(LegacyUiConstants.COLOR_LEGACY_DULL_GREEN,
 				getIntAsText(currentGameStatsForPlayer.getStat(Stats.STATS_RUSHING_YARDS), 3));
 	}
 
@@ -71,7 +68,7 @@ public class PlayerTextFactory
 		if (attempts > 0)
 			average = (int) (yards / attempts);
 
-		return GameText.small2(OFFSCREEN_COORDS, LegacyUiConstants.COLOR_LEGACY_DULL_GREEN, getIntAsText(average, 3));
+		return GameText.small2(LegacyUiConstants.COLOR_LEGACY_DULL_GREEN, getIntAsText(average, 3));
 	}
 
 	public static GameText getColoredAttributeWithModifiers(int attribute, Color defaultColor, Color enhancedColor)
@@ -96,7 +93,7 @@ public class PlayerTextFactory
 		if (modifiedAttribute > baseAttribute)
 			color = enhancedColor;
 
-		return new GameText(font, OFFSCREEN_COORDS, color, getIntAsText(modifiedAttribute, 2));
+		return new GameText(font, color, getIntAsText(modifiedAttribute, 2));
 	}
 
 	public static GameText getColoredCost(Color defaultColor, Color enhancedColor)
@@ -114,6 +111,6 @@ public class PlayerTextFactory
 		if (currentCost > baseCost)
 			color = enhancedColor;
 
-		return GameText.small2(OFFSCREEN_COORDS, color, getIntAsText(currentCost, 3)); // note that the cost doesn't actually have leading zeroes
+		return GameText.small2(color, getIntAsText(currentCost, 3)); // note that the cost doesn't actually have leading zeroes
 	}
 }

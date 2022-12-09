@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
@@ -15,6 +17,7 @@ import main.data.entities.Team;
 import main.presentation.ImageFactory;
 import main.presentation.ImageType;
 import main.presentation.TeamColorsManager;
+import main.presentation.common.Logger;
 import main.presentation.common.ScreenCommand;
 import main.presentation.common.image.TeamLineupGenerator;
 import main.presentation.game.FontType;
@@ -25,8 +28,6 @@ import main.presentation.screens.StandardButtonScreen;
 
 public abstract class AbstractVictoryScreen extends StandardButtonScreen
 {
-	private ImageButton clickToExit = null;
-	
 	private GameText hugeTeamName = null;
 	private GameText normalTeamName = null;
 	private GameText normalCoachName = null;
@@ -35,11 +36,24 @@ public abstract class AbstractVictoryScreen extends StandardButtonScreen
 	private List<StaticImage> teamLineup = new ArrayList<StaticImage>();
 	private StaticImage coachImage = null;
 	
+	private ScreenCommand flowToSourceScreenCommand;
+	
+	private boolean renderError = false;
+	private Team winningTeam = null;
+	
 	protected AbstractVictoryScreen(Game sourceGame, ActionListener eventListener, ScreenCommand flowToSourceScreenCommand)
 	{
 		super(sourceGame, eventListener);
+		this.flowToSourceScreenCommand = flowToSourceScreenCommand;
+	}
+	
+	@Override
+	public void render(float delta)
+	{
+		if (renderError)
+			refreshTeamColors();
 		
-		clickToExit = addClickZone(0, 0, 640, 400, flowToSourceScreenCommand);
+		super.render(delta);
 	}
 
 	@Override
@@ -49,40 +63,75 @@ public abstract class AbstractVictoryScreen extends StandardButtonScreen
 		stage.clear();
 		stage.addActor(new Image(ImageFactory.getInstance().getDrawable(ImageType.BG_BG8)));
 		stage.addActor(new Image(ImageFactory.getInstance().getDrawable(getVictoryScreenImageType())));
-		stage.addActor(clickToExit);	//the way images and text are added right now, this won't work if you click on custom text or images (since they're on top)
 	}
 	
-	public void setTeam(Team winningTeam)
+	@Override
+	public void update()
 	{
-		updateTeamAndCoachNames(winningTeam);
-		updateCoachImage(winningTeam);
-		updateTeamLineup(winningTeam);
+		if (!isActive)
+			return;
+		
+		if (Gdx.input.justTouched() || Gdx.input.isKeyJustPressed(Keys.ANY_KEY))
+			eventListener.actionPerformed(flowToSourceScreenCommand.asActionEvent());
 	}
 	
-	private void updateTeamAndCoachNames(Team winningTeam)
+	@Override
+	public void activate()
 	{
-		hugeTeamName = new GameText(FontType.FONT_HUGE, new Point(0, 0), LegacyUiConstants.COLOR_LEGACY_WHITE, winningTeam.teamName);
+		refreshTeamColors();
+		super.activate();
+	}
+	
+	public void setTeam(Team team)
+	{
+		if (team == null)
+			return;
+		
+		winningTeam = team;
+	}
+		
+	public void refreshTeamColors()
+	{	
+		try
+		{
+			updateTeamAndCoachNames(winningTeam);
+			updateCoachImage(winningTeam);
+			updateTeamLineup(winningTeam);
+		}
+		catch (IllegalArgumentException e)
+		{
+			Logger.error("Error updating team graphics for victory screen.  Will retry.");
+			renderError = true;
+			return;
+		}
+		
+		renderError = false;
+	}
+	
+	private void updateTeamAndCoachNames(Team team)
+	{
+		hugeTeamName = new GameText(FontType.FONT_HUGE, new Point(0, 0), LegacyUiConstants.COLOR_LEGACY_WHITE, team.teamName);
 		int padding = 640 - hugeTeamName.getStringPixelLength();
 		hugeTeamName.setCoords(new Point(padding / 2, -10));
 		
-		normalTeamName = new GameText(FontType.FONT_SMALL, new Point(0, 0), LegacyUiConstants.COLOR_LEGACY_GREY, winningTeam.teamName);
+		normalTeamName = new GameText(FontType.FONT_SMALL, new Point(0, 0), LegacyUiConstants.COLOR_LEGACY_GREY, team.teamName);
 		padding = 640 - normalTeamName.getStringPixelLength();
 		normalTeamName.setCoords(new Point(padding / 2, 288));
 		
-		normalCoachName = new GameText(FontType.FONT_SMALL, new Point(0, 0), LegacyUiConstants.COLOR_LEGACY_GREY, "COACH  " + winningTeam.coachName);
+		normalCoachName = new GameText(FontType.FONT_SMALL, new Point(0, 0), LegacyUiConstants.COLOR_LEGACY_GREY, "COACH  " + team.coachName);
 		padding = 640 - normalCoachName.getStringPixelLength();
 		normalCoachName.setCoords(new Point(padding / 2, 263));
 	}
 
-	private void updateCoachImage(Team winningTeam)
+	private void updateCoachImage(Team team)
 	{
-		Texture coachTexture = TeamColorsManager.getInstance().getCoachImage(winningTeam);
+		Texture coachTexture = TeamColorsManager.getInstance().getCoachImage(team);
 		coachImage = new StaticImage(coachTexture, new Point(275, 156));
 	}
 
-	private void updateTeamLineup(Team winningTeam)
+	private void updateTeamLineup(Team team)
 	{
-		teamLineup = TeamLineupGenerator.getLineup(winningTeam, new Point(275, 270), true);
+		teamLineup = TeamLineupGenerator.getLineup(team, new Point(275, 270), true);
 	}
 	
 	@Override
@@ -99,6 +148,9 @@ public abstract class AbstractVictoryScreen extends StandardButtonScreen
 	public List<StaticImage> getStaticImages()
 	{
 		List<StaticImage> images = new ArrayList<StaticImage>();
+		
+		if (renderError)
+			return images;
 
 		images.addAll(teamLineup);
 		images.add(coachImage);

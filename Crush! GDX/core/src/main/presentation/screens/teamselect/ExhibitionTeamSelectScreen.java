@@ -28,6 +28,8 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 	private ImageButton startButton = null;
 	private ImageButton eventButton;
 	private ImageButton victoryButton;
+	//TODO: will need an additional start button for before the teams are locked that does a budget check and potentially shows a popup rather than
+	//		just going straight to the game
 	
 	private GameText winRequirementText;
 	
@@ -51,6 +53,8 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 		buttons.add(addClickZone(265, 369, 45, 9, ScreenCommand.CHANGE_BUDGET));
 		buttons.add(addClickZone(331, 369, 61, 9, ScreenCommand.CHANGE_PACE));
 		buttons.add(addClickZone(413, 369, 45, 9, ScreenCommand.CHANGE_TURNS));
+		
+		addHelmetClickZones(buttons);
 		
 		defineSettingsTexts();
 		
@@ -336,6 +340,8 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 	private void updateVictoryScreen(Team team)
 	{
 		ExhibitionVictoryScreen victoryScreen = (ExhibitionVictoryScreen) GameScreenManager.getInstance().getScreen(ScreenType.EXHIBITION_VICTORY);
+		
+		boolean victoryResetSuccess = false;
 		victoryScreen.reset();
 		victoryScreen.setTeam(team);
 		startButton = victoryButton;
