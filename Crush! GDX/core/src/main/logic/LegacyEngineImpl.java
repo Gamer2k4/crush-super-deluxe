@@ -150,7 +150,7 @@ public class LegacyEngineImpl implements Engine
 			
 			int originalAP = activePlayer.currentAP;
 			int curAP = originalAP;
-			int curTG = activePlayer.getAttributeWithModifiers(Player.ATT_TG);
+			int curTG = activePlayer.getAttributeWithModifiers(Player.ATT_TG, localData);
 			
 			if (theCommand.flags[5] == 1)
 				isJumping = true;
@@ -203,7 +203,7 @@ public class LegacyEngineImpl implements Engine
 					continue;
 				else if (isJumping)	//we're landing, so check for damage (note that failing a jump on shocks precludes you from shocks)
 				{
-					int curJP = activePlayer.getAttributeWithModifiers(Player.ATT_JP);
+					int curJP = activePlayer.getAttributeWithModifiers(Player.ATT_JP, localData);
 					if (!skillCheck(curJP))
 					{
 						curAP = 0;
@@ -245,7 +245,7 @@ public class LegacyEngineImpl implements Engine
 				//CHECK IF THE BALL IS HERE AND ACT ACCORDINGLY
 				if (ballLoc.x == playerMoveCoords.x && ballLoc.y == playerMoveCoords.y)
 				{
-					int hands = activePlayer.getAttributeWithModifiers(Player.ATT_HD);
+					int hands = activePlayer.getAttributeWithModifiers(Player.ATT_HD, localData);
 					if (!activePlayer.hasSkill(Skill.SCOOP))
 					{
 						curAP -= 10;
@@ -863,8 +863,8 @@ public class LegacyEngineImpl implements Engine
 		Logger.debug("\t\t" + attacker);
 		Logger.debug("\t\t" + defender);
 
-		int atk_base_CH = attacker.getAttributeWithModifiers(Player.ATT_CH);
-		int def_base_CH = defender.getAttributeWithModifiers(Player.ATT_CH);
+		int atk_base_CH = attacker.getAttributeWithModifiers(Player.ATT_CH, localData);
+		int def_base_CH = defender.getAttributeWithModifiers(Player.ATT_CH, localData);
 		
 		if (def_base_CH < atk_base_CH && defender.hasSkill(Skill.JUDO))
 		{
@@ -875,14 +875,14 @@ public class LegacyEngineImpl implements Engine
 		int atk_CH = atk_base_CH + getLocalAssistBonus(attacker, defender) + Randomizer.getRandomInt(1, RANDOMNESS);
 		int def_CH = def_base_CH + getLocalAssistBonus(defender, attacker) + Randomizer.getRandomInt(1, RANDOMNESS);
 		
-		int atk_ST = attacker.getAttributeWithModifiers(Player.ATT_ST) + Randomizer.getRandomInt(1, RANDOMNESS);
-		int def_ST = defender.getAttributeWithModifiers(Player.ATT_ST) + Randomizer.getRandomInt(1, RANDOMNESS);
+		int atk_ST = attacker.getAttributeWithModifiers(Player.ATT_ST, localData) + Randomizer.getRandomInt(1, RANDOMNESS);
+		int def_ST = defender.getAttributeWithModifiers(Player.ATT_ST, localData) + Randomizer.getRandomInt(1, RANDOMNESS);
 		
-		int atk_TG = attacker.getAttributeWithModifiers(Player.ATT_TG) + Randomizer.getRandomInt(1, RANDOMNESS);
-		int def_TG = defender.getAttributeWithModifiers(Player.ATT_TG) + Randomizer.getRandomInt(1, RANDOMNESS);
+		int atk_TG = attacker.getAttributeWithModifiers(Player.ATT_TG, localData) + Randomizer.getRandomInt(1, RANDOMNESS);
+		int def_TG = defender.getAttributeWithModifiers(Player.ATT_TG, localData) + Randomizer.getRandomInt(1, RANDOMNESS);
 		
 		int result = atk_CH - def_CH;
-		boolean dodge = skillCheck(defender.getAttributeWithModifiers(Player.ATT_DA));
+		boolean dodge = skillCheck(defender.getAttributeWithModifiers(Player.ATT_DA, localData));
 		
 		Logger.debug("ENGINE - CHECK: Attacker rolls " + atk_CH + " and defender rolls " + def_CH + " for a total of " + result + ".");
 
@@ -1038,7 +1038,7 @@ public class LegacyEngineImpl implements Engine
 						continue;
 					
 					//reflex check passed, or the second check of a combo
-					if (combo || skillCheck(checkingPlayer.getAttributeWithModifiers(Player.ATT_RF)))
+					if (combo || skillCheck(checkingPlayer.getAttributeWithModifiers(Player.ATT_RF, localData)))
 					{
 						int p1 = localData.getIndexOfPlayer(checkedPlayer);
 						int p2 = localData.getIndexOfPlayer(checkingPlayer);

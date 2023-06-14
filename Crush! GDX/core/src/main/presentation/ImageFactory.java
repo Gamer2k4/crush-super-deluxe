@@ -138,17 +138,25 @@ public class ImageFactory
 		addImage(ImageType.SCREEN_TEAM_EDITOR_SETTINGS, "screens/editor/settings.png");
 		addImage(ImageType.SCREEN_TEAM_EDITOR_ACQUIRE, "screens/editor/acquire.png");
 		addImage(ImageType.SCREEN_TEAM_EDITOR_OUTFIT, "screens/editor/outfit.png");
-		addImage(ImageType.SCREEN_TEAM_EDITOR_DRAFT, "screens/editor/stock.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_DRAFT, "screens/editor/stock_with_player_sprites.png");
 		addImage(ImageType.SCREEN_TEAM_EDITOR_POOL_DRAFT_GENERAL, "screens/editor/draftg.png");
 		addImage(ImageType.SCREEN_TEAM_EDITOR_POOL_DRAFT_DETAILED, "screens/editor/draftd.png");
 		addImage(ImageType.SCREEN_TEAM_EDITOR_DOCBOT, "screens/editor/docbot.png");
 		addImage(ImageType.SCREEN_TEAM_EDITOR_POWER, "screens/editor/power.png");
 		addImage(ImageType.SCREEN_TEAM_EDITOR_AGILITY, "screens/editor/agility.png");
 		addImage(ImageType.SCREEN_TEAM_EDITOR_PSYCHE, "screens/editor/psyche.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_POWER_MASK, "screens/editor/power_mask.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_AGILITY_MASK, "screens/editor/agility_mask.png");
+		addImage(ImageType.SCREEN_TEAM_EDITOR_PSYCHE_MASK, "screens/editor/psyche_mask.png");
 //		fillTeamColorDiamonds();
 		
 		addImage(ImageType.SCREEN_TEAM_EDITOR_ROSTER_GENERAL, "screens/editor/rosterg.png");
 		addImage(ImageType.SCREEN_TEAM_EDITOR_ROSTER_DETAILED, "screens/editor/rosterd.png");
+		
+		addImage(ImageType.SCREEN_TEAM_STATS_TCARNAGE, "screens/team_stats/tcarnage.png");
+		addImage(ImageType.SCREEN_TEAM_STATS_TCHECK, "screens/team_stats/tcheck.png");
+		addImage(ImageType.SCREEN_TEAM_STATS_TMISC, "screens/team_stats/tmisc.png");
+		addImage(ImageType.SCREEN_TEAM_STATS_TRUSH, "screens/team_stats/trush.png");
 	}
 
 	private void addArenas()
@@ -242,6 +250,8 @@ public class ImageFactory
 		addImage(ImageType.EJECT_KILL, "eventoverlays/death.png");
 		addImage(ImageType.EJECT_BLOB, "eventoverlays/mutation.png");
 		addImage(ImageType.EJECT_REF, "eventoverlays/ref.png");
+		addImage(ImageType.POPUP_DIALOG_BLANK_PROMPT, "screens/popups/popup_dialog_blank_prompt.png");
+		addImage(ImageType.POPUP_DIALOG_OVER_BUDGET, "screens/popups/popup_dialog_over_budget.png");
 	}
 
 	private void extractStatusLabels()
@@ -311,10 +321,19 @@ public class ImageFactory
 	{
 		addImage(ImageType.BUTTON_72x17_NORMAL, "screens/buttons/button_72x17_normal.png");
 		addImage(ImageType.BUTTON_72x17_CLICKED, "screens/buttons/button_72x17_clicked.png");
+		addImage(ImageType.BUTTON_35x17_NORMAL, "screens/buttons/button_35x17_normal.png");
+		addImage(ImageType.BUTTON_35x17_CLICKED, "screens/buttons/button_35x17_clicked.png");
 		addImage(ImageType.BUTTON_37x17_NORMAL, "screens/buttons/button_37x17_normal.png");
 		addImage(ImageType.BUTTON_37x17_CLICKED, "screens/buttons/button_37x17_clicked.png");
+		addImage(ImageType.BUTTON_37x25_NORMAL, "screens/buttons/button_37x25_normal.png");
+		addImage(ImageType.BUTTON_37x25_CLICKED, "screens/buttons/button_37x25_clicked.png");
 		addImage(ImageType.BUTTON_39x20_NORMAL, "screens/buttons/button_39x20_normal.png");
 		addImage(ImageType.BUTTON_39x20_CLICKED, "screens/buttons/button_39x20_clicked.png");
+		addImage(ImageType.BUTTON_20x38_NORMAL, "screens/buttons/button_20x38_normal.png");
+		addImage(ImageType.BUTTON_20x38_CLICKED, "screens/buttons/button_20x38_clicked.png");
+		addImage(ImageType.BUTTON_102x20_LEFTCLICK, "screens/buttons/button_102x20_left_click.png");
+		addImage(ImageType.BUTTON_102x20_RIGHTCLICK, "screens/buttons/button_102x20_right_click.png");
+		addImage(ImageType.BUTTON_STATS_ARROWS, "screens/buttons/arrows.png");
 	}
 	
 	private void extractButtonHighlights()

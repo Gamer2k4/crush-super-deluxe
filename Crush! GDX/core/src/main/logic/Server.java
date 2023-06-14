@@ -15,8 +15,8 @@ import main.data.DataImpl;
 import main.data.Event;
 import main.data.entities.Pace;
 import main.data.entities.Team;
-import main.logic.AI.AI;
-import main.logic.AI.BasicAI;
+import main.logic.ai.AI;
+import main.logic.ai.BasicAI;
 import main.presentation.common.Logger;
 
 //TODO: the AI timer is probably in the wrong place, but it should be done on the server, and it doesn't really quite fit into the

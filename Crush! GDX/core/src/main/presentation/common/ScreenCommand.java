@@ -2,6 +2,8 @@ package main.presentation.common;
 
 import java.awt.event.ActionEvent;
 
+import main.data.entities.Race;
+import main.data.entities.Skill;
 import main.presentation.screens.ScreenType;
 
 public enum ScreenCommand
@@ -80,9 +82,12 @@ public enum ScreenCommand
 	ARENA_SET_3,
 	ARENA_SET_4,
 
-	SCROLL_UP,
-	SCROLL_DOWN,
+	SCROLL_ROSTER_UP,
+	SCROLL_ROSTER_DOWN,
 
+	CONTROLLER_HUMAN,
+	CONTROLLER_AI,
+	
 	TEAM_SAVE,
 	TEAM_LOAD,
 	
@@ -108,6 +113,23 @@ public enum ScreenCommand
 	TEAM_COLOR_51,
 	TEAM_COLOR_52,
 	
+	EQUIP_SCROLL_TEAM_GEAR_UP,
+	EQUIP_SCROLL_TEAM_GEAR_DOWN,
+	EQUIP_SELECT_PADS,
+	EQUIP_SELECT_BELTS,
+	EQUIP_SELECT_BOOTS,
+	EQUIP_SELECT_GLOVES,
+	EQUIP_SCROLL_LEFT,
+	EQUIP_SCROLL_RIGHT,
+	EQUIP_BUY,
+	EQUIP_SELL,
+	EQUIP_SELECT_0,
+	EQUIP_SELECT_1,
+	EQUIP_SELECT_2,
+	EQUIP_SELECT_3,
+	EQUIP_SCROLL_UP,
+	EQUIP_SCROLL_DOWN,
+	
 	DOCBOT_UP,
 	DOCBOT_DOWN,
 	
@@ -119,6 +141,35 @@ public enum ScreenCommand
 	DOCBOT_21,
 	DOCBOT_30,
 	DOCBOT_31,
+	
+	GAIN_SKILL_TERROR,
+	GAIN_SKILL_JUGGERNAUT,
+	GAIN_SKILL_TACTICS,
+	GAIN_SKILL_VICIOUS,
+	GAIN_SKILL_BRUTAL,
+	GAIN_SKILL_CHECKMASTER,
+	GAIN_SKILL_STALWART,
+	GAIN_SKILL_GUARD,
+	GAIN_SKILL_RESILIENT,
+	GAIN_SKILL_CHARGE,
+	GAIN_SKILL_BOXING,
+	GAIN_SKILL_COMBO,
+	GAIN_SKILL_QUICKENING,
+	GAIN_SKILL_GYMNASTICS,
+	GAIN_SKILL_JUGGLING,
+	GAIN_SKILL_SCOOP,
+	GAIN_SKILL_STRIP,
+	GAIN_SKILL_JUDO,
+	GAIN_SKILL_FIST_OF_IRON,
+	GAIN_SKILL_DOOMSTRIKE,
+	GAIN_SKILL_AWE,
+	GAIN_SKILL_STOIC,
+	GAIN_SKILL_LEADER,
+	GAIN_SKILL_SENSEI,
+	GAIN_SKILL_SLY,
+	GAIN_SKILL_INTUITION,
+	GAIN_SKILL_HEALER,
+	GAIN_SKILL_KARMA,
 
 	SWAP_PLAYERS,
 	
@@ -166,6 +217,9 @@ public enum ScreenCommand
 	HIRE_PLAYER,
 	FIRE_PLAYER,
 	
+	POPUP_YES,
+	POPUP_NO,
+	
 	GAME_MAIN_PANEL_CLICK,
 	GAME_MINIMAP_CLICK,
 	GAME_SELECT_PLAYER_1,
@@ -204,7 +258,19 @@ public enum ScreenCommand
 	DRAFT_SELECT_PLAYER_7,
 	DRAFT_SELECT_PLAYER_8,
 	DRAFT_SELECT_PLAYER_9,
-	DRAFT_SELECT_PLAYER_10;
+	DRAFT_SELECT_PLAYER_10,
+	
+	STATS_SCROLL_PREV,
+	STATS_SCROLL_NEXT,
+	STATS_BACK,
+	STATS_TCARNAGE,
+	STATS_TCHECK,
+	STATS_TMISC,
+	STATS_TRUSH,
+	STATS_SORT_COLUMN_0,
+	STATS_SORT_COLUMN_1,
+	STATS_SORT_COLUMN_2,
+	STATS_SORT_COLUMN_3;
 	
 	public static ScreenCommand fromValue(String string)
 	{
@@ -237,6 +303,16 @@ public enum ScreenCommand
 		return ScreenCommand.valueOf("DOCBOT_" + option + "" + level);
 	}
 	
+	public static ScreenCommand gainSkill(Skill skill)
+	{
+		return ScreenCommand.valueOf("GAIN_SKILL_" + skill.name());
+	}
+	
+	public static ScreenCommand stockDraftSelect(Race race)
+	{
+		return ScreenCommand.valueOf("STOCK_DRAFT_SELECT_" + race.name());
+	}
+	
 	public ActionEvent asActionEvent()
 	{
 		return new ActionEvent(this, 0, name());
@@ -257,9 +333,34 @@ public enum ScreenCommand
 		return this.name().startsWith("EDIT_TEAM_");
 	}
 	
+	public boolean isEventPregame()
+	{
+		return this.name().endsWith("_PREGAME");
+	}
+	
 	public boolean isGameSelectPlayer()
 	{
 		return this.name().startsWith("GAME_SELECT_PLAYER_");
+	}
+	
+	public boolean isGainSkill()
+	{
+		return this.name().startsWith("GAIN_SKILL_");
+	}
+	
+	public boolean isStockDraftSelect()
+	{
+		return this.name().startsWith("STOCK_DRAFT_SELECT_");
+	}
+	
+	public boolean isEquipSelect()
+	{
+		return this.name().startsWith("EQUIP_SELECT_");
+	}
+	
+	public boolean isStatColumnSort()
+	{
+		return this.name().startsWith("STATS_SORT_COLUMN_");
 	}
 	
 	public int getCommandIndex()
@@ -273,5 +374,23 @@ public enum ScreenCommand
 		{
 			return -1;
 		}
+	}
+	
+	public Skill getSkillToGain()
+	{
+		if (!isGainSkill())
+			return null;
+		
+		String skillName = this.name().substring(11);
+		return Skill.valueOf(skillName);
+	}
+	
+	public Race getRaceToDraft()
+	{
+		if (!isStockDraftSelect())
+			return null;
+		
+		String raceName = this.name().substring(19);
+		return Race.valueOf(raceName);
 	}
 }

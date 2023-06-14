@@ -16,10 +16,8 @@ public class DebugConstants
 	public static final boolean HIDE_EVENT_EXCEPTIONS = false;
 	public static final boolean AUDIO_ON = false;
 	public static final int LOGGING_LEVEL = Logger.WARN;
+//	public static final int LOGGING_LEVEL = Logger.DEBUG;
 	public static final boolean ABSTRACT_SIMULATION = true;
+//	public static final boolean ABSTRACT_SIMULATION = false;
 	public static final Color BG_TINT = Color.WHITE;
-	
-	public static final boolean PLAYER0_IS_HUMAN = false;
-	public static final boolean PLAYER1_IS_HUMAN = false;
-	public static final boolean PLAYER2_IS_HUMAN = false;
 }

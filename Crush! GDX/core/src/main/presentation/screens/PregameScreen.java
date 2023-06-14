@@ -108,7 +108,7 @@ public class PregameScreen extends MouseOverButtonScreen
 		for (int t = 0; t < teams.size(); t++)
 		{
 			Team team = teams.get(t);
-			playerImages.addAll(TeamLineupGenerator.getLineup(team, new Point(275, 129 * (3 - t) - 108), false));
+			playerImages.addAll(TeamLineupGenerator.getLineup(team, new Point(275, 129 * (3 - t) - 108), true));
 		}	
 	}
 	

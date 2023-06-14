@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 import main.data.TeamLoader;
+import main.data.entities.Equipment;
 import main.data.entities.Player;
 import main.data.entities.Race;
 import main.data.entities.Skill;
@@ -20,6 +21,8 @@ import main.presentation.common.Logger;
 public class TeamUpdater
 {
 	public static final String UPDATER_NEW_TEAM = "UPDATER_NEW_TEAM";
+	public static final String UPDATER_COLORS_CHANGED = "UPDATER_COLORS_CHANGED";
+	public static final String UPDATER_ARENA_CHANGED = "UPDATER_ARENA_CHANGED";
 	public static final String UPDATER_PLAYER_SELECTION_CHANGED = "UPDATER_NEW_PLAYER_SELECTED";
 	public static final String UPDATER_PLAYERS_CHANGED = "UPDATER_PLAYERS_CHANGED";
 	public static final String UPDATER_EQUIPMENT_CHANGED = "UPDATER_EQUIPMENT_CHANGED";
@@ -29,8 +32,11 @@ public class TeamUpdater
 	private TeamColorsManager teamColorsManager = TeamColorsManager.getInstance();
 
 	private int currentPlayerIndex = 0;
+	private int maxBudget = 0;
 	
 	private JButton newTeamUpdater;
+	private JButton colorsChangedUpdater;
+	private JButton arenaChangedUpdater;
 	private JButton playerSelectionUpdater;
 	private JButton playersChangedUpdater;
 	private JButton equipmentChangedUpdater;
@@ -46,6 +52,10 @@ public class TeamUpdater
 		team = existingTeam;
 		newTeamUpdater = new JButton();
 		newTeamUpdater.setActionCommand(UPDATER_NEW_TEAM);
+		colorsChangedUpdater = new JButton();
+		colorsChangedUpdater.setActionCommand(UPDATER_COLORS_CHANGED);
+		arenaChangedUpdater = new JButton();
+		arenaChangedUpdater.setActionCommand(UPDATER_ARENA_CHANGED);
 		playerSelectionUpdater = new JButton();
 		playerSelectionUpdater.setActionCommand(UPDATER_PLAYER_SELECTION_CHANGED);
 		playersChangedUpdater = new JButton();
@@ -54,6 +64,7 @@ public class TeamUpdater
 		equipmentChangedUpdater.setActionCommand(UPDATER_EQUIPMENT_CHANGED);
 		docbotChangedUpdater = new JButton();
 		docbotChangedUpdater.setActionCommand(UPDATER_DOCBOT_CHANGED);
+		newTeamUpdater.doClick();
 	}
 
 	public TeamUpdater(File loadPath)
@@ -113,6 +124,7 @@ public class TeamUpdater
 	public void setMainColor(Color color)
 	{
 		team.teamColors[0] = color;
+		colorsChangedUpdater.doClick();
 	}
 
 	public Color getTrimColor()
@@ -123,6 +135,7 @@ public class TeamUpdater
 	public void setTrimColor(Color color)
 	{
 		team.teamColors[1] = color;
+		colorsChangedUpdater.doClick();
 	}
 
 	public int getHomeField()
@@ -133,6 +146,12 @@ public class TeamUpdater
 	public void setHomeField(int homeField)
 	{
 		team.homeField = homeField;
+		arenaChangedUpdater.doClick();
+	}
+	
+	public Player getCurrentlySelectedPlayer()
+	{
+		return team.getPlayer(getCurrentPlayerIndex());
 	}
 
 	public Player getPlayer(int index)
@@ -144,6 +163,16 @@ public class TeamUpdater
 	{
 		team.setPlayer(index, player);
 		playersChangedUpdater.doClick();
+	}
+	
+	public Player fireCurrentlySelectedPlayer()
+	{
+		return firePlayer(currentPlayerIndex, false);
+	}
+	
+	public Player fireCurrentlySelectedPlayer(boolean playerKeepsEquipment)
+	{
+		return firePlayer(currentPlayerIndex, playerKeepsEquipment);
 	}
 	
 	public Player firePlayer(int index)
@@ -177,12 +206,11 @@ public class TeamUpdater
 		return player;
 	}
 	
-	public boolean hirePlayer(int playerIndex, Player player, int budgetLimit)
+	public boolean hirePlayer(int playerIndex, Player player)
 	{
-		int budget = budgetLimit - team.getValue();
 		int playerCost = player.getSalary();
 
-		if (budget < playerCost)
+		if (getCurrentBudget() < playerCost)
 			return false;
 
 		boolean canDraft = pushPlayersForDraft(playerIndex);
@@ -193,14 +221,42 @@ public class TeamUpdater
 		return canDraft;
 	}
 	
-	public boolean hirePlayerAndAdvanceSlot(Player player, int budgetLimit)
+	public boolean hirePlayerAndAdvanceSlot(Player player)
 	{
-		boolean playerDrafted = hirePlayer(currentPlayerIndex, player, budgetLimit);
+		boolean playerDrafted = hirePlayer(currentPlayerIndex, player);
 		
 		if (playerDrafted)
 			selectNextPlayer();
 		
 		return playerDrafted;
+	}
+	
+	public boolean buyEquipment(int selectionIndex, Equipment equipmentToBuy)
+	{
+		int equipmentCost = equipmentToBuy.cost;
+		
+		if (getCurrentBudget() < equipmentCost)
+			return false;
+		
+		addEquipmentToTeam(selectionIndex, equipmentToBuy.index);
+		return true;
+	}
+	
+	public void addEquipmentToTeam(int selectionIndex, int equipment)
+	{
+		if (selectionIndex < 0)
+			team.getEquipment().add(equipment);
+		else
+			team.getEquipment().add(selectionIndex, equipment);
+		
+		equipmentChangedUpdater.doClick();
+	}
+	
+	public boolean sellEquipment(int selectionIndex)
+	{
+		removeEquipment(selectionIndex);
+		equipmentChangedUpdater.doClick();
+		return true;
 	}
 	
 	public int getDocbotCost()
@@ -259,6 +315,45 @@ public class TeamUpdater
 		equipmentChangedUpdater.doClick();
 		
 		return returnedEquipment;
+	}
+	
+	public boolean unequipFromSelectedPlayer(int equipmentSlot, int targetSlot)
+	{
+		if (equipmentSlot < 0)
+			return false;
+		
+		Player player = getCurrentlySelectedPlayer();
+		
+		if (player == null)
+			return false;
+		
+		if (player.getEquipment(equipmentSlot) == Equipment.EQUIP_NONE)
+			return false;
+		
+		int equipmentToRemove = player.unequipItem(equipmentSlot);
+		addEquipmentToTeam(targetSlot, equipmentToRemove);
+		return true;
+	}
+	
+	public boolean equipToSelectedPlayer(int teamInventorySlot)
+	{
+		if (teamInventorySlot < 0)
+			return false;
+		
+		Player player = getCurrentlySelectedPlayer();
+		
+		if (player == null)
+			return false;
+		
+		Equipment equipment = Equipment.getEquipment(getEquipment(teamInventorySlot));
+		int equipmentSlot = equipment.type;
+		
+		if (player.getEquipment(equipmentSlot) != Equipment.EQUIP_NONE)
+			return false;
+				
+		removeEquipment(teamInventorySlot);
+		player.equipItem(equipment);
+		return true;
 	}
 	
 	public void setDocbotTreatment(int index, boolean value)
@@ -331,5 +426,20 @@ public class TeamUpdater
 		
 		currentPlayerIndex++;
 		playerSelectionUpdater.doClick();
+	}
+	
+	public void setMaxBudget(int maxBudget)
+	{
+		this.maxBudget = maxBudget;
+	}
+	
+	public int getMaxBudget()
+	{
+		return maxBudget;
+	}
+	
+	public int getCurrentBudget()
+	{
+		return maxBudget - team.getValue();
 	}
 }

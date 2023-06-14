@@ -197,4 +197,14 @@ public class GameText
 	{
 		return small2(OFFSCREEN_COORDS, color, text);
 	}
+	
+	public static GameText smallSpread(Point coords, Color color, String text)
+	{
+		return new GameText(FontType.FONT_SMALL_SPREAD, coords, color, text);
+	}
+	
+	public static GameText smallSpread(Color color, String text)
+	{
+		return smallSpread(OFFSCREEN_COORDS, color, text);
+	}
 }

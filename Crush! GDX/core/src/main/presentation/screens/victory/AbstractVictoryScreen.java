@@ -131,7 +131,7 @@ public abstract class AbstractVictoryScreen extends StandardButtonScreen
 
 	private void updateTeamLineup(Team team)
 	{
-		teamLineup = TeamLineupGenerator.getLineup(team, new Point(275, 270), true);
+		teamLineup = TeamLineupGenerator.getLineup(team, new Point(275, 270), false);
 	}
 	
 	@Override

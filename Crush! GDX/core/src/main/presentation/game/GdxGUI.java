@@ -583,7 +583,9 @@ public class GdxGUI extends GameRunnerGUI implements ActionListener
 		snapToPlayer(player);
 		
 		CrushPlayerSprite playerSprite = eventTextureFactory.getPlayerSpriteAtCoords(playerLocation);
-		playerSprite.turnTowardArenaLocation(binLocation);
+		
+		if (playerSprite != null)	//TODO: I think this would happen if the ball bin injures/kills the player
+			playerSprite.turnTowardArenaLocation(binLocation);
 		
 		//TODO: this is such an easy way to avoid the grey bin at the end of the animation cycle, but DON'T MODIFY DATA DIRECTLY!!!
 		getData().getArena().setBinStatus(binIndex, result + 1);

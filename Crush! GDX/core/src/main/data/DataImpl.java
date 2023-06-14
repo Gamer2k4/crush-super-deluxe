@@ -195,7 +195,7 @@ public class DataImpl implements Data
 				throw new IllegalArgumentException("There must be three teams in a game!");
 			
 			curTeam.clearLastGameStats();
-			teams.add(curTeam);
+			teams.add(curTeam.clone());
 
 			for (int j = 0; j < TEAM_SIZE; j++)		//only bring in players within the defined team size, even if they have more available
 			{
@@ -237,12 +237,11 @@ public class DataImpl implements Data
 			return null;
 		
 		//TODO: technically, this should be updated at the end of the game, not the beginning
+		//		if I do move this, it'll be to Team.advanceWeek()
 		if (player.getStatus() == Player.STS_OKAY || player.getStatus() == Player.STS_DOWN
 				|| player.getStatus() == Player.STS_STUN_DOWN || player.getStatus() == Player.STS_STUN_SIT
 				|| player.getWeeksOut() <= 0)
 			player.status = Player.STS_DECK;
-		else
-			player.recoverInjuries(1);	//okay to do it here, because if the game is cancelled, it all gets undone anyway
 		
 		return player;
 	}
@@ -252,6 +251,10 @@ public class DataImpl implements Data
 	{
 		gameActive = false;
 		
+		//if the game was exited early, none of this should apply - no new stats, no xp, no updates to the team, etc.
+		if (winningTeam == DataImpl.GAME_CANCELLED)
+			return;
+		
 		//save the stats for everyone
 		for (Player player : allPlayers)
 		{
@@ -259,8 +262,9 @@ public class DataImpl implements Data
 			{
 				Stats stats = statsOfPlayer.get(player);
 				stats.setStat(Stats.STATS_HIGHEST_RATING, stats.getXP());
+				stats.setStat(Stats.STATS_TOTAL_RATING, stats.getXP());
 				player.addXP(stats);
-				player.incrementGamesPlayed();
+				setGamesPlayed(player);
 			}
 		}
 		
@@ -270,6 +274,7 @@ public class DataImpl implements Data
 			Team team = teams.get(i);
 			
 			int startingIndex = i * TEAM_SIZE;
+			
 			for (int j = startingIndex; j < startingIndex + TEAM_SIZE; j++)
 			{
 				Player player = allPlayers.get(j);
@@ -302,11 +307,45 @@ public class DataImpl implements Data
 				
 				team.setPlayer(j - startingIndex, player);
 			}
+			
+			correctTeamStats(team);
 		}
 		
 		gameWinner = winningTeam;
 	}
 	
+	private void setGamesPlayed(Player player)
+	{
+		int gamesPlayed = player.getLastGameStats().getStat(Stats.STATS_GAMES_PLAYED);
+		if (gamesPlayed > 0)
+			return;
+		
+		//XP has already been calculated, so this is the cleanest way to increment the gameplay count
+		//this is needed because while you don't get credit for entering the game if you never made it in, being on the 9-man lineup
+		//	still is treated has "having played a game." 
+		player.getLastGameStats().enterGame();
+		player.getSeasonStats().enterGame();
+		player.getCareerStats().enterGame();
+	}
+
+	//needed because otherwise the team will get a new win (or loss or tie) for each player, rather than a single one for the whole game
+	private void correctTeamStats(Team team)
+	{
+		Stats gameStats = team.getLastGameStats();
+
+		if (gameStats.getStat(Stats.STATS_WINS) > 0)
+			gameStats.setStat(Stats.STATS_WINS, 1);
+
+		if (gameStats.getStat(Stats.STATS_LOSSES) > 0)
+			gameStats.setStat(Stats.STATS_LOSSES, 1);
+
+		if (gameStats.getStat(Stats.STATS_TIES) > 0)
+			gameStats.setStat(Stats.STATS_TIES, 1);
+		
+		if (gameStats.getStat(Stats.STATS_GAMES_PLAYED) > 0)
+			gameStats.setStat(Stats.STATS_GAMES_PLAYED, 1);
+	}
+
 	@Override
 	public int getNextStateForRecoveringPlayer(Player player)
 	{
@@ -556,6 +595,7 @@ public class DataImpl implements Data
 			
 			if (injury)		//getting killed is already handled in EJECT_DEATH
 				statsOfPlayer.get(player).getInjured();
+				//TODO: I think the player's equipment should automatically be removed here
 			
 			Logger.debug("Data - eject event: " + theEvent);
 
@@ -660,14 +700,21 @@ public class DataImpl implements Data
 			
 			for (int j = startingIndex; j < startingIndex + TEAM_SIZE; j++)
 			{
-				Player p = allPlayers.get(i);
+				Player p = allPlayers.get(j);
 				
 				if (p == null)
 					continue;
 				
+				//a player that never even made it into the game doesn't get credit for wins
+				if (statsOfPlayer.get(p).getStat(Stats.STATS_GAMES_PLAYED) == 0)
+					continue;
+				
 				//if it's not a tie, the player with the ball when the game ended must have scored the goal
 				if (p == ballCarrier && winningTeam != TIE_GAME)
+				{
 					statsOfPlayer.get(p).score();
+					continue;
+				}
 				
 				if (winningTeam == TIE_GAME)
 					statsOfPlayer.get(p).teamTied();

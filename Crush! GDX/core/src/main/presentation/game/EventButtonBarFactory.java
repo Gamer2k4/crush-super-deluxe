@@ -12,6 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import main.data.Data;
 import main.data.entities.Arena;
 import main.data.entities.Player;
+import main.data.entities.Skill;
 import main.data.entities.Team;
 import main.presentation.ImageType;
 import main.presentation.TeamColorsManager;
@@ -390,7 +391,11 @@ public class EventButtonBarFactory
 			else if (status == Player.STS_DEAD)
 				statusImage = ImageType.GAME_MASK_DEADSTATUS;
 			else if (status == Player.STS_BLOB)
-				statusImage = ImageType.GAME_MASK_BLOBSTATUS; 
+				statusImage = ImageType.GAME_MASK_BLOBSTATUS;
+			else if (status == Player.STS_OUT)
+				statusImage = ImageType.GAME_MASK_OUTSTATUS;
+			else if (status == Player.STS_LATE)
+				statusImage = ImageType.GAME_MASK_LATESTATUS;
 			
 			images.add(new StaticImage(statusImage, new Point(9 + (28 * i), 15)));
 		}

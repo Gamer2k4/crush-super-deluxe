@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import main.data.Data;
 import main.data.save.EntityMap;
 import main.data.save.SaveStringBuilder;
 import main.data.save.SaveToken;
@@ -129,7 +130,6 @@ public class Player extends SaveableEntity
 		seasonStats = new Stats();
 		careerStats = new Stats();
 		
-		gamesPlayed = 0;
 		totalSeasons = 0;
 	}
 
@@ -183,7 +183,6 @@ public class Player extends SaveableEntity
 	private Stats seasonStats;
 	private Stats careerStats;
 	
-	private int gamesPlayed;
 	private int totalSeasons;
 
 	@Override
@@ -202,7 +201,6 @@ public class Player extends SaveableEntity
 		toRet.seasonStats = seasonStats.clone();
 		toRet.careerStats = careerStats.clone();
 		
-		toRet.gamesPlayed = gamesPlayed;
 		toRet.totalSeasons = totalSeasons;
 
 		for (int i = 0; i < 8; i++)
@@ -264,7 +262,7 @@ public class Player extends SaveableEntity
 		
 		skills.add(skill);
 		
-		if (skills.size() == 29)	//28 plus racial skill
+		if (skills.size() > 29 && skills.contains(Skill.NINJA_MASTER))	//28 plus racial skill
 			skills.add(Skill.NINJA_MASTER);
 	}
 	
@@ -378,7 +376,7 @@ public class Player extends SaveableEntity
 		if (weeksOut < 0)
 		{
 			weeksOut = 0;
-			injuryType = INJURY_NONE; // a trivial injury will be set to 0, based on how the weeks off are store in Data
+			injuryType = INJURY_NONE; // a trivial injury will be set to 0, based on how the weeks off are stored in Data
 		}
 
 		if (status == STS_BLOB)
@@ -455,6 +453,11 @@ public class Player extends SaveableEntity
 
 	public int getAttributeWithModifiers(int attribute)
 	{
+		return getAttributeWithModifiers(attribute, null);
+	}
+	
+	public int getAttributeWithModifiers(int attribute, Data data)	//TODO: I HATE this coupling, but I have no idea how else to implement Hive Mind
+	{
 		int bonus = 0;
 
 		if (attribute == Player.ATT_ST && hasSkill(Skill.BRUTAL))
@@ -475,6 +478,9 @@ public class Player extends SaveableEntity
 			bonus += 10;
 
 		int toRet = attributes[attribute] + injuries[attribute] + bonus;
+		
+		if (data != null && hasSkill(Skill.HIVE_MIND))
+			toRet = toRet + getHiveMindAttributeBonus(attribute, data);
 
 		for (int i = 0; i < 4; i++)
 		{
@@ -490,6 +496,37 @@ public class Player extends SaveableEntity
 			toRet = 1;
 
 		return toRet;
+	}
+	
+	//TODO: Determine how the Hive Overseer skill works.  Does the player with it get an additional +1 for others in the hive? Or do others
+	//		gain an additional +1 from this one?  (I assume the former, because otherwise that seems crazy good.)
+	private int getHiveMindAttributeBonus(int attribute, Data data)
+	{
+		if (attribute == ATT_AP)
+			return 0;
+		
+		int hiveMembers = 0;
+		
+		int teamIndex = data.getTeamIndexOfPlayer(this);
+		
+		for (int i = 0; i < 9; i++)
+		{
+			Player player = data.getPlayer((9 * teamIndex) + i);		//I believe the players in the game are copies of the players on the teams in Data, so I need to get the players this way.
+			
+			if (player == null)
+				continue;
+			
+			if (player.equals(this))
+				continue;
+			
+			if (player.hasSkill(Skill.HIVE_MIND) && player.isInGame())
+				hiveMembers++;
+		}
+		
+		if (attribute != ATT_DA)
+			return 2 * hiveMembers;
+		
+		return hiveMembers;
 	}
 
 	public void setAttribute(int attribute, int value)
@@ -578,6 +615,8 @@ public class Player extends SaveableEntity
 	//TODO: this doesn't match up with the numbers in the legacy game, but I think my calculation is correct
 	public int getAverageRating()
 	{
+		int gamesPlayed = careerStats.getStat(Stats.STATS_GAMES_PLAYED);
+		
 		if (gamesPlayed == 0)
 			return 0;
 		
@@ -592,21 +631,6 @@ public class Player extends SaveableEntity
 	public void setSeasons(int seasons)
 	{
 		totalSeasons = seasons;
-	}
-	
-	public int getGamesPlayed()
-	{
-		return gamesPlayed;
-	}
-	
-	public void setGamesPlayed(int games)
-	{
-		gamesPlayed = games;
-	}
-	
-	public void incrementGamesPlayed()
-	{
-		gamesPlayed++;
 	}
 	
 	public void incrementSeasons()
@@ -697,7 +721,6 @@ public class Player extends SaveableEntity
 		ssb.addToken(new SaveToken(SaveTokenTag.P_SST, convertStatsToString(seasonStats)));
 		ssb.addToken(new SaveToken(SaveTokenTag.P_CST, convertStatsToString(careerStats)));
 		
-		ssb.addToken(new SaveToken(SaveTokenTag.P_GPL, String.valueOf(gamesPlayed)));
 		ssb.addToken(new SaveToken(SaveTokenTag.P_SEA, String.valueOf(totalSeasons)));
 
 		return ssb.getSaveString();
@@ -723,7 +746,6 @@ public class Player extends SaveableEntity
 		setMember(ssb, SaveTokenTag.P_SKL);
 		setMember(ssb, SaveTokenTag.P_EQP);
 		setMember(ssb, SaveTokenTag.P_CST);
-		setMember(ssb, SaveTokenTag.P_GPL);
 		setMember(ssb, SaveTokenTag.P_SEA);
 
 		//TODO: intentionally not loading season and game stats (for now, i guess - assuming a "new season")
@@ -844,11 +866,6 @@ public class Player extends SaveableEntity
 			careerStats = EntityMap.getStats(referenceKey).clone();
 			break;
 
-		case P_GPL:
-			saveToken = ssb.getToken(saveTokenTag);
-			gamesPlayed = Integer.parseInt(saveToken.getContents());
-			break;
-
 		case P_SEA:
 			saveToken = ssb.getToken(saveTokenTag);
 			totalSeasons = Integer.parseInt(saveToken.getContents());
@@ -876,7 +893,7 @@ public class Player extends SaveableEntity
 
 		if (status != player.status || !name.equals(player.name) ||  race != player.race || weeksOut != player.weeksOut || injuryType != player.injuryType || XP != player.XP
 				|| skillPoints != player.skillPoints || !lastGameStats.equals(player.lastGameStats) || !seasonStats.equals(player.seasonStats)
-				|| !careerStats.equals(player.careerStats) || gamesPlayed != player.gamesPlayed || totalSeasons != player.gamesPlayed)
+				|| !careerStats.equals(player.careerStats) || totalSeasons != player.totalSeasons)
 			return false;
 
 		for (int i = 0; i < 8; i++)
@@ -921,7 +938,6 @@ public class Player extends SaveableEntity
 		hash = 31 * hash + lastGameStats.hashCode();   // TODO: check if this should be saveHash()
 		hash = 31 * hash + seasonStats.hashCode(); // TODO: check if this should be saveHash()
 		hash = 31 * hash + careerStats.hashCode(); // TODO: check if this should be saveHash()
-		hash = 31 * hash + gamesPlayed;
 		hash = 31 * hash + totalSeasons;
 
 		for (int i = 0; i < 8; i++)

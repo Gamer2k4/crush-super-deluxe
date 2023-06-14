@@ -71,9 +71,9 @@ public class TeamEditorGeneralRoster extends AbstractTeamEditorRosterScreen
 		String commandString = command.name();
 //		System.out.println("Command received in General Roster: " + commandString);
 
-		if (ScreenCommand.SCROLL_UP.equals(command))
+		if (ScreenCommand.SCROLL_ROSTER_UP.equals(command))
 			scrollUp();
-		if (ScreenCommand.SCROLL_DOWN.equals(command))
+		if (ScreenCommand.SCROLL_ROSTER_DOWN.equals(command))
 			scrollDown();
 
 //		if (command == ScreenCommand.SWAP_PLAYERS)
@@ -199,7 +199,13 @@ public class TeamEditorGeneralRoster extends AbstractTeamEditorRosterScreen
 	@Override
 	public void actionPerformed(ActionEvent event)
 	{
+		super.actionPerformed(event);
+		
 		if (event.getActionCommand().equals(TeamUpdater.UPDATER_PLAYER_SELECTION_CHANGED))
+			refreshAllPlayerTexts();
+		if (event.getActionCommand().equals(TeamUpdater.UPDATER_NEW_TEAM))
+			refreshAllPlayerTexts();
+		if (event.getActionCommand().equals(TeamUpdater.UPDATER_PLAYERS_CHANGED))
 			refreshAllPlayerTexts();
 	}
 }

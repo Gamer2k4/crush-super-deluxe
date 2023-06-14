@@ -479,7 +479,7 @@ public class Arena implements Serializable
 		return name;
 	}
 	
-	//returns the inner corner of the active goal, defaulting to the lower right if it's not any of the others
+	//returns the inner corner of the active goal
 	public Point getGoalFarCorner()
 	{
 		if (tiles[1][1] == TILE_GOAL)
@@ -491,7 +491,10 @@ public class Arena implements Serializable
 		if (tiles[28][1] == TILE_GOAL)
 			return new Point(28, 1);
 		
-		return new Point(28, 28);
+		if (tiles[28][28] == TILE_GOAL)
+			return new Point(28, 28);
+		
+		throw new IllegalStateException("Cannot get goal coordinations; no goal is active.");
 	}
 
 	// TODO: DEBUG

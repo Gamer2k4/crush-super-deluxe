@@ -55,7 +55,7 @@ public abstract class MedicalEjectionAlert extends EjectionAlert
 		text.add(new GameText(FontType.FONT_SMALL2, new Point(5, 25), LegacyUiConstants.COLOR_LEGACY_WHITE, causerTeam));
 		text.add(new GameText(FontType.FONT_SMALL2, new Point(85, 25), LegacyUiConstants.COLOR_LEGACY_WHITE, causerNumber + " " + cause));
 		
-		if (event.flags[2] == Event.EJECT_DEATH)	//TODO: will get updated once there's such a thing as regeneration or docbot resusciation, but for now it's assumed
+		if (event.flags[2] == Event.EJECT_DEATH)	//TODO: will get updated once there's such a thing as regeneration or docbot resuscitation, but for now it's assumed
 			return;									//		that "dead" means "not revived," so there will be no injury explanation text
 		
 		addInjurySpecifics(event);

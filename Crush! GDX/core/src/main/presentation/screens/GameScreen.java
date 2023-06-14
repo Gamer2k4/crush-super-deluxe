@@ -152,6 +152,11 @@ public abstract class GameScreen implements Screen
 		return new ArrayList<StaticImage>();
 	}
 	
+	public List<CrushSprite> getStaticSprites()
+	{
+		return new ArrayList<CrushSprite>();
+	}
+	
 	public Cursor getCursor()
 	{
 		return CursorManager.crush();

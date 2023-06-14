@@ -8,6 +8,7 @@ import com.badlogic.gdx.Game;
 
 import main.presentation.ImageType;
 import main.presentation.common.ScreenCommand;
+import main.presentation.screens.stats.TeamStatsTeamParentScreen;
 import main.presentation.screens.teameditor.TeamEditorParentScreen;
 import main.presentation.screens.teamselect.ExhibitionTeamSelectScreen;
 import main.presentation.screens.teamselect.LeagueTeamSelectScreen;
@@ -56,6 +57,7 @@ public class GameScreenManager
 		allScreens.put(ScreenType.TOURNAMENT_TEAM_SELECT, new TournamentTeamSelectScreen(game));
 		allScreens.put(ScreenType.LEAGUE_TEAM_SELECT, new LeagueTeamSelectScreen(game));
 		allScreens.put(ScreenType.TEAM_EDITOR, new TeamEditorParentScreen(game, (ActionListener) game));
+		allScreens.put(ScreenType.TEAM_STATS_TEAM, new TeamStatsTeamParentScreen(game, (ActionListener) game));
 		allScreens.put(ScreenType.EXHIBITION_PREGAME, new PregameScreen(game, (ActionListener) game, ImageType.SCREEN_EXHIBITION_PREGAME));
 		allScreens.put(ScreenType.EXHIBITION_VICTORY, new ExhibitionVictoryScreen(game, (ActionListener) game, ScreenCommand.EXHIBITION_TEAM_SELECT));
 		allScreens.put(ScreenType.GAME_PLAY, new CrushEventScreen(game));

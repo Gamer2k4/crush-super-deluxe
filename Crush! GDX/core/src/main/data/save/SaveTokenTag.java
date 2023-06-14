@@ -32,7 +32,6 @@ public enum SaveTokenTag
 	P_GST,	//player game stats
 	P_SST,	//player season stats
 	P_CST,	//player career stats
-	P_GPL,	//player games played
 	P_SEA,	//player total seasons
 	//current action points aren't saved because they're never relevant outside of the game
 

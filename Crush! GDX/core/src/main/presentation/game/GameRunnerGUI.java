@@ -200,8 +200,8 @@ public abstract class GameRunnerGUI extends GameGUI
 					{
 						int checkOdds = HighlightIcon.HI_CHECK_EVEN;
 
-						int atk_base_CH = plyr.getAttributeWithModifiers(Player.ATT_CH);
-						int def_base_CH = target.getAttributeWithModifiers(Player.ATT_CH);
+						int atk_base_CH = plyr.getAttributeWithModifiers(Player.ATT_CH, getData());
+						int def_base_CH = target.getAttributeWithModifiers(Player.ATT_CH, getData());
 						
 						if (def_base_CH < atk_base_CH && target.hasSkill(Skill.JUDO))
 							def_base_CH = atk_base_CH;

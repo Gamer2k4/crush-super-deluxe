@@ -9,7 +9,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 
 import main.data.Data;
 import main.data.DataImpl;
@@ -32,13 +34,18 @@ import main.presentation.game.StaticImage;
 import main.presentation.game.sprite.CrushAnimatedTile;
 import main.presentation.game.sprite.CrushArenaImageManager;
 import main.presentation.game.sprite.CrushSprite;
+import main.presentation.game.sprite.StaticSprite;
 import main.presentation.screens.CrushEventScreen;
 import main.presentation.screens.EventDetails;
 import main.presentation.screens.GameScreen;
 import main.presentation.screens.GameScreenManager;
 import main.presentation.screens.PregameScreen;
 import main.presentation.screens.ScreenType;
+import main.presentation.screens.popupready.PopupReadyScreen;
+import main.presentation.screens.stats.AbstractTeamStatsParentScreen;
+import main.presentation.screens.stats.TeamStatsTeamParentScreen;
 import main.presentation.screens.teameditor.TeamEditor;
+import main.presentation.screens.teameditor.TeamEditorParentScreen;
 import main.presentation.screens.teameditor.utilities.TeamUpdater;
 import main.presentation.screens.teamselect.AbstractTeamSelectScreen;
 
@@ -67,6 +74,7 @@ public class CrushGame extends Game implements ActionListener
 		GameScreenManager.getInstance().initializeScreens(this);
 		setScreen(GameScreenManager.getInstance().getScreen(ScreenType.GAME_SELECT));
 		AudioManager.getInstance().loopSound(SoundType.THEME);
+		TeamColorsManager.getInstance().refresh(new Team());		//initialize images for default color scheme (gold on gold)
 	}
 	
 	private void setScreen(ScreenType screen)
@@ -115,7 +123,19 @@ public class CrushGame extends Game implements ActionListener
 			super.render();
 		
 		renderStaticImages();
+		renderStaticSprites();
 		renderStaticText();
+		renderPopup();
+		
+		//draws a darkening rectangle, like needed for the equipment tab, but at present it doesn't stretch if the screen size changes
+//		Gdx.gl.glEnable(GL20.GL_BLEND);
+//	    Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+//	    ShapeRenderer shapeRenderer = new ShapeRenderer();
+//	    shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+//	    shapeRenderer.setColor(new Color(0, 0, 0, 0.5f));
+//	    shapeRenderer.rect(264, 135, 100, 51);
+//	    shapeRenderer.end();
+//	    Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
 
 	private void manageCameraDrivenRendering(OrthographicCamera camera)
@@ -138,6 +158,26 @@ public class CrushGame extends Game implements ActionListener
 		//TODO: render stat text over players (if that's selected, of course)
 		
 		getCurrentScreen().getStage().draw();
+	}
+	
+	private void renderStaticSprites()
+	{
+		List<CrushSprite> sprites = getCurrentScreen().getStaticSprites();
+		
+		spriteBatch.setProjectionMatrix(fixedCamera.combined);
+		spriteBatch.begin();
+		
+		for (CrushSprite sprite : sprites)
+		{
+			if (!sprite.getImage().isFlipY())
+				sprite.getImage().flip(false, true);
+			
+			Sprite spriteWithAlpha = new Sprite(sprite.getImage());
+			spriteWithAlpha.setPosition(sprite.getX(), sprite.getY());
+			spriteWithAlpha.draw(spriteBatch, sprite.getAlpha());
+		}
+		
+		spriteBatch.end();
 	}
 	
 	private void renderStaticImages()
@@ -165,6 +205,37 @@ public class CrushGame extends Game implements ActionListener
 		}
 		
 		spriteBatch.end();
+	}
+	
+	private void renderPopup()
+	{
+		if (!(getCurrentScreen() instanceof PopupReadyScreen))
+			return;
+		
+		PopupReadyScreen popupScreen = (PopupReadyScreen) getCurrentScreen();
+		
+		if (!popupScreen.popupIsActive())
+			return;
+		
+		spriteBatch.setProjectionMatrix(fixedCamera.combined);
+		spriteBatch.begin();
+		
+		StaticSprite sprite = popupScreen.getDialog();
+		
+		if (!sprite.getImage().isFlipY())
+			sprite.getImage().flip(false, true);
+		
+		spriteBatch.draw(sprite.getImage(), sprite.getX(), sprite.getY());
+		
+		for (GameText text : popupScreen.getPopupText())
+		{
+			text.render(spriteBatch);
+		}
+		
+		spriteBatch.end();
+
+		for (ImageButton button : popupScreen.getPopupButtons())
+			popupScreen.getStage().addActor(button);
 	}
 
 	@Override
@@ -231,11 +302,6 @@ public class CrushGame extends Game implements ActionListener
 		gui.setGameScreen(activeScreen);
 
 		host.newGame(EventDetails.getTeams(), EventDetails.getArenaIndex(), EventDetails.getPace(), EventDetails.getTurns());
-
-		//TODO: set this elsewhere
-		/* DEBUG */ EventDetails.getTeams().get(0).humanControlled = DebugConstants.PLAYER0_IS_HUMAN;
-		/* DEBUG */ EventDetails.getTeams().get(1).humanControlled = DebugConstants.PLAYER1_IS_HUMAN;
-		/* DEBUG */ EventDetails.getTeams().get(2).humanControlled = DebugConstants.PLAYER2_IS_HUMAN;
 		
 		client.getGui().beginGame();
 	}
@@ -267,9 +333,10 @@ public class CrushGame extends Game implements ActionListener
 		if (gameWinner != DataImpl.GAME_CANCELLED)
 		{
 			//I'll probably need to update this if Data shuffles the teams at the start of the game
-			sourceScreen.updateTeam(0, data.getTeam(0));
-			sourceScreen.updateTeam(1, data.getTeam(1));
-			sourceScreen.updateTeam(2, data.getTeam(2));
+			//Also, this resets all equipment, which technically should happen at the start of the game, not the end
+			sourceScreen.updateTeam(0, data.getTeam(0).advanceWeek());
+			sourceScreen.updateTeam(1, data.getTeam(1).advanceWeek());
+			sourceScreen.updateTeam(2, data.getTeam(2).advanceWeek());
 		}
 		
 		//done via screen commands to make the audio change appropriately
@@ -296,8 +363,13 @@ public class CrushGame extends Game implements ActionListener
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
-		ScreenCommand command = ScreenCommand.fromActionEvent(e);
-		executeScreenCommand(command);
+		try {
+			ScreenCommand command = ScreenCommand.fromActionEvent(e);
+			executeScreenCommand(command);
+		} catch (IllegalArgumentException iae)
+		{
+			//don't process events we can't parse
+		}
 	}
 
 	private void executeScreenCommand(ScreenCommand command)
@@ -306,6 +378,13 @@ public class CrushGame extends Game implements ActionListener
 		{
 			flowToTeamEditorForTeamIndex(command.getCommandIndex());
 			return;
+		}
+		
+		if (command.isEventPregame())
+		{
+			AbstractTeamSelectScreen teamSelectScreen = (AbstractTeamSelectScreen) getScreen();
+			if (!teamSelectScreen.getTeamsOverBudget().isEmpty())
+				return;	//the screen itself will handle the popup
 		}
 		
 		// This is where screen swaps happen
@@ -346,6 +425,12 @@ public class CrushGame extends Game implements ActionListener
 			AudioManager.getInstance().loopSound(SoundType.THEME);
 			endCurrentGame();
 			break;
+		case STATS_VIEW:
+			flowToTeamStatsFromTeamEditor();
+			break;
+		case STATS_BACK:
+			returnFromStatsScreen();
+			break;
 		case EXIT_TEAM_EDITOR_DONE:
 			flowToTeamSelectFromTeamEditor();
 			break;
@@ -380,5 +465,24 @@ public class CrushGame extends Game implements ActionListener
 		Team team = teamUpdater.getTeam();
 		
 		teamSelectScreen.updateTeam(teamIndex, team);
+		teamSelectScreen.activate();		//technically it's already activated, but this refreshes the content after the team in the editor has been loaded
+	}
+	
+	private void flowToTeamStatsFromTeamEditor()
+	{
+		//DON'T reset the team editor; in the original game, everything is as though you never left
+		TeamEditorParentScreen editorScreen = (TeamEditorParentScreen) activeScreen;
+		TeamStatsTeamParentScreen statsScreen = (TeamStatsTeamParentScreen) GameScreenManager.getInstance().getScreen(ScreenType.TEAM_STATS_TEAM);
+		statsScreen.setOriginScreen(editorScreen);
+		statsScreen.setTeam(editorScreen.getTeam());
+		setScreen(statsScreen);
+	}
+
+	private void returnFromStatsScreen()
+	{
+		activeScreen.reset();
+		AbstractTeamStatsParentScreen statsScreen = (AbstractTeamStatsParentScreen) activeScreen;
+		setScreen(statsScreen.getOriginScreen());
+		//no resetting of the new screen, since its state is supposed to be unchanged
 	}
 }

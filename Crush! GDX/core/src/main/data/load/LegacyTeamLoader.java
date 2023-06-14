@@ -200,7 +200,6 @@ public class LegacyTeamLoader extends ByteFileReader
 		player.name = name;
 		player.setWeeksOut(weeksOut);
 		player.setInjuryType(injuryLevel);
-		player.setGamesPlayed(gamesPlayed);
 		player.setSeasons(totalSeasons);
 
 		// System.out.println("\n\tPlayer loaded: " + player.saveAsText());

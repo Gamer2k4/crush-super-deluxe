@@ -14,6 +14,7 @@ import main.data.entities.Pace;
 import main.data.entities.Simulation;
 import main.data.entities.Team;
 import main.data.factory.CpuTeamFactory;
+import main.logic.ai.coach.Coach;
 import main.presentation.ImageFactory;
 import main.presentation.ImageType;
 import main.presentation.common.ScreenCommand;
@@ -21,10 +22,10 @@ import main.presentation.game.FontType;
 import main.presentation.game.GameText;
 import main.presentation.legacy.common.LegacyUiConstants;
 import main.presentation.screens.ScreenType;
-import main.presentation.screens.StandardButtonScreen;
+import main.presentation.screens.popupready.OverBudgetPopupScreen;
 import main.presentation.screens.teameditor.utilities.TeamUpdater;
 
-public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
+public abstract class AbstractTeamSelectScreen extends OverBudgetPopupScreen
 {
 	private int totalTeams;
 	protected TeamEntry[] teams;
@@ -139,7 +140,7 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 		refreshStage();
 	}
 	
-	private void refreshStage()
+	protected void refreshStage()
 	{
 		stage.clear();
 		stage.addActor(new Image(ImageFactory.getInstance().getDrawable(getBackgroundImageType())));
@@ -165,6 +166,23 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 	public boolean areTeamsLockedForEditing()
 	{
 		return teamsLockedForEditing;
+	}
+	
+	public List<String> getTeamsOverBudget()
+	{
+		List<String> teamNames = new ArrayList<String>();
+		
+		if (teamsLockedForEditing)
+			return teamNames;	//if we can't edit the teams, there's no sense in calling them out for being over budget
+		
+		for (int i = 0; i < totalTeams; i++)
+		{
+			Team team = teams[i].getTeam();
+			if (team.getValue() > budget)
+				teamNames.add(team.teamName);
+		}
+		
+		return teamNames;
 	}
 	
 	public int getBudget()
@@ -243,6 +261,22 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 
 		return preparedTeams;
 	}
+	
+	protected void initializeBlankTeams()
+	{
+		for (int i = 0; i < teams.length; i++)
+		{
+			if (!teams[i].getTeam().isBlankTeam())
+				continue;
+			
+			Team newTeam = CpuTeamFactory.getInstance().generateEmptyCpuTeam();
+			
+			Coach coach = teams[i].getCoach();
+			newTeam = coach.draftForTeam(newTeam, budget);
+			newTeam = coach.setLineup(newTeam);		//TODO: this shouldn't be here, but right now I have the lineup adjusted AFTER each game, instead of BEFORE (before is correct)
+			teams[i].setTeam(newTeam);
+		}
+	}
 
 	protected void changeBudget()
 	{
@@ -309,6 +343,7 @@ public abstract class AbstractTeamSelectScreen extends StandardButtonScreen
 	public abstract List<Team> getTeamsForNextGame();
 	public abstract void updateRecords(int gameWinner);
 	public abstract void updateTeam(int index, Team team);
+	public abstract void updateCoach(int index, Coach coach);
 	public abstract ScreenType getVictoryScreenType();
 	
 	protected abstract ImageType getBackgroundImageType();

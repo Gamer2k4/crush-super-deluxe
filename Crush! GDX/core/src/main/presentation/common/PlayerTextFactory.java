@@ -82,7 +82,7 @@ public class PlayerTextFactory
 
 		Player basePlayer = PlayerFactory.getInstance().createPlayerWithDefinedName(currentPlayer.getRace(), "BASE");
 		int baseAttribute = basePlayer.getAttributeWithoutModifiers(attribute);
-		int modifiedAttribute = currentPlayer.getAttributeWithModifiers(attribute);
+		int modifiedAttribute = currentPlayer.getAttributeWithModifiers(attribute, currentGameDataImpl);
 
 		if (modifiedAttribute > 99)
 			modifiedAttribute = 99;

@@ -43,14 +43,18 @@ public class CpuTeamFactory extends RandomlyNamedEntityFactory
 		return instance;
 	}
 	
-	public Team generateEmptyCpuTeam(int budget)
+	public Team generateEmptyCpuTeam()
 	{
-		return updateTeamWithRandomElements(new Team());
+		Team cpuTeam = updateTeamWithRandomElements(new Team());
+		cpuTeam.humanControlled = false;
+		return cpuTeam;
 	}
 	
 	public Team generatePopulatedCpuTeam(int budget)
 	{
-		return updateTeamWithRandomElements(generateNewTeamWithPlayers());
+		Team cpuTeam = updateTeamWithRandomElements(generateNewTeamWithPlayers());
+		cpuTeam.humanControlled = false;
+		return cpuTeam;
 	}
 		
 	public Team updateTeamWithRandomElements(Team cpuTeam)

@@ -1,0 +1,412 @@
+main/data/TeamLoader.java
+ main.data.TeamLoader
+main/data/entities/Race.java
+ main.data.entities.Race
+main/presentation/ImageType.java
+ main.presentation.ImageType
+main/logic/AI/coach/skill/PsycheFirstSkillSelectionAi.java
+ main.logic.ai.coach.skill.PsycheFirstSkillSelectionAi
+main/presentation/game/ejectionalert/FatalityEjectionAlert.java
+ main.presentation.game.ejectionalert.FatalityEjectionAlert
+main/data/Event.java
+ main.data.Event
+main/presentation/common/image/ColorReplacer.java
+ main.presentation.common.image.ColorReplacer
+main/presentation/screens/victory/AbstractVictoryScreen.java
+ main.presentation.screens.victory.AbstractVictoryScreen
+main/presentation/screens/teameditor/TeamEditorPsycheTrainerScreen.java
+ main.presentation.screens.teameditor.TeamEditorPsycheTrainerScreen
+main/data/entities/SaveableEntity.java
+ main.data.entities.SaveableEntity
+main/logic/AI/coach/EquipmentPackageAi.java
+ main.logic.ai.coach.EquipmentPackageAi
+main/data/load/ByteFileReader.java
+ main.data.load.ByteFileReader
+main/presentation/TeamColorsManager.java
+ main.presentation.TeamColorsManager
+main/data/load/LegacyLeagueLoader.java
+ main.data.load.LegacyLeagueLoader
+main/presentation/common/image/TeamLineupGenerator.java
+ main.presentation.common.image.TeamLineupGenerator
+main/logic/AI/coach/player/KurganSlithArdentDraftingAi.java
+ main.logic.ai.coach.player.KurganSlithArdentDraftingAi
+main/logic/AI/coach/player/RandomPlayerDraftingAi.java
+ main.logic.ai.coach.player.RandomPlayerDraftingAi
+main/logic/AI/BasicAI.java
+ main.logic.ai.BasicAI
+main/data/save/SaveTokenTag.java
+ main.data.save.SaveTokenTag
+main/data/save/ByteFileWriter.java
+ main.data.save.ByteFileWriter
+main/presentation/game/StaticImage.java
+ main.presentation.game.StaticImage
+main/presentation/screens/teameditor/TeamEditorParentScreen.java
+ main.presentation.screens.teameditor.TeamEditorParentScreen
+ main.presentation.screens.teameditor.TeamEditorParentScreen$1
+main/presentation/screens/teameditor/utilities/GUIPlayerAttributes.java
+ main.presentation.screens.teameditor.utilities.GUIPlayerAttributes
+main/data/entities/Team.java
+ main.data.entities.Team
+ main.data.entities.Team$1
+main/presentation/game/ejectionalert/EjectionAlert.java
+ main.presentation.game.ejectionalert.EjectionAlert
+main/data/save/EntitySerializer.java
+ main.data.save.EntitySerializer
+main/presentation/game/sprite/StaticSprite.java
+ main.presentation.game.sprite.StaticSprite
+main/presentation/screens/teamselect/LeagueTeamSelectScreen.java
+ main.presentation.screens.teamselect.LeagueTeamSelectScreen
+main/logic/AI/coach/TeamIceSpendingPlan.java
+ main.logic.ai.coach.TeamIceSpendingPlan
+main/presentation/CursorManager.java
+ main.presentation.CursorManager
+ main.presentation.CursorManager$1
+main/presentation/screens/teameditor/TeamEditorAgilityTrainerScreen.java
+ main.presentation.screens.teameditor.TeamEditorAgilityTrainerScreen
+main/logic/AI/coach/skill/RandomSkillSelectionAi.java
+ main.logic.ai.coach.skill.RandomSkillSelectionAi
+main/data/entities/Equipment.java
+ main.data.entities.Equipment
+main/logic/Client.java
+ main.logic.Client
+main/presentation/screens/ScreenType.java
+ main.presentation.screens.ScreenType
+main/presentation/game/sprite/PlayerSpriteType.java
+ main.presentation.game.sprite.PlayerSpriteType
+main/presentation/game/ejectionalert/VictoryAlert.java
+ main.presentation.game.ejectionalert.VictoryAlert
+main/presentation/game/sprite/PlayerAnimationManager.java
+ main.presentation.game.sprite.PlayerAnimationManager
+ main.presentation.game.sprite.PlayerAnimationManager$CompositeSpriteKey
+main/data/GameDataPreloader.java
+ main.data.GameDataPreloader
+main/logic/AI/coach/skill/AgilityFirstSkillSelectionAi.java
+ main.logic.ai.coach.skill.AgilityFirstSkillSelectionAi
+main/logic/AI/coach/AbstractSpendingPlan.java
+ main.logic.ai.coach.AbstractSpendingPlan
+main/logic/AI/coach/PurchasePriorityNode.java
+ main.logic.ai.coach.PurchasePriorityNode
+main/presentation/FileChooser.java
+ main.presentation.FileChooser
+ main.presentation.FileChooser$1
+main/data/CrushAssetManager.java
+ main.data.CrushAssetManager
+main/logic/AI/coach/skill/EnforcerSkillSelectionAi.java
+ main.logic.ai.coach.skill.EnforcerSkillSelectionAi
+main/presentation/game/ejectionalert/PopupAlert.java
+ main.presentation.game.ejectionalert.PopupAlert
+main/data/save/EntityMap.java
+ main.data.save.EntityMap
+main/presentation/screens/teameditor/utilities/TeamUpdater.java
+ main.presentation.screens.teameditor.utilities.TeamUpdater
+main/logic/LegacyEngineImpl.java
+ main.logic.LegacyEngineImpl
+main/logic/RandomGenerator.java
+ main.logic.RandomGenerator
+main/logic/AI/coach/player/NynaxStealthSurgeDraftingAi.java
+ main.logic.ai.coach.player.NynaxStealthSurgeDraftingAi
+main/presentation/common/SkillPrerequisiteValidator.java
+ main.presentation.common.SkillPrerequisiteValidator
+main/presentation/screens/MouseOverButtonScreen.java
+ main.presentation.screens.MouseOverButtonScreen
+ main.presentation.screens.MouseOverButtonScreen$1
+main/presentation/screens/teameditor/TeamEditorSettingsScreen.java
+ main.presentation.screens.teameditor.TeamEditorSettingsScreen
+main/presentation/game/sprite/CrushArenaImageManager.java
+ main.presentation.game.sprite.CrushArenaImageManager
+main/presentation/screens/teameditor/TeamEditorPowerTrainerScreen.java
+ main.presentation.screens.teameditor.TeamEditorPowerTrainerScreen
+main/presentation/game/GameGUI.java
+ main.presentation.game.GameGUI
+main/data/load/NameLoader.java
+ main.data.load.NameLoader
+main/presentation/screens/teameditor/AbstractTeamEditorEquipmentScreen.java
+ main.presentation.screens.teameditor.AbstractTeamEditorEquipmentScreen
+main/presentation/screens/teameditor/AbstractTeamEditorSubScreen.java
+ main.presentation.screens.teameditor.AbstractTeamEditorSubScreen
+main/presentation/screens/teamselect/TeamEntry.java
+ main.presentation.screens.teamselect.TeamEntry
+main/data/factory/PlayerFactory.java
+ main.data.factory.PlayerFactory
+ main.data.factory.PlayerFactory$1
+main/logic/AI/coach/Coach.java
+ main.logic.ai.coach.Coach
+ main.logic.ai.coach.Coach$LineupEntry
+main/presentation/screens/CrushEventScreen.java
+ main.presentation.screens.CrushEventScreen
+main/presentation/game/ejectionalert/MedicalEjectionAlert.java
+ main.presentation.game.ejectionalert.MedicalEjectionAlert
+main/presentation/game/sprite/CrushArena.java
+ main.presentation.game.sprite.CrushArena
+main/presentation/game/sprite/PlayerCompositeSpriteKey.java
+ main.presentation.game.sprite.PlayerCompositeSpriteKey
+main/presentation/screens/teameditor/utilities/GUIStatsFormatter.java
+ main.presentation.screens.teameditor.utilities.GUIStatsFormatter
+main/presentation/screens/teameditor/TeamEditorOutfitScreen.java
+ main.presentation.screens.teameditor.TeamEditorOutfitScreen
+ main.presentation.screens.teameditor.TeamEditorOutfitScreen$1
+main/data/load/LegacyMapLoader.java
+ main.data.load.LegacyMapLoader
+main/presentation/game/sprite/CrushTile.java
+ main.presentation.game.sprite.CrushTile
+main/logic/AI/coach/skill/BallCarrierSkillSelectionAi.java
+ main.logic.ai.coach.skill.BallCarrierSkillSelectionAi
+main/logic/AI/coach/SpendingPlan.java
+ main.logic.ai.coach.SpendingPlan
+main/presentation/game/sprite/CrushBallSprite.java
+ main.presentation.game.sprite.CrushBallSprite
+main/presentation/screens/PregameScreen.java
+ main.presentation.screens.PregameScreen
+ main.presentation.screens.PregameScreen$1
+main/presentation/game/sprite/CrushPlayerSprite.java
+ main.presentation.game.sprite.CrushPlayerSprite
+ main.presentation.game.sprite.CrushPlayerSprite$1
+main/presentation/screens/teameditor/TeamEditorStartScreen.java
+ main.presentation.screens.teameditor.TeamEditorStartScreen
+main/logic/pathfinding/Pathfinder.java
+ main.logic.pathfinding.Pathfinder
+main/presentation/game/ejectionalert/InjuryEjectionAlert.java
+ main.presentation.game.ejectionalert.InjuryEjectionAlert
+main/data/factory/SimpleArenaFactory.java
+ main.data.factory.SimpleArenaFactory
+main/data/entities/Simulation.java
+ main.data.entities.Simulation
+main/presentation/screens/teameditor/utilities/GUIStatsFormatterDeprecated.java
+ main.presentation.screens.teameditor.utilities.GUIStatsFormatterDeprecated
+main/presentation/screens/teameditor/TeamEditorDetailedRoster.java
+ main.presentation.screens.teameditor.TeamEditorDetailedRoster
+main/presentation/game/sprite/PlayerAnimation.java
+ main.presentation.game.sprite.PlayerAnimation
+ main.presentation.game.sprite.PlayerAnimation$1
+main/presentation/screens/teameditor/TeamEditor.java
+ main.presentation.screens.teameditor.TeamEditor
+main/data/factory/ArenaFactory.java
+ main.data.factory.ArenaFactory
+main/presentation/screens/victory/ExhibitionVictoryScreen.java
+ main.presentation.screens.victory.ExhibitionVictoryScreen
+main/presentation/TeamImages.java
+ main.presentation.TeamImages
+main/logic/AI/coach/skill/PrioritySkillSelectionAi.java
+ main.logic.ai.coach.skill.PrioritySkillSelectionAi
+main/logic/AI/coach/DocbotAi.java
+ main.logic.ai.coach.DocbotAi
+main/presentation/game/sprite/TileSpriteType.java
+ main.presentation.game.sprite.TileSpriteType
+main/data/entities/Pace.java
+ main.data.entities.Pace
+main/presentation/game/sprite/CrushAnimatedTile.java
+ main.presentation.game.sprite.CrushAnimatedTile
+main/presentation/common/Logger.java
+ main.presentation.common.Logger
+main/presentation/screens/teameditor/TeamEditorAcquireScreen.java
+ main.presentation.screens.teameditor.TeamEditorAcquireScreen
+ main.presentation.screens.teameditor.TeamEditorAcquireScreen$1
+main/presentation/screens/GameSelectScreen.java
+ main.presentation.screens.GameSelectScreen
+main/presentation/screens/teamselect/AbstractTeamSelectScreen.java
+ main.presentation.screens.teamselect.AbstractTeamSelectScreen
+main/logic/AI/coach/player/PlayerPersona.java
+ main.logic.ai.coach.player.PlayerPersona
+main/presentation/screens/GameScreen.java
+ main.presentation.screens.GameScreen
+main/logic/AI/coach/player/HappyTroopDraftingAi.java
+ main.logic.ai.coach.player.HappyTroopDraftingAi
+main/logic/AI/coach/skill/PowerFirstSkillSelectionAi.java
+ main.logic.ai.coach.skill.PowerFirstSkillSelectionAi
+main/data/entities/Arena.java
+ main.data.entities.Arena
+main/data/entities/Stats.java
+ main.data.entities.Stats
+ main.data.entities.Stats$1
+main/execute/DebugConstants.java
+ main.execute.DebugConstants
+main/logic/AI/coach/player/DraftingAi.java
+ main.logic.ai.coach.player.DraftingAi
+main/presentation/game/EventButtonBarFactory.java
+ main.presentation.game.EventButtonBarFactory
+main/logic/AI/coach/player/DraftingAiType.java
+ main.logic.ai.coach.player.DraftingAiType
+main/logic/AI/coach/player/TeamIceDraftingAi.java
+ main.logic.ai.coach.player.TeamIceDraftingAi
+main/logic/AI/coach/player/BestPlayerDraftingAi.java
+ main.logic.ai.coach.player.BestPlayerDraftingAi
+main/data/entities/Skill.java
+ main.data.entities.Skill
+main/execute/CrushGame.java
+ main.execute.CrushGame
+ main.execute.CrushGame$1
+main/presentation/screens/teameditor/AbstractTeamEditorTrainerScreen.java
+ main.presentation.screens.teameditor.AbstractTeamEditorTrainerScreen
+main/presentation/screens/teamselect/TournamentTeamSelectScreen.java
+ main.presentation.screens.teamselect.TournamentTeamSelectScreen
+main/presentation/audio/SoundType.java
+ main.presentation.audio.SoundType
+main/presentation/ImageFactory.java
+ main.presentation.ImageFactory
+main/logic/AI/coach/skill/InvincibleSkillSelectionAi.java
+ main.logic.ai.coach.skill.InvincibleSkillSelectionAi
+main/logic/Randomizer.java
+ main.logic.Randomizer
+main/presentation/common/image/AbstractColorReplacer.java
+ main.presentation.common.image.AbstractColorReplacer
+main/presentation/game/FontType.java
+ main.presentation.game.FontType
+main/presentation/game/ejectionalert/EquipmentEjectionAlert.java
+ main.presentation.game.ejectionalert.EquipmentEjectionAlert
+main/presentation/screens/popupready/YesNoPopupScreen.java
+ main.presentation.screens.popupready.YesNoPopupScreen
+main/presentation/screens/teameditor/TeamEditorStockDraftScreen.java
+ main.presentation.screens.teameditor.TeamEditorStockDraftScreen
+ main.presentation.screens.teameditor.TeamEditorStockDraftScreen$1
+main/data/DataImpl.java
+ main.data.DataImpl
+main/data/save/SaveHandler.java
+ main.data.save.SaveHandler
+main/presentation/audio/AudioManager.java
+ main.presentation.audio.AudioManager
+main/presentation/game/sprite/PlayerAnimationFrame.java
+ main.presentation.game.sprite.PlayerAnimationFrame
+main/presentation/screens/teamselect/TeamRecordTracker.java
+ main.presentation.screens.teamselect.TeamRecordTracker
+main/logic/RandomGeneratorSingletonImpl.java
+ main.logic.RandomGeneratorSingletonImpl
+main/presentation/game/ejectionalert/NewTurnAlert.java
+ main.presentation.game.ejectionalert.NewTurnAlert
+main/data/entities/Attribute.java
+ main.data.entities.Attribute
+main/presentation/screens/teameditor/AbstractTeamEditorRosterScreen.java
+ main.presentation.screens.teameditor.AbstractTeamEditorRosterScreen
+main/presentation/game/PresentationMode.java
+ main.presentation.game.PresentationMode
+main/data/load/LegacyTeamLoader.java
+ main.data.load.LegacyTeamLoader
+main/logic/Server.java
+ main.logic.Server
+main/data/save/SaveStringBuilder.java
+ main.data.save.SaveStringBuilder
+main/presentation/game/GdxGUI.java
+ main.presentation.game.GdxGUI
+ main.presentation.game.GdxGUI$1
+ main.presentation.game.GdxGUI$2
+ main.presentation.game.GdxGUI$3
+ main.presentation.game.GdxGUI$4
+ main.presentation.game.GdxGUI$5
+ main.presentation.game.GdxGUI$6
+main/data/factory/CpuTeamFactory.java
+ main.data.factory.CpuTeamFactory
+main/presentation/screens/teameditor/TeamEditorGeneralRoster.java
+ main.presentation.screens.teameditor.TeamEditorGeneralRoster
+main/presentation/screens/EventDetails.java
+ main.presentation.screens.EventDetails
+main/data/factory/LegacyArenaFactory.java
+ main.data.factory.LegacyArenaFactory
+main/data/entities/EntityType.java
+ main.data.entities.EntityType
+main/presentation/screens/StandardButtonScreen.java
+ main.presentation.screens.StandardButtonScreen
+ main.presentation.screens.StandardButtonScreen$1
+main/execute/LeagueLoader.java
+ main.execute.LeagueLoader
+main/presentation/screens/popupready/PopupReadyScreen.java
+ main.presentation.screens.popupready.PopupReadyScreen
+main/presentation/game/ArenaImageGenerator.java
+ main.presentation.game.ArenaImageGenerator
+main/data/Data.java
+ main.data.Data
+main/presentation/screens/popupready/OverBudgetPopupScreen.java
+ main.presentation.screens.popupready.OverBudgetPopupScreen
+main/presentation/game/HighlightIcon.java
+ main.presentation.game.HighlightIcon
+main/presentation/common/ScreenCommand.java
+ main.presentation.common.ScreenCommand
+main/logic/AI/coach/player/NynaxGronkDraftingAi.java
+ main.logic.ai.coach.player.NynaxGronkDraftingAi
+main/presentation/common/image/TeamColorType.java
+ main.presentation.common.image.TeamColorType
+main/logic/pathfinding/PathfindingMap.java
+ main.logic.pathfinding.PathfindingMap
+main/data/entities/Player.java
+ main.data.entities.Player
+ main.data.entities.Player$1
+main/data/save/SaveToken.java
+ main.data.save.SaveToken
+main/data/entities/SortableStatsCollection.java
+ main.data.entities.SortableStatsCollection
+ main.data.entities.SortableStatsCollection$SortableStatsEntry
+main/logic/AI/coach/skill/SkillSelectionAiType.java
+ main.logic.ai.coach.skill.SkillSelectionAiType
+main/data/entities/SkillComparator.java
+ main.data.entities.SkillComparator
+main/presentation/common/GameSettings.java
+ main.presentation.common.GameSettings
+main/presentation/game/ejectionalert/MutationEjectionAlert.java
+ main.presentation.game.ejectionalert.MutationEjectionAlert
+main/presentation/common/image/ColorMap.java
+ main.presentation.common.image.ColorMap
+main/presentation/common/PlayerTextFactory.java
+ main.presentation.common.PlayerTextFactory
+main/presentation/ColorPairKey.java
+ main.presentation.ColorPairKey
+main/presentation/screens/teameditor/PlayerFlavorStats.java
+ main.presentation.screens.teameditor.PlayerFlavorStats
+ main.presentation.screens.teameditor.PlayerFlavorStats$1
+main/data/factory/RandomlyNamedEntityFactory.java
+ main.data.factory.RandomlyNamedEntityFactory
+main/presentation/game/GameText.java
+ main.presentation.game.GameText
+ main.presentation.game.GameText$1
+main/presentation/common/image/ImageUtils.java
+ main.presentation.common.image.ImageUtils
+main/logic/AI/coach/player/CurmianRushDraftingAi.java
+ main.logic.ai.coach.player.CurmianRushDraftingAi
+main/logic/AI/AI.java
+ main.logic.ai.AI
+main/presentation/game/Action.java
+ main.presentation.game.Action
+main/presentation/common/image/OutsideGameColorMap.java
+ main.presentation.common.image.OutsideGameColorMap
+main/presentation/screens/GameScreenManager.java
+ main.presentation.screens.GameScreenManager
+main/logic/Engine.java
+ main.logic.Engine
+main/presentation/screens/teameditor/TeamEditorDocbotScreen.java
+ main.presentation.screens.teameditor.TeamEditorDocbotScreen
+main/logic/AI/coach/PurchaseType.java
+ main.logic.ai.coach.PurchaseType
+main/presentation/screens/teameditor/AbstractTeamEditorDraftScreen.java
+ main.presentation.screens.teameditor.AbstractTeamEditorDraftScreen
+main/presentation/game/sprite/Facing.java
+ main.presentation.game.sprite.Facing
+main/presentation/game/GameRunnerGUI.java
+ main.presentation.game.GameRunnerGUI
+main/presentation/game/sprite/CrushSprite.java
+ main.presentation.game.sprite.CrushSprite
+main/logic/AI/coach/skill/SkillSelectionAi.java
+ main.logic.ai.coach.skill.SkillSelectionAi
+main/presentation/screens/teamselect/ExhibitionTeamSelectScreen.java
+ main.presentation.screens.teamselect.ExhibitionTeamSelectScreen
+ main.presentation.screens.teamselect.ExhibitionTeamSelectScreen$1
+main/presentation/game/EventTextureFactory.java
+ main.presentation.game.EventTextureFactory
+main/presentation/common/image/InGameColorMap.java
+ main.presentation.common.image.InGameColorMap
+main/presentation/game/sprite/PlayerState.java
+ main.presentation.game.sprite.PlayerState
+main/presentation/legacy/common/LegacyUiConstants.java
+ main.presentation.legacy.common.LegacyUiConstants
+main/presentation/screens/stats/AbstractTeamStatsScreen.java
+ main.presentation.screens.stats.AbstractTeamStatsScreen
+ main.presentation.screens.stats.AbstractTeamStatsScreen$1
+ main.presentation.screens.stats.AbstractTeamStatsScreen$ColumnHighlight
+main/presentation/screens/stats/AbstractTeamStatsParentScreen.java
+ main.presentation.screens.stats.AbstractTeamStatsParentScreen
+main/presentation/screens/stats/TeamStatsTeamRushingScreen.java
+ main.presentation.screens.stats.TeamStatsTeamRushingScreen
+main/presentation/screens/stats/TeamStatsTeamCarnageScreen.java
+ main.presentation.screens.stats.TeamStatsTeamCarnageScreen
+main/presentation/screens/stats/TeamStatsTeamCheckingScreen.java
+ main.presentation.screens.stats.TeamStatsTeamCheckingScreen
+main/presentation/screens/stats/TeamStatsTeamMiscScreen.java
+ main.presentation.screens.stats.TeamStatsTeamMiscScreen
+main/presentation/screens/stats/TeamStatsTeamParentScreen.java
+ main.presentation.screens.stats.TeamStatsTeamParentScreen

@@ -3,10 +3,12 @@ package main.presentation.screens.teamselect;
 import com.badlogic.gdx.graphics.Texture;
 
 import main.data.entities.Team;
+import main.logic.ai.coach.Coach;
 import main.presentation.TeamColorsManager;
 
 public class TeamEntry
 {
+	private Coach coach;
 	private Team team;
 	
 	private int wins;
@@ -15,10 +17,30 @@ public class TeamEntry
 	
 	public TeamEntry()
 	{
+		coach = new Coach();
 		team = new Team();
 		wins = 0;
 		losses = 0;
 		ties = 0;
+	}
+	
+	public void updateTeamByCoach()
+	{
+		if (team.humanControlled)
+			return;
+		
+		coach.setLineup(team);
+		coach.spendPlayerXp(team);
+	}
+	
+	public Coach getCoach()
+	{
+		return coach;
+	}
+	
+	public void setCoach(Coach coach)
+	{
+		this.coach = coach;
 	}
 	
 	public Team getTeam()

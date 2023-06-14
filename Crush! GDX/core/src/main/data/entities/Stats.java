@@ -8,6 +8,7 @@ import main.data.save.EntityMap;
 import main.data.save.SaveStringBuilder;
 import main.data.save.SaveToken;
 import main.data.save.SaveTokenTag;
+import main.presentation.common.Logger;
 
 public class Stats extends SaveableEntity
 {
@@ -39,8 +40,17 @@ public class Stats extends SaveableEntity
 	public static final int STATS_WINS = 18;
 	public static final int STATS_LOSSES = 19;
 	public static final int STATS_TIES = 20;
+	
+	//extra stored stats
+	public static final int STATS_TOTAL_RATING = 21;
 
-	public static final int TOTAL_STATS = 21;
+	public static final int TOTAL_STATS = 22;
+
+	public static final int STATS_RUSHING_AVERAGE = -1;
+	public static final int STATS_CHECKING_AVERAGE = -2;
+	public static final int STATS_AVERAGE_RATING = -3;
+	public static final int STATS_CARNAGE_FOR = -4;
+	public static final int STATS_CARNAGE_AGAINST = -5;
 
 	private int[] statFields;
 
@@ -62,7 +72,48 @@ public class Stats extends SaveableEntity
 
 	public int getStat(int statIndex)
 	{
-		return statFields[statIndex];
+		if (statIndex >= 0 && statIndex < TOTAL_STATS)
+			return statFields[statIndex];
+		else if (statIndex == STATS_RUSHING_AVERAGE)
+			return getRushingAverage();
+		else if (statIndex == STATS_CHECKING_AVERAGE)
+			return getCheckingAverage();
+		else if (statIndex == STATS_AVERAGE_RATING)
+			return getAverageRating();
+		else if (statIndex == STATS_CARNAGE_FOR)
+			return statFields[STATS_INJURIES_FOR] + statFields[STATS_KILLS_FOR];
+		else if (statIndex == STATS_CARNAGE_AGAINST)
+			return statFields[STATS_INJURIES_AGAINST] + statFields[STATS_KILLS_AGAINST];
+		
+		Logger.warn("Cannot find stat for index [" + statIndex + "]; returning 0 instead.");
+		return 0;
+	}
+
+	private int getRushingAverage()
+	{
+		if (statFields[STATS_RUSHING_ATTEMPTS] == 0)
+			return 0;
+		
+		return statFields[STATS_RUSHING_YARDS] / statFields[STATS_RUSHING_ATTEMPTS];
+	}
+
+	private int getCheckingAverage()
+	{
+		if (statFields[STATS_CHECKS_THROWN] == 0)
+			return 0;
+		
+		//this one actually rounds correctly in the original game
+		return (int)(((100.0 * statFields[STATS_CHECKS_LANDED]) / statFields[STATS_CHECKS_THROWN]) + .5);
+		
+		//TODO: consider edge cases, like topping out at .99 (unless it's truly 100%) or bottoming out at .01 (unless it's truly 0%)
+	}
+
+	private int getAverageRating()
+	{
+		if (statFields[STATS_GAMES_PLAYED] == 0)
+			return 0;
+		
+		return statFields[STATS_TOTAL_RATING] / statFields[STATS_GAMES_PLAYED];
 	}
 
 	//used for loading a player
@@ -281,6 +332,7 @@ public class Stats extends SaveableEntity
 			}
 			break;
 
+			//$CASES-OMITTED$
 		default:
 			throw new IllegalArgumentException("Stats - Unhandled token: " + saveTokenTag.toString());
 		}

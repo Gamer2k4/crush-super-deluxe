@@ -139,7 +139,7 @@ public class Equipment
 			name = "SAAI Gauntlets";
 			description = "Gives player 60 CH";
 			type = EQUIP_GLOVES;
-			detection = 15;
+			detection = 10;
 			attFix[Player.ATT_CH] = 60;
 			cost = 20;
 		}
@@ -157,7 +157,7 @@ public class Equipment
 			name = "Magnetic Gauntlets";
 			description = "Player always picks up the ball";
 			type = EQUIP_GLOVES;
-			detection = 5;
+			detection = 10;
 			attFix[Player.ATT_HD] = 99;
 			cost = 10;
 		}
@@ -241,7 +241,7 @@ public class Equipment
 			name = "Field Integrity Belt";
 			description = "Keeps player from being blobbed";
 			type = EQUIP_BELT;
-			detection = 10;
+			detection = 5;
 			// TODO Blob Effect
 			cost = 10;
 		}
@@ -260,7 +260,7 @@ public class Equipment
 			name = "Backfire Belt";
 			description = "Explodes when the player gets checked";
 			type = EQUIP_BELT;
-			detection = 10;
+			detection = 15;
 			// TODO Injury Effect
 			cost = 10;
 		}
@@ -278,7 +278,7 @@ public class Equipment
 			name = "Hologram Belt";
 			description = "Disguises the true species of the player";
 			type = EQUIP_BELT;
-			detection = 10;
+			detection = 5;
 			// TODO Appearance Effect
 			cost = 10;
 		}
@@ -287,7 +287,7 @@ public class Equipment
 			name = "Scrambler Belt";
 			description = "Causes teleporter accidents 25% of the time";
 			type = EQUIP_BELT;
-			detection = 15;
+			detection = 10;
 			// TODO Blob Effect
 			cost = 30;
 		}
@@ -329,6 +329,11 @@ public class Equipment
 			defineEquipment();
 		
 		return allEquipment.get(index);
+	}
+	
+	public static int getType(int index)
+	{
+		return getEquipment(index).type;
 	}
 	
 	

@@ -40,6 +40,11 @@ public class StaticImage
 		image.setPosition(coords.x, coords.y);
 	}
 	
+	public Point getPosition()
+	{
+		return new Point((int)image.getImageX(), (int)image.getImageY());
+	}
+	
 	public Image getImage()
 	{
 		return image;

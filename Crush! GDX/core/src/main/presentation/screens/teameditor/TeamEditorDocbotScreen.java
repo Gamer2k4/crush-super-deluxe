@@ -6,6 +6,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 
 import main.data.entities.Player;
@@ -28,8 +29,8 @@ public class TeamEditorDocbotScreen extends AbstractTeamEditorSubScreen
 	private GameText[][] playerText = new GameText[5][3];
 	private GameText docbotBudget = null;
 	private ImageButton[][] docbotOptions = new ImageButton[4][2];
-	private ImageButton docbotUp = parentScreen.addButton(240, 211, 39, 20, false, ScreenCommand.DOCBOT_UP, true);
-	private ImageButton docbotDown = parentScreen.addButton(240, 234, 39, 20, false, ScreenCommand.DOCBOT_DOWN, true);
+	private ImageButton docbotUp = parentScreen.addClickZone(240, 211, 39, 20, ScreenCommand.DOCBOT_UP);
+	private ImageButton docbotDown = parentScreen.addClickZone(240, 234, 39, 20, ScreenCommand.DOCBOT_DOWN);
 
 	private int topIndex = 0;
 
@@ -58,6 +59,7 @@ public class TeamEditorDocbotScreen extends AbstractTeamEditorSubScreen
 	@Override
 	public void refreshContent()
 	{
+		topIndex = 0;
 		refreshInjuredPlayers();
 		refreshAllPlayerTexts();
 		refreshDocbotOptions();
@@ -177,6 +179,13 @@ public class TeamEditorDocbotScreen extends AbstractTeamEditorSubScreen
 	public List<ImageButton> getScreenButtons()
 	{
 		List<ImageButton> screenButtons = super.getScreenButtons();
+		
+		screenButtons.add(docbotUp);
+		screenButtons.add(docbotDown);
+		
+		//disable changing docbot options if the player is not allowed to
+		if (!canUserEditTeam())
+			return screenButtons;
 
 		for (int i = 0; i < 4; i++)
 		{
@@ -185,9 +194,6 @@ public class TeamEditorDocbotScreen extends AbstractTeamEditorSubScreen
 				screenButtons.add(docbotOptions[i][j]);
 			}
 		}
-		
-		screenButtons.add(docbotUp);
-		screenButtons.add(docbotDown);
 
 		return screenButtons;
 	}
@@ -208,5 +214,35 @@ public class TeamEditorDocbotScreen extends AbstractTeamEditorSubScreen
 		}
 
 		return screenTexts;
+	}
+	
+	@Override
+	public List<Actor> getActors()
+	{
+		List<Actor> actors = super.getActors();
+		
+		actors.add(subScreenImage.getImage());
+		
+		//if the user can make changes, the buttons are working and we don't need to add pressed button images
+		if (canUserEditTeam())
+			return actors;
+		
+		boolean[] docbotBools = teamUpdater.getTeam().docbot; 
+		
+		for (int i = 0; i < 4; i++)
+		{
+			int column = 0;
+			
+			if (docbotBools[i])
+				column = 1;
+			
+			ImageButton button = docbotOptions[i][column];
+			Point location = new Point((int) button.getX(), (int) button.getY());
+			
+			StaticImage pressedButton = new StaticImage(ImageType.BUTTON_72x17_CLICKED, location);
+			actors.add(pressedButton.getImage());
+		}
+		
+		return actors;
 	}
 }

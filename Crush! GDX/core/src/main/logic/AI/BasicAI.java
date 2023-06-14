@@ -1,4 +1,4 @@
-package main.logic.AI;
+package main.logic.ai;
 
 import java.awt.Point;
 import java.util.ArrayList;
@@ -36,6 +36,7 @@ public class BasicAI implements AI
 		
 		if (destination == null || (destination.x == -1 && destination.y == -1))
 		{
+			//TODO: i believe this comes up if the ballcarrier is killed
 			Logger.error("BasicAI - Destination was " + destination + ", which should NEVER happen - LOOK INTO THIS AND FIX IT.");
 			System.out.println("\tBall coords: " + data.getBallLocation());
 			System.out.println("\tBallcarrier: " + data.getBallCarrier());
@@ -146,9 +147,6 @@ public class BasicAI implements AI
 		if (ballCarrierIsOpponent(player))
 			return data.getLocationOfPlayer(data.getBallCarrier());
 		
-//		return getFarCornerCoords(playerCoords);
-//		return arena.getGoalFarCorner();		//if we've got nothing else to do, just move toward the goal
-		
 		return getNearestOpponentCoords(player);	//if nothing else applies, just run full speed at the nearest opponent
 	}
 	
@@ -186,7 +184,7 @@ public class BasicAI implements AI
 	private Point getNearestOpponentCoords(Player player)
 	{
 		int shortestDistance = Arena.ARENA_DIMENSIONS;
-		Point nearestOpponentCoords = new Point(29, 29);
+		Point nearestOpponentCoords = data.getArena().getGoalFarCorner();		//in case we can't find an opponent, default to running toward the goal instead
 		Point playerCoords = data.getLocationOfPlayer(player);
 		
 		for (Player opponent : data.getAllPlayers())
@@ -217,22 +215,6 @@ public class BasicAI implements AI
 		return nearestOpponentCoords;
 	}
 
-	private Point getFarCornerCoords(Point playerCoords)
-	{
-		int x = playerCoords.x;
-		int y = playerCoords.y;
-		
-		int targetX = 0;
-		int targetY = 0;
-		
-		if (x < 15)
-			targetX = 29;
-		if (y < 15)
-			targetY = 29;
-		
-		return new Point(targetX, targetY);
-	}
-
 	private Point getNextActionTarget(Player player, Point destination)
 	{
 		boolean avoidPlayers = false;
@@ -254,6 +236,14 @@ public class BasicAI implements AI
 	
 	private Point getNextActionTarget(Player player, Point destination, boolean avoidPlayers)
 	{
+		Point playerLocation = data.getLocationOfPlayer(player);
+		
+		if (playerLocation == null)
+		{
+			Logger.error("Cannot get next action target for Player [" + data.getTeamOfPlayer(player).teamName + "/" + player.name + "] due to a null player location; returning null point.");
+			return null;
+		}
+		
 		Pathfinder.setData(data);
 		List<Point> path = Pathfinder.findPath(data.getArena(), data.getLocationOfPlayer(player), destination, avoidPlayers);
 		

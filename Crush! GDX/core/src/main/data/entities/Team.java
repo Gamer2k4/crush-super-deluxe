@@ -15,6 +15,11 @@ public class Team extends SaveableEntity
 {
 	public static final int MAX_TEAM_SIZE = 35;
 
+	public static final int DOCBOT_EMERGENCY = 0;
+	public static final int DOCBOT_SURGERY = 1;
+	public static final int DOCBOT_RECOVERY = 2;
+	public static final int DOCBOT_THERAPY = 3;
+
 	public Team(String serialString)
 	{
 		throw new UnsupportedOperationException("Teams cannot yet be created from a data String.");
@@ -173,6 +178,27 @@ public class Team extends SaveableEntity
 	{
 		return unassignedGear;
 	}
+	
+	public void unequipAllItems()
+	{
+		for (int i = 0; i < MAX_TEAM_SIZE; i++)
+		{
+			if (players.get(i) == null)
+				continue;
+			
+			unequipItemsFromPlayer(players.get(i));
+		}
+	}
+	
+	public void unequipItemsFromPlayer(Player player)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			int equipment = player.unequipItem(j);
+			if (equipment >= 0)
+				unassignedGear.add(equipment);
+		}
+	}
 
 	public void addPlayer(Player p)
 	{
@@ -238,6 +264,22 @@ public class Team extends SaveableEntity
 	public Stats getCareerStats()
 	{
 		return careerStats;
+	}
+	
+	public Team advanceWeek()
+	{
+		for (Player player : players)
+		{
+			if (player == null)
+				continue;
+			player.recoverInjuries(1);
+			//TODO: roll for quirks for each player
+			
+			//this makes it hard to track equipment of AI teams in the team editor, but it means equipment can be reallocated each game
+			unequipItemsFromPlayer(player);
+		}
+		
+		return this;
 	}
 
 	private List<String> convertDocbotSettingsToList()

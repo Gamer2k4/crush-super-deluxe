@@ -1,4 +1,4 @@
-package main.logic.AI;
+package main.logic.ai;
 
 import main.data.Event;
 

@@ -8,13 +8,20 @@ public abstract class CrushSprite
 {
 	protected Point coords;
 	protected TextureRegion tile;
+	protected float alpha;
 	
 	public static final Point OFFSCREEN_COORDS = new Point(-1000, -1000);
 	
 	protected CrushSprite(Point coords, TextureRegion tile)
 	{
+		this(coords, tile, 1.0f);
+	}
+	
+	protected CrushSprite(Point coords, TextureRegion tile, float alpha)
+	{
 		this.coords = new Point(coords.x, coords.y);
 		this.tile = tile;
+		this.alpha = alpha;
 	}
 	
 	public void setCoords(Point newCoords)
@@ -40,6 +47,11 @@ public abstract class CrushSprite
 	public TextureRegion getImage()
 	{
 		return tile;
+	}
+	
+	public float getAlpha()
+	{
+		return alpha;
 	}
 
 	public void setArenaPosition(Point position)

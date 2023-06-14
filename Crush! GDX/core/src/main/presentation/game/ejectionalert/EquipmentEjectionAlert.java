@@ -36,6 +36,8 @@ public class EquipmentEjectionAlert extends EjectionAlert
 		text.add(new GameText(FontType.FONT_SMALL2, new Point(5, 15), LegacyUiConstants.COLOR_LEGACY_ORANGE, "EJECTED"));
 		text.add(new GameText(FontType.FONT_SMALL2, new Point(5, 25), LegacyUiConstants.COLOR_LEGACY_WHITE, "ILLEGAL ITEMS:"));
 		
+		int equipCount = 0;
+		
 		for (int i = 0; i < 4; i++)
 		{
 			int equipmentIndex = player.getEquipment(i);
@@ -43,9 +45,11 @@ public class EquipmentEjectionAlert extends EjectionAlert
 			if (equipmentIndex == Equipment.EQUIP_NONE)
 				continue;
 			
+			equipCount++;
+			
 			Equipment equippedItem = Equipment.getEquipment(equipmentIndex);
 			
-			text.add(new GameText(FontType.FONT_SMALL2, new Point(5, 35), LegacyUiConstants.COLOR_LEGACY_WHITE, equippedItem.name.toUpperCase()));
+			text.add(new GameText(FontType.FONT_SMALL2, new Point(5, 35 + (6 * (equipCount - 1))), LegacyUiConstants.COLOR_LEGACY_WHITE, equippedItem.name.toUpperCase()));
 		}
 	}
 

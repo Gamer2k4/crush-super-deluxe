@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 
 import main.data.DataImpl;
 import main.data.entities.Team;
+import main.logic.ai.coach.Coach;
 import main.presentation.ImageType;
 import main.presentation.common.ScreenCommand;
 import main.presentation.game.FontType;
@@ -28,8 +29,6 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 	private ImageButton startButton = null;
 	private ImageButton eventButton;
 	private ImageButton victoryButton;
-	//TODO: will need an additional start button for before the teams are locked that does a budget check and potentially shows a popup rather than
-	//		just going straight to the game
 	
 	private GameText winRequirementText;
 	
@@ -76,6 +75,8 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 	@Override
 	public List<Team> getTeamsForNextGame()
 	{
+		initializeBlankTeams();
+		
 		List<Team> rawTeams = new ArrayList<Team>();
 		
 		for (int i = 0; i < 3; i++)
@@ -287,7 +288,22 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 		case CHANGE_TURNS:
 			changeTurns();
 			break;
+		case EXHIBITION_PREGAME:
+			checkBudgets();
+			break;
+		case POPUP_NO:
+			hidePopup();
+			refreshStage();
+			break;
 		}
+	}
+
+	private void checkBudgets()
+	{
+		List<String> teamsOverBudget = getTeamsOverBudget();
+		
+		if (!teamsOverBudget.isEmpty())
+			showPopup(teamsOverBudget);
 	}
 
 	private void changeWinRequirement()
@@ -345,8 +361,7 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 		victoryScreen.reset();
 		victoryScreen.setTeam(team);
 		startButton = victoryButton;
-		super.reset();	//to get the correct start button on the screen
-		lockTeams();	//to undo the unlock from reseting the parent screen
+		refreshStage();	//to get the correct start button on the screen
 		eventCompleted = true;
 	}
 
@@ -354,6 +369,15 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 	public void updateTeam(int index, Team team)
 	{
 		teams[index].setTeam(team);
+		
+		if (!team.humanControlled)
+			teams[index].updateTeamByCoach();		//TODO: this is also triggering just upon leaving the team editor (which makes sense, since it's being "updated")
+	}
+
+	@Override
+	public void updateCoach(int index, Coach coach)
+	{
+		teams[index].setCoach(coach);
 	}
 
 	@Override
@@ -371,6 +395,9 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 		
 		if (startButton != null)
 			allButtons.add(startButton);
+		
+		if (popupIsActive())
+			allButtons.addAll(getPopupButtons());
 		
 		return allButtons;
 	}
