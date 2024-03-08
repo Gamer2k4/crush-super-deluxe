@@ -1,5 +1,8 @@
 package main.presentation.game;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
@@ -8,13 +11,19 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 import main.data.entities.Arena;
+import main.data.factory.SimpleArenaFactory;
 import main.presentation.common.image.ImageUtils;
 import main.presentation.legacy.common.LegacyUiConstants;
 
 public class ArenaImageGenerator
 {
-	private static Texture arenaImage = null;
-	private static Pixmap arenaPixmap = null;
+	private static ArenaImageGenerator instance = null;
+	
+	private Texture arenaImage = null;
+	private Pixmap arenaPixmap = null;
+	
+	private List<Texture> arenaImages = new ArrayList<Texture>();
+	private List<Pixmap> arenaPixmaps = new ArrayList<Pixmap>();
 	
 	//TODO: confirm these colors (they may also be different between the team editor and the actual game)
 	public static final Color FLOOR_COLOR = ImageUtils.gdxColor(LegacyUiConstants.COLOR_LEGACY_BLACK);
@@ -25,7 +34,28 @@ public class ArenaImageGenerator
 	public static final Color WALL_COLOR = ImageUtils.gdxColor(LegacyUiConstants.COLOR_LEGACY_BLUE_GREY);
 	public static final Color BIN_COLOR =ImageUtils.gdxColor( LegacyUiConstants.COLOR_LEGACY_BLUE_GREY);
 	
-	public static void drawTile(int x, int y, int tile, int tileSize)
+	public static ArenaImageGenerator getInstance()
+	{
+		if (instance == null)
+			instance = new ArenaImageGenerator();
+		
+		return instance;
+	}
+	
+	private ArenaImageGenerator()
+	{
+		for (int i = 0; i < Arena.TOTAL_ARENAS; i++)
+		{
+			Arena arena = SimpleArenaFactory.getInstance().generateArena(i);
+			Pixmap pixmap = generateArenaImagePixmap(arena, 30, 2);
+			Texture texture = new Texture(pixmap);
+			
+			arenaPixmaps.add(pixmap);
+			arenaImages.add(texture);
+		}
+	}
+	
+	private void drawTile(Pixmap pixmap, int x, int y, int tile, int tileSize)
 	{
 		Color fillColor = FLOOR_COLOR;
 		
@@ -40,22 +70,34 @@ public class ArenaImageGenerator
 		else if (tile == Arena.TILE_BIN)
 			fillColor = BIN_COLOR;
 		
-		drawTile(x, y, fillColor, tileSize);
+		drawTile(pixmap, x, y, fillColor, tileSize);
 	}
 	
-	public static void drawTile(int x, int y, Color fillColor, int tileSize)
+	public void drawTile(int x, int y, Color fillColor, int tileSize)
 	{
-		arenaPixmap.setColor(fillColor);
-		arenaPixmap.fillRectangle(x * tileSize, y * tileSize, tileSize, tileSize);
+		drawTile(arenaPixmap, x, y, fillColor, tileSize);
+	}
+	
+	public void drawTile(Pixmap pixmap, int x, int y, Color fillColor, int tileSize)
+	{
+		pixmap.setColor(fillColor);
+		pixmap.fillRectangle(x * tileSize, y * tileSize, tileSize, tileSize);
 	}
 	
 	//TODO: I think the coloration here isn't QUITE right; in fact, I think I give more detail than the original game does
-	public static void generateArenaImage(Arena arena, int arenaSideLength, int tileSize)
+	public void generateArenaImage(Arena arena, int arenaSideLength, int tileSize)
 	{
-		dispose();
+		disposeCurrentImage();
 		
+		arenaPixmap = generateArenaImagePixmap(arena, arenaSideLength, tileSize);
+		
+		prepare();
+	}
+	
+	private Pixmap generateArenaImagePixmap(Arena arena, int arenaSideLength, int tileSize)
+	{
 		int sideLengthWithBorders = arenaSideLength + 2;
-		arenaPixmap = new Pixmap(sideLengthWithBorders * tileSize, sideLengthWithBorders * tileSize, Format.RGBA8888);
+		Pixmap pixmap = new Pixmap(sideLengthWithBorders * tileSize, sideLengthWithBorders * tileSize, Format.RGBA8888);
 		
 		for (int i = 0; i < sideLengthWithBorders; i++)
 		{
@@ -63,18 +105,18 @@ public class ArenaImageGenerator
 			{
 				if (i == 0 || j == 0 || i == sideLengthWithBorders - 1 || j == sideLengthWithBorders - 1)
 				{
-					drawTile(j, i, Arena.TILE_WALL, tileSize);
+					drawTile(pixmap, j, i, Arena.TILE_WALL, tileSize);
 					continue;
 				}
 				
-				drawTile(j, i, arena.getTile(i - 1, j - 1), tileSize);
+				drawTile(pixmap, j, i, arena.getTile(i - 1, j - 1), tileSize);
 			}
 		}
 		
-		prepare();
+		return pixmap;
 	}
 	
-	public static void prepare()
+	public void prepare()
 	{
 		if (arenaImage != null)
 			arenaImage.dispose();
@@ -82,17 +124,39 @@ public class ArenaImageGenerator
 		arenaImage = new Texture(arenaPixmap);
 	}
 	
-	public static Drawable getArenaImage()
+	public Drawable getArenaImage()
 	{
 		return new TextureRegionDrawable(arenaImage);
 	}
 	
-	public static void dispose()
+	public Drawable getArenaImage(int arenaIndex)
+	{
+		return new TextureRegionDrawable(arenaImages.get(arenaIndex));
+	}
+	
+	private void disposeCurrentImage()
 	{
 		if (arenaPixmap != null && !arenaPixmap.isDisposed())
 			arenaPixmap.dispose();
 		
 		if (arenaImage != null)
 			arenaImage.dispose();
+	}
+	
+	public void dispose()
+	{
+		disposeCurrentImage();
+		
+		for (int i = 0; i < Arena.TOTAL_ARENAS; i++)
+		{
+			Pixmap pixmap = arenaPixmaps.get(i);
+			Texture texture = arenaImages.get(i);
+			
+			if (pixmap != null && !pixmap.isDisposed())
+				pixmap.dispose();
+			
+			if (texture != null)
+				texture.dispose();
+		}
 	}
 }

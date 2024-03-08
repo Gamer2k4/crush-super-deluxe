@@ -1,9 +1,14 @@
 package main.presentation.common;
 
 import java.awt.Color;
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
 
 import main.data.Data;
 import main.data.entities.Player;
+import main.data.entities.Quirk;
+import main.data.entities.Skill;
 import main.data.entities.Stats;
 import main.data.factory.PlayerFactory;
 import main.presentation.game.FontType;
@@ -111,6 +116,69 @@ public class PlayerTextFactory
 		if (currentCost > baseCost)
 			color = enhancedColor;
 
-		return GameText.small2(color, getIntAsText(currentCost, 3)); // note that the cost doesn't actually have leading zeroes
+		return GameText.small2(color, String.valueOf(currentCost));
+	}
+	
+	public static List<GameText> getSkills(Point coords)
+	{
+		List<String> skills = new ArrayList<String>();
+		
+		for (Skill skill : currentPlayer.getSkills())
+		{
+			skills.add(skill.getName());
+		}
+		
+		return getTextBox(coords, skills);
+	}
+	
+	public static List<GameText> getQuirks(Point coords)
+	{
+		List<String> quirks = new ArrayList<String>();
+
+		for (Quirk quirk : currentPlayer.getQuirks())
+		{
+			quirks.add(quirk.getName());
+		}
+		
+		return getTextBox(coords, quirks);
+	}
+	
+	private static List<GameText> getTextBox(Point coords, List<String> textElements)
+	{
+		int maxWidth = 198;
+		
+		List<GameText> textBoxLines = new ArrayList<GameText>();
+		
+		if (textElements.isEmpty())
+			return textBoxLines;
+		
+		String currentLine = "";
+		
+		for (int i = 0; i < textElements.size(); i++)
+		{
+			String textElement = textElements.get(i);
+			String lineToCheck = currentLine + "  " + textElement + ",";	//yes, the original game has a double space between elements
+			lineToCheck = lineToCheck.trim();	//it's a bit of a waste to do this with every addition, but it's the simplest way to ensure lines don't start with spaces
+			
+			int lineWidth = GameText.getStringPixelLength(GameText.small2, lineToCheck);
+			
+			if (lineWidth > maxWidth)
+			{
+				int x = coords.x;
+				int y = coords.y + (6 * textBoxLines.size());
+				GameText textLine = GameText.small2(new Point(x, y), LegacyUiConstants.COLOR_LEGACY_GREY, currentLine);
+				currentLine = "";
+				textBoxLines.add(textLine);
+				i--;
+			}
+			else
+			{
+				currentLine = lineToCheck;
+			}
+		}
+		
+		textBoxLines.add(GameText.small2(new Point(coords.x, coords.y + (6 * textBoxLines.size())), LegacyUiConstants.COLOR_LEGACY_GREY, currentLine));
+		
+		return textBoxLines;
 	}
 }

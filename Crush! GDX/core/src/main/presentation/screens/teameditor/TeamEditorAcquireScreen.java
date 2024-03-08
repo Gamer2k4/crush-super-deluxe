@@ -129,12 +129,25 @@ public class TeamEditorAcquireScreen extends AbstractTeamEditorEquipmentScreen
 	private int getSelectedEquipment()
 	{
 		int type = typeSelectionMap.get(selectedEquipmentType);
+		
+		//if scrolling backwards, keep going until at an index with a valid equipment
+		if (selectedEquipmentIndex < 0)
+		{
+			selectedEquipmentIndex = 6;
+			while (equipmentInStore[type][selectedEquipmentIndex] < 0)
+				selectedEquipmentIndex--;
+		}
+		
 		int equipmentIndex = equipmentInStore[type][selectedEquipmentIndex];
 		
 		if (equipmentIndex >= 0)
 			return equipmentIndex;
 		
+		System.out.println("Invalid equipment type " + equipmentIndex + " found for selected index " + selectedEquipmentIndex);
+		
 		selectedEquipmentIndex = equipmentIndex + 2;		//wrap around to the start if the index is greater than the total equipments of this type (such as when moving from belts to gloves)
+		
+		System.out.println("Selected index has been set to " + selectedEquipmentIndex);
 		return equipmentInStore[type][selectedEquipmentIndex];
 	}
 
@@ -157,8 +170,8 @@ public class TeamEditorAcquireScreen extends AbstractTeamEditorEquipmentScreen
 			break;
 		case EQUIP_SCROLL_LEFT:
 			selectedEquipmentIndex--;
-			if (selectedEquipmentIndex < 0)
-				selectedEquipmentIndex = 6;
+			if (selectedEquipmentIndex < -1)
+				selectedEquipmentIndex = -1;
 			break;
 		case EQUIP_SCROLL_RIGHT:
 			selectedEquipmentIndex++;

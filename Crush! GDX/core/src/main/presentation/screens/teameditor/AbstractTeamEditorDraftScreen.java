@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 import main.data.entities.Attribute;
 import main.data.entities.Player;
@@ -16,7 +18,6 @@ import main.presentation.TeamColorsManager;
 import main.presentation.common.PlayerTextFactory;
 import main.presentation.game.FontType;
 import main.presentation.game.GameText;
-import main.presentation.game.StaticImage;
 import main.presentation.legacy.common.LegacyUiConstants;
 
 public abstract class AbstractTeamEditorDraftScreen extends AbstractTeamEditorSubScreen
@@ -48,10 +49,12 @@ public abstract class AbstractTeamEditorDraftScreen extends AbstractTeamEditorSu
 		attributeTextCoords.put(Attribute.DA, new Point(316, 136));
 	}
 
-	protected StaticImage getPlayerImage(Color mainColor, Color trimColor)
+	protected Image getPlayerImage(Color mainColor, Color trimColor)
 	{
 		Texture playerTexture = TeamColorsManager.getInstance().getPlayerImage(draftee.getRace(), mainColor, trimColor);
-		return new StaticImage(playerTexture, PLAYER_IMAGE_COORDS);
+		Image playerImage = new Image(new TextureRegionDrawable(playerTexture));
+		playerImage.setPosition(PLAYER_IMAGE_COORDS.x, PLAYER_IMAGE_COORDS.y);
+		return playerImage;
 	}
 	
 	public List<GameText> getPlayerAttributeTexts()

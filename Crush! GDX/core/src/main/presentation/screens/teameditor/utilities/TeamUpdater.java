@@ -115,6 +115,12 @@ public class TeamUpdater
 	{
 		team.coachName = name;
 	}
+	
+	public void setCurrentPlayerName(String name)
+	{
+		team.getPlayer(currentPlayerIndex).name = name;
+		playersChangedUpdater.doClick();
+	}
 
 	public Color getMainColor()
 	{
@@ -353,6 +359,7 @@ public class TeamUpdater
 				
 		removeEquipment(teamInventorySlot);
 		player.equipItem(equipment);
+		equipmentChangedUpdater.doClick();
 		return true;
 	}
 	
@@ -393,6 +400,8 @@ public class TeamUpdater
 	public void addUpdateListener(ActionListener listener)
 	{
 		newTeamUpdater.addActionListener(listener);
+		colorsChangedUpdater.addActionListener(listener);
+		arenaChangedUpdater.addActionListener(listener);
 		playerSelectionUpdater.addActionListener(listener);
 		playersChangedUpdater.addActionListener(listener);
 		equipmentChangedUpdater.addActionListener(listener);

@@ -99,7 +99,7 @@ public abstract class AbstractTeamEditorRosterScreen extends AbstractTeamEditorS
 		List<ImageButton> screenButtons = super.getScreenButtons();
 		
 		//TODO: see if i've extracted highlight images for these buttons
-		//TODO: a clickmap image is define in the original files for these; I can just paint that on the clickmap screen like I do for the action buttons in the game window
+		//TODO: a clickmap image is defined in the original files for these; I can just paint that on the clickmap screen like I do for the action buttons in the game window
 		
 		screenButtons.add(parentScreen.addClickZone(447, 329, SCROLL_BUTTON_DIM.width, SCROLL_BUTTON_DIM.height, ScreenCommand.SCROLL_ROSTER_UP));
 		screenButtons.add(parentScreen.addClickZone(504, 329, SCROLL_BUTTON_DIM.width, SCROLL_BUTTON_DIM.height, ScreenCommand.SCROLL_ROSTER_DOWN));

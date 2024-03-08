@@ -324,7 +324,7 @@ public class Coach
 			player.purchaseSkill(nextSkill);
 		} while (nextSkill != null);
 		
-		Collections.sort(player.getSkills(), new SkillComparator());
+		//Collections.sort(player.getSkills(), new SkillComparator());		//TODO: I think this was for the pool draft so the skills would appear in a nice order
 	}
 
 	private class LineupEntry implements Comparable<LineupEntry>

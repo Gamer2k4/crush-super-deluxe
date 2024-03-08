@@ -94,8 +94,8 @@ public class PregameScreen extends MouseOverButtonScreen
 	
 	private void addArenaImage()
 	{
-		ArenaImageGenerator.generateArenaImage(EventDetails.getArena(), 30, 1);
-		Image arenaImage = new Image(ArenaImageGenerator.getArenaImage());
+		ArenaImageGenerator.getInstance().generateArenaImage(EventDetails.getArena(), 30, 1);
+		Image arenaImage = new Image(ArenaImageGenerator.getInstance().getArenaImage());
 		arenaImage.setPosition(45, 43);
 		stage.addActor(arenaImage);
 	}

@@ -35,8 +35,16 @@ public class SkillPrerequisiteValidator
 		if (player.hasSkill(skill))
 			return false;
 		
+		//Exception for Nynax players: Leader should be "clicked" if they have Hive Overseer
+		if (skill == Skill.LEADER && player.hasSkill(Skill.HIVE_OVERSEER))
+			return false;
+		
 		if (player.getSkillPoints() < getSkillXpCost(skill, player))
 			return false;
+		
+		//Exception for Nynax players: Leader should be available if they have the skill points, don't have the skill, but do have Hive Mind
+		if (skill == Skill.LEADER && player.hasSkill(Skill.HIVE_MIND))
+			return true;
 		
 		if (!hasRequiredSkills(skill, player))
 			return false;
@@ -62,6 +70,14 @@ public class SkillPrerequisiteValidator
 		List<Skill> prereqs = skillPrereqs.get(skill);
 		
 		if (prereqs == null)
+			return true;
+		
+		//Nynax players can't get Leader; this one check is only for skill selection AIs
+		if (skill == Skill.LEADER && player.hasSkill(Skill.HIVE_MIND))
+			return false;
+		
+		//Similarly, Nynax players can Awe as long a they have Hive Overseer
+		if (skill == Skill.AWE && player.hasSkill(Skill.HIVE_OVERSEER))
 			return true;
 		
 		for (Skill prereq : prereqs)
@@ -97,6 +113,7 @@ public class SkillPrerequisiteValidator
 		addPrereq(Skill.HEALER, Skill.KARMA);
 		addPrereq(Skill.SENSEI, Skill.AWE);
 		addPrereq(Skill.SENSEI, Skill.HEALER);
+		addPrereq(Skill.HIVE_OVERSEER, Skill.HIVE_MIND);
 
 		addPrereq(Skill.SCOOP, Skill.JUGGLING);
 		addPrereq(Skill.JUDO, Skill.GYMNASTICS);

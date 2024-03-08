@@ -15,9 +15,11 @@ public class DebugConstants
 	public static final boolean ALWAYS_BIN_SUCCESS = false;
 	public static final boolean HIDE_EVENT_EXCEPTIONS = false;
 	public static final boolean AUDIO_ON = false;
+//	public static final boolean AUDIO_ON = true;
 	public static final int LOGGING_LEVEL = Logger.WARN;
 //	public static final int LOGGING_LEVEL = Logger.DEBUG;
 	public static final boolean ABSTRACT_SIMULATION = true;
 //	public static final boolean ABSTRACT_SIMULATION = false;
 	public static final Color BG_TINT = Color.WHITE;
+	public static final boolean ONLY_USE_LEGACY_TEAM_COLORS = true;
 }

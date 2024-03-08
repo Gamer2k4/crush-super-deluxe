@@ -234,7 +234,7 @@ public class TeamEditorOutfitScreen extends AbstractTeamEditorEquipmentScreen
 	// these two methods are assumed to only be called from mouseReleased(), and do not properly clean up otherwise
 	private void releaseGearOnPlayer()
 	{
-		if (isCpuTeam())
+		if (isCpuTeam())	//TODO: or current player has technophobia
 			return;
 		
 		if (grabbingFromPlayer)

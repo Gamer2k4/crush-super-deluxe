@@ -1,5 +1,6 @@
 package main.presentation.screens.teamselect;
 
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -11,9 +12,13 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 
 import main.data.entities.Pace;
+import main.data.entities.Player;
+import main.data.entities.Quirk;
 import main.data.entities.Simulation;
+import main.data.entities.Skill;
 import main.data.entities.Team;
 import main.data.factory.CpuTeamFactory;
+import main.logic.Randomizer;
 import main.logic.ai.coach.Coach;
 import main.presentation.ImageFactory;
 import main.presentation.ImageType;
@@ -262,6 +267,37 @@ public abstract class AbstractTeamSelectScreen extends OverBudgetPopupScreen
 		return preparedTeams;
 	}
 	
+	protected void handlePregameEffects(Team team)
+	{
+		//TODO:
+		//Coach rearranges roster (currently done in updateTeam(), which is triggered by game end)
+		//Coach allocates skill points (currently done in updateTeam(), which is triggered by game end)
+		//Coach assigns equipment (currently done in updateTeam(), which is triggered by game end)
+		
+		for (int i = 0; i < Team.MAX_TEAM_SIZE; i++)
+		{
+			Player player = team.getPlayer(i);
+			
+			if (player == null)
+				continue;
+			
+			if (player.hasSkill(Skill.HEALER))
+				team.triggerHealChecks();
+			
+			if (player.hasQuirk(Quirk.EGOMANIAC) && i > 0)
+			{
+				player.status = Player.STS_EGO;
+				continue;
+			}
+			
+			if (player.hasQuirk(Quirk.SLACKER) && Randomizer.getRandomInt(1, 4) == 1)
+			{
+				player.status = Player.STS_LATE;
+				continue;
+			}
+		}
+	}
+
 	protected void initializeBlankTeams()
 	{
 		for (int i = 0; i < teams.length; i++)
@@ -275,6 +311,32 @@ public abstract class AbstractTeamSelectScreen extends OverBudgetPopupScreen
 			newTeam = coach.draftForTeam(newTeam, budget);
 			newTeam = coach.setLineup(newTeam);		//TODO: this shouldn't be here, but right now I have the lineup adjusted AFTER each game, instead of BEFORE (before is correct)
 			teams[i].setTeam(newTeam);
+		}
+		
+		removeDuplicateTeamColorPairs();
+	}
+	
+	//no team can have a main color that matches another team's main color, or a trim color that matches another team's trim color
+	//also, giveTeamNewRandomColors() gives distinct colors for main and trim, so a team can't have both be the same
+	private void removeDuplicateTeamColorPairs()
+	{
+		List<Color> usedMainColors = new ArrayList<Color>();
+		List<Color> usedTrimColors = new ArrayList<Color>();
+		
+		for (int i = 0; i < teams.length; i++)
+		{
+			Team team = teams[i].getTeam();
+			if (team == null)
+				continue;
+			
+			if (team.humanControlled)
+				continue;
+			
+			while (usedMainColors.contains(team.teamColors[0]) || usedTrimColors.contains(team.teamColors[1]))
+				CpuTeamFactory.getInstance().giveTeamNewRandomColors(team);
+			
+			usedMainColors.add(team.teamColors[0]);
+			usedTrimColors.add(team.teamColors[1]);
 		}
 	}
 
@@ -340,11 +402,23 @@ public abstract class AbstractTeamSelectScreen extends OverBudgetPopupScreen
 		return teams[index].getTeam();
 	}
 	
+	public void updateTeam(int index, Team team)
+	{
+		teams[index].setTeam(team);
+		
+		if (!team.humanControlled)
+			teams[index].updateTeamByCoach();		//TODO: this is also triggering just upon leaving the team editor (which makes sense, since it's being "updated")
+	}
+
+	public void updateCoach(int index, Coach coach)
+	{
+		teams[index].setCoach(coach);
+	}
+	
 	public abstract List<Team> getTeamsForNextGame();
 	public abstract void updateRecords(int gameWinner);
-	public abstract void updateTeam(int index, Team team);
-	public abstract void updateCoach(int index, Coach coach);
 	public abstract ScreenType getVictoryScreenType();
+	public abstract boolean showScheduleButton();
 	
 	protected abstract ImageType getBackgroundImageType();
 	protected abstract ImageType getTeamSelectScreenImageType();

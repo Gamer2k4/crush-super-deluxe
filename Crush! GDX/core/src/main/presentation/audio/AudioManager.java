@@ -7,7 +7,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 
 import main.execute.DebugConstants;
-import main.presentation.common.Logger;
 
 public class AudioManager
 {

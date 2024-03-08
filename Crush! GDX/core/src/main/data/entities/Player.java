@@ -9,6 +9,8 @@ import main.data.save.EntityMap;
 import main.data.save.SaveStringBuilder;
 import main.data.save.SaveToken;
 import main.data.save.SaveTokenTag;
+import main.logic.Randomizer;
+import main.presentation.common.Logger;
 
 public class Player extends SaveableEntity
 {
@@ -31,6 +33,7 @@ public class Player extends SaveableEntity
 	public static final int STS_DEAD = 7;
 	public static final int STS_OUT = 8;
 	public static final int STS_STUN_SIT = 9;
+	public static final int STS_EGO = 10;
 	
 	// TODO: IMPORTANT! Update these two arrays if the race order ever changes (also update getSalary())
 	public static final String[] races = { "Human", "Gronk", "Curmian", "Dragoran", "Nynax", "Slith", "Kurgan", "XJS9000" };
@@ -66,20 +69,6 @@ public class Player extends SaveableEntity
 	public static final int RANK_LEGEND = 6;
 	public static final int RANK_AVATAR = 7;
 
-	// confirmed to match up with legacy format
-	public static final int QUIRK_MORON = 1;
-	public static final int QUIRK_INTELLIGENT = 2;
-	public static final int QUIRK_EGOMANIAC = 3;
-	public static final int QUIRK_SLACKER = 4;
-	public static final int QUIRK_TECHNOPHOBIA = 5;
-	public static final int QUIRK_ELECTROPHOBIA = 6;
-	public static final int QUIRK_BLOBBOPHOBIA = 7;
-	public static final int QUIRK_DISPLACER = 8;
-	public static final int QUIRK_BOUNCER = 9;
-	public static final int QUIRK_IMMUNITY = 10;
-	public static final int QUIRK_SPACE_ROT = 11;
-	public static final int QUIRK_GRIT = 12;
-
 	@Override
 	public String toString()
 	{
@@ -111,6 +100,7 @@ public class Player extends SaveableEntity
 		currentAP = attributes[ATT_AP];
 
 		skills = new ArrayList<Skill>();
+		quirks = new ArrayList<Quirk>();
 		
 		gainRacialSkill();
 
@@ -163,10 +153,10 @@ public class Player extends SaveableEntity
 	private Race race = null;
 	private int[] attributes = new int[8];
 	private int[] injuries = new int[8];
-//	private boolean[] gainedSkills = new boolean[Skill.getTotalSkills() + 1];
-//	private String orderOfGainedSkills;
 	
 	private List<Skill> skills;
+	private List<Quirk> quirks;
+	
 	public int currentAP; // TODO: perhaps extract this to the data layer
 	private int rosterIndex;	//TODO: not sure that I like the player knowing this, but it makes things easier
 
@@ -219,6 +209,11 @@ public class Player extends SaveableEntity
 			toRet.gainSkill(skill);
 		}
 
+		for (Quirk quirk : quirks)
+		{
+			toRet.quirks.add(quirk);
+		}
+
 		return toRet;
 	}
 
@@ -260,9 +255,12 @@ public class Player extends SaveableEntity
 		if (hasSkill(skill))
 			return;
 		
-		skills.add(skill);
+		if (skill == Skill.LEADER && hasSkill(Skill.HIVE_MIND) && !hasSkill(Skill.HIVE_OVERSEER))
+			skills.add(Skill.HIVE_OVERSEER);
+		else
+			skills.add(skill);
 		
-		if (skills.size() > 29 && skills.contains(Skill.NINJA_MASTER))	//28 plus racial skill
+		if (skills.size() > 28 && !skills.contains(Skill.NINJA_MASTER))	//28 plus racial skill
 			skills.add(Skill.NINJA_MASTER);
 	}
 	
@@ -279,6 +277,37 @@ public class Player extends SaveableEntity
 		
 		skillPoints -= skill.getCost();
 		gainSkill(skill);
+	}
+	
+	public void gainRandomQuirk()
+	{
+		List<Quirk> potentialQuirks = new ArrayList<Quirk>();
+		
+		for (Quirk quirk : Quirk.values())
+		{
+			//if a player has either space rot or immunity, they can't get the other
+			if ((quirk == Quirk.SPACE_ROT || quirk == Quirk.IMMUNITY) && hasQuirk(Quirk.SPACE_ROT) || hasQuirk(Quirk.IMMUNITY))
+				continue;
+			
+			if (!hasQuirk(quirk))
+				potentialQuirks.add(quirk);
+		}
+		
+		if (potentialQuirks.isEmpty())
+			return;
+		
+		int index = Randomizer.getRandomInt(0, potentialQuirks.size() - 1);
+		quirks.add(potentialQuirks.get(index));
+	}
+	
+	public List<Quirk> getQuirks()
+	{
+		return quirks;
+	}
+	
+	public boolean hasQuirk(Quirk quirk)
+	{
+		return quirks.contains(quirk);
 	}
 	
 	public int getRosterIndex()
@@ -363,6 +392,7 @@ public class Player extends SaveableEntity
 
 	public void healInjuries()
 	{
+		Logger.info("Player [" + name + "] has just healed all attributes.");
 		for (int i = 0; i < 8; i++)
 		{
 			injuries[i] = 0;
@@ -499,10 +529,14 @@ public class Player extends SaveableEntity
 	}
 	
 	//TODO: Determine how the Hive Overseer skill works.  Does the player with it get an additional +1 for others in the hive? Or do others
-	//		gain an additional +1 from this one?  (I assume the former, because otherwise that seems crazy good.)
+	//		gain an additional +1 from this one?  (I've implemented the former, because otherwise that seems crazy good.)
 	private int getHiveMindAttributeBonus(int attribute, Data data)
 	{
-		if (attribute == ATT_AP)
+		if (attribute == ATT_AP || !hasSkill(Skill.HIVE_MIND))
+			return 0;
+		
+		//no bonus if they're not in the game
+		if (status == Player.STS_BLOB || status == Player.STS_DEAD || status == Player.STS_DECK || status == Player.STS_HURT || status == Player.STS_LATE || status == Player.STS_OUT)
 			return 0;
 		
 		int hiveMembers = 0;
@@ -523,10 +557,15 @@ public class Player extends SaveableEntity
 				hiveMembers++;
 		}
 		
-		if (attribute != ATT_DA)
-			return 2 * hiveMembers;
+		int overseerBonus = 0;
 		
-		return hiveMembers;
+		if (hasSkill(Skill.HIVE_OVERSEER))
+			overseerBonus = 1;
+		
+		if (attribute != ATT_DA)
+			return (2 + overseerBonus) * hiveMembers;
+		
+		return hiveMembers + (overseerBonus * hiveMembers);
 	}
 
 	public void setAttribute(int attribute, int value)
@@ -668,6 +707,16 @@ public class Player extends SaveableEntity
 		return toReturn;
 	}
 
+	private List<String> convertQuirksToList()
+	{
+		List<String> toReturn = new ArrayList<String>();
+
+		for (Quirk quirk : quirks)
+			toReturn.add(quirk.name());
+
+		return toReturn;
+	}
+
 	private List<String> convertEquipmentToList()
 	{
 		List<String> toReturn = new ArrayList<String>();
@@ -715,6 +764,7 @@ public class Player extends SaveableEntity
 		ssb.addToken(new SaveToken(SaveTokenTag.P_ATT, convertAttributesToList()));
 		ssb.addToken(new SaveToken(SaveTokenTag.P_INJ, convertInjuriesToList()));
 		ssb.addToken(new SaveToken(SaveTokenTag.P_SKL, convertSkillsToList()));
+		ssb.addToken(new SaveToken(SaveTokenTag.P_QRK, convertQuirksToList()));
 		ssb.addToken(new SaveToken(SaveTokenTag.P_EQP, convertEquipmentToList()));
 
 		ssb.addToken(new SaveToken(SaveTokenTag.P_GST, convertStatsToString(lastGameStats)));
@@ -744,6 +794,7 @@ public class Player extends SaveableEntity
 		setMember(ssb, SaveTokenTag.P_ATT);
 		setMember(ssb, SaveTokenTag.P_INJ);
 		setMember(ssb, SaveTokenTag.P_SKL);
+		setMember(ssb, SaveTokenTag.P_QRK);
 		setMember(ssb, SaveTokenTag.P_EQP);
 		setMember(ssb, SaveTokenTag.P_CST);
 		setMember(ssb, SaveTokenTag.P_SEA);
@@ -839,6 +890,15 @@ public class Player extends SaveableEntity
 			}
 			break;
 
+		case P_QRK:
+			saveToken = ssb.getToken(saveTokenTag);
+			strVals = saveToken.getContentSet();
+			for (String quirkName : strVals)
+			{
+				quirks.add(Quirk.valueOf(quirkName));
+			}
+			break;
+
 		case P_EQP:
 			saveToken = ssb.getToken(saveTokenTag);
 			strVals = saveToken.getContentSet();
@@ -913,6 +973,15 @@ public class Player extends SaveableEntity
 			if (skills.get(i) != player.skills.get(i))
 				return false;
 		}
+		
+		if (quirks.size() != player.quirks.size())
+			return false;
+
+		for (int i = 0; i < quirks.size(); i++)
+		{
+			if (quirks.get(i) != player.quirks.get(i))
+				return false;
+		}
 
 		for (int i = 0; i < 4; i++)
 		{
@@ -948,6 +1017,9 @@ public class Player extends SaveableEntity
 
 		for (Skill skill : skills)
 			hash = hash + skill.hashCode();
+
+		for (Quirk quirk: quirks)
+			hash = hash + quirk.hashCode();
 
 		for (int i = 0; i < 4; i++)
 			hash = 31 * hash + equipment[i];

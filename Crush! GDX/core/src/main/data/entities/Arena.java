@@ -42,6 +42,8 @@ public class Arena implements Serializable
 	public static final int ARENA_DARKSTAR = 18;
 	public static final int ARENA_SPACECOM = 19;
 	
+	public static final int TOTAL_ARENAS = 20;
+	
 	public static final int ARENA_DIMENSIONS = 30;
 	
 	private boolean ballFound = false;

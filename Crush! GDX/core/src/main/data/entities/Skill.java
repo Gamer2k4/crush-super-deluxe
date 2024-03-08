@@ -44,7 +44,7 @@ public enum Skill
 	KARMA("Karma", 36, 60, 2),
 	NINJA_MASTER("Ninja Master", 37, 0, 5),
 	HIVE_OVERSEER("Hive Overseer", 38, 60, 2);
-	//TODO: tie the cost with the tier, rather than having them be separate values
+	//TODO: tie the cost with the tier (20 * (tier + 1)), rather than having them be separate values
 	
 	private String name;
 	private int legacyIndex;

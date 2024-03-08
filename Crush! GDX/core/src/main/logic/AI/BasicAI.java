@@ -39,7 +39,7 @@ public class BasicAI implements AI
 			//TODO: i believe this comes up if the ballcarrier is killed
 			Logger.error("BasicAI - Destination was " + destination + ", which should NEVER happen - LOOK INTO THIS AND FIX IT.");
 			System.out.println("\tBall coords: " + data.getBallLocation());
-			System.out.println("\tBallcarrier: " + data.getBallCarrier());
+			System.out.println("\tBallcarrier: " + data.getBallCarrier().saveAsText());
 			
 			if (data.getBallCarrier() != null)
 				System.out.println("\tBallcarrier location: " + data.getLocationOfPlayer(data.getBallCarrier()));
@@ -77,6 +77,12 @@ public class BasicAI implements AI
 
 	private Event move(Player player, Point target)
 	{
+		if (target == null)
+		{
+			Logger.warn("Cannot generate a move event with a null target for Player [" + player.name + "].  Returning null event instead.");
+			return null;
+		}
+		
 		int playerIndex = data.getIndexOfPlayer(player);
 		return Event.move(playerIndex, target.x, target.y, false, false, false);
 	}
@@ -199,6 +205,13 @@ public class BasicAI implements AI
 				continue;
 			
 			Point opponentCoords = data.getLocationOfPlayer(opponent);
+			
+			if (opponentCoords == null)
+			{
+				Logger.warn("BasicAI.getNearestOpponentCoords() - Opponent [" + opponent.name + "] has no location; skipping.");
+				continue;
+			}
+			
 			int opponentDistance = distance(playerCoords, opponentCoords);
 			
 			//TODO: potentially adjust opponent distance based on stats, rank, etc.

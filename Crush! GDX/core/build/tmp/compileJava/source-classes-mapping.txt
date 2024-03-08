@@ -110,8 +110,8 @@ main/presentation/common/SkillPrerequisiteValidator.java
 main/presentation/screens/MouseOverButtonScreen.java
  main.presentation.screens.MouseOverButtonScreen
  main.presentation.screens.MouseOverButtonScreen$1
-main/presentation/screens/teameditor/TeamEditorSettingsScreen.java
- main.presentation.screens.teameditor.TeamEditorSettingsScreen
+main/presentation/screens/stats/AbstractTeamStatsParentScreen.java
+ main.presentation.screens.stats.AbstractTeamStatsParentScreen
 main/presentation/game/sprite/CrushArenaImageManager.java
  main.presentation.game.sprite.CrushArenaImageManager
 main/presentation/screens/teameditor/TeamEditorPowerTrainerScreen.java
@@ -163,8 +163,8 @@ main/presentation/game/sprite/CrushPlayerSprite.java
  main.presentation.game.sprite.CrushPlayerSprite$1
 main/presentation/screens/teameditor/TeamEditorStartScreen.java
  main.presentation.screens.teameditor.TeamEditorStartScreen
-main/logic/pathfinding/Pathfinder.java
- main.logic.pathfinding.Pathfinder
+main/presentation/screens/stats/TeamStatsTeamParentScreen.java
+ main.presentation.screens.stats.TeamStatsTeamParentScreen
 main/presentation/game/ejectionalert/InjuryEjectionAlert.java
  main.presentation.game.ejectionalert.InjuryEjectionAlert
 main/data/factory/SimpleArenaFactory.java
@@ -175,9 +175,10 @@ main/presentation/screens/teameditor/utilities/GUIStatsFormatterDeprecated.java
  main.presentation.screens.teameditor.utilities.GUIStatsFormatterDeprecated
 main/presentation/screens/teameditor/TeamEditorDetailedRoster.java
  main.presentation.screens.teameditor.TeamEditorDetailedRoster
-main/presentation/game/sprite/PlayerAnimation.java
- main.presentation.game.sprite.PlayerAnimation
- main.presentation.game.sprite.PlayerAnimation$1
+main/presentation/screens/stats/AbstractTeamStatsScreen.java
+ main.presentation.screens.stats.AbstractTeamStatsScreen
+ main.presentation.screens.stats.AbstractTeamStatsScreen$1
+ main.presentation.screens.stats.AbstractTeamStatsScreen$ColumnHighlight
 main/presentation/screens/teameditor/TeamEditor.java
  main.presentation.screens.teameditor.TeamEditor
 main/data/factory/ArenaFactory.java
@@ -194,8 +195,8 @@ main/presentation/game/sprite/TileSpriteType.java
  main.presentation.game.sprite.TileSpriteType
 main/data/entities/Pace.java
  main.data.entities.Pace
-main/presentation/game/sprite/CrushAnimatedTile.java
- main.presentation.game.sprite.CrushAnimatedTile
+main/presentation/screens/stats/TeamStatsTeamCarnageScreen.java
+ main.presentation.screens.stats.TeamStatsTeamCarnageScreen
 main/presentation/common/Logger.java
  main.presentation.common.Logger
 main/presentation/screens/teameditor/TeamEditorAcquireScreen.java
@@ -224,8 +225,8 @@ main/logic/AI/coach/player/DraftingAi.java
  main.logic.ai.coach.player.DraftingAi
 main/presentation/game/EventButtonBarFactory.java
  main.presentation.game.EventButtonBarFactory
-main/logic/AI/coach/player/DraftingAiType.java
- main.logic.ai.coach.player.DraftingAiType
+main/presentation/screens/stats/TeamStatsTeamCheckingScreen.java
+ main.presentation.screens.stats.TeamStatsTeamCheckingScreen
 main/logic/AI/coach/player/TeamIceDraftingAi.java
  main.logic.ai.coach.player.TeamIceDraftingAi
 main/logic/AI/coach/player/BestPlayerDraftingAi.java
@@ -280,8 +281,8 @@ main/presentation/game/PresentationMode.java
  main.presentation.game.PresentationMode
 main/data/load/LegacyTeamLoader.java
  main.data.load.LegacyTeamLoader
-main/logic/Server.java
- main.logic.Server
+main/presentation/screens/stats/TeamStatsTeamMiscScreen.java
+ main.presentation.screens.stats.TeamStatsTeamMiscScreen
 main/data/save/SaveStringBuilder.java
  main.data.save.SaveStringBuilder
 main/presentation/game/GdxGUI.java
@@ -361,8 +362,8 @@ main/logic/AI/coach/player/CurmianRushDraftingAi.java
  main.logic.ai.coach.player.CurmianRushDraftingAi
 main/logic/AI/AI.java
  main.logic.ai.AI
-main/presentation/game/Action.java
- main.presentation.game.Action
+main/presentation/screens/stats/TeamStatsTeamRushingScreen.java
+ main.presentation.screens.stats.TeamStatsTeamRushingScreen
 main/presentation/common/image/OutsideGameColorMap.java
  main.presentation.common.image.OutsideGameColorMap
 main/presentation/screens/GameScreenManager.java
@@ -394,19 +395,18 @@ main/presentation/game/sprite/PlayerState.java
  main.presentation.game.sprite.PlayerState
 main/presentation/legacy/common/LegacyUiConstants.java
  main.presentation.legacy.common.LegacyUiConstants
-main/presentation/screens/stats/AbstractTeamStatsScreen.java
- main.presentation.screens.stats.AbstractTeamStatsScreen
- main.presentation.screens.stats.AbstractTeamStatsScreen$1
- main.presentation.screens.stats.AbstractTeamStatsScreen$ColumnHighlight
-main/presentation/screens/stats/AbstractTeamStatsParentScreen.java
- main.presentation.screens.stats.AbstractTeamStatsParentScreen
-main/presentation/screens/stats/TeamStatsTeamRushingScreen.java
- main.presentation.screens.stats.TeamStatsTeamRushingScreen
-main/presentation/screens/stats/TeamStatsTeamCarnageScreen.java
- main.presentation.screens.stats.TeamStatsTeamCarnageScreen
-main/presentation/screens/stats/TeamStatsTeamCheckingScreen.java
- main.presentation.screens.stats.TeamStatsTeamCheckingScreen
-main/presentation/screens/stats/TeamStatsTeamMiscScreen.java
- main.presentation.screens.stats.TeamStatsTeamMiscScreen
-main/presentation/screens/stats/TeamStatsTeamParentScreen.java
- main.presentation.screens.stats.TeamStatsTeamParentScreen
+main/logic/pathfinding/Pathfinder.java
+ main.logic.pathfinding.Pathfinder
+main/logic/Server.java
+ main.logic.Server
+main/logic/AI/coach/player/DraftingAiType.java
+ main.logic.ai.coach.player.DraftingAiType
+main/presentation/game/sprite/CrushAnimatedTile.java
+ main.presentation.game.sprite.CrushAnimatedTile
+main/presentation/game/Action.java
+ main.presentation.game.Action
+main/presentation/screens/teameditor/TeamEditorSettingsScreen.java
+ main.presentation.screens.teameditor.TeamEditorSettingsScreen
+main/presentation/game/sprite/PlayerAnimation.java
+ main.presentation.game.sprite.PlayerAnimation
+ main.presentation.game.sprite.PlayerAnimation$1

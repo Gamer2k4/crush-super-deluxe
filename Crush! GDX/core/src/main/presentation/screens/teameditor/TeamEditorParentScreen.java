@@ -10,6 +10,7 @@ import java.util.Map;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
@@ -19,6 +20,7 @@ import main.data.factory.CpuTeamFactory;
 import main.logic.ai.coach.Coach;
 import main.presentation.ImageFactory;
 import main.presentation.ImageType;
+import main.presentation.common.GdxKeyMappings;
 import main.presentation.common.Logger;
 import main.presentation.common.ScreenCommand;
 import main.presentation.game.GameText;
@@ -47,6 +49,8 @@ public class TeamEditorParentScreen extends YesNoPopupScreen implements TeamEdit
 	private ImageButton draftButton = addButton(72, 85, 374, false, ScreenCommand.DRAFT_VIEW);
 	private ImageButton docbotButton = addButton(72, 170, 374, false, ScreenCommand.DOCBOT_VIEW);
 	private ImageButton trainerButton = addButton(72, 255, 374, false, ScreenCommand.POWER_VIEW);
+	
+	private Image scheduleButtonMask;
 	
 	private Map<ImageType, AbstractTeamEditorSubScreen> screenMappings = new HashMap<ImageType, AbstractTeamEditorSubScreen>();
 	
@@ -82,6 +86,9 @@ public class TeamEditorParentScreen extends YesNoPopupScreen implements TeamEdit
 		generalRoster = new TeamEditorGeneralRoster(this);
 		detailedRoster = new TeamEditorDetailedRoster(this);
 		
+		scheduleButtonMask = new Image(ImageFactory.getInstance().getDrawable(ImageType.BUTTON_72x17_BLANK));
+		scheduleButtonMask.setPosition(340, 9);
+		
 		resetBaseButtons();
 		
 		teamUpdater.addUpdateListener(this);
@@ -106,8 +113,7 @@ public class TeamEditorParentScreen extends YesNoPopupScreen implements TeamEdit
 	{
 		hidePopup();
 		
-		AbstractTeamSelectScreen originTeamSelectScreen = (AbstractTeamSelectScreen) GameScreenManager.getInstance().getScreen(getOriginScreen());
-		teamsLockedForEditing = originTeamSelectScreen.areTeamsLockedForEditing();
+		teamsLockedForEditing = getOriginTeamSelectScreen().areTeamsLockedForEditing();
 		
 		teamUpdater.setCurrentPlayerIndex(0);
 		
@@ -177,11 +183,22 @@ public class TeamEditorParentScreen extends YesNoPopupScreen implements TeamEdit
 		{
 			stage.addActor(button);
 		}
+		
+		if (getOriginTeamSelectScreen() != null && !getOriginTeamSelectScreen().showScheduleButton())
+		{
+			stage.addActor(scheduleButtonMask);
+		}
 	}
 	
 	private void refreshScreensForTeamUpdate()
 	{
-		generalRoster.refreshContent();
+		AbstractTeamEditorSubScreen mainScreen = screenMappings.get(currentEditorScreen);
+		mainScreen.refreshContent();
+		
+		if (showingDetailedRoster)
+			detailedRoster.refreshContent();
+		else
+			generalRoster.refreshContent();
 	}
 	
 	@Override
@@ -344,6 +361,12 @@ public class TeamEditorParentScreen extends YesNoPopupScreen implements TeamEdit
 	private void delegateCommandToActiveScreens(ScreenCommand command)
 	{
 		AbstractTeamEditorSubScreen mainScreen = screenMappings.get(currentEditorScreen);
+		
+		//don't delegate any commands if a text field is being changed
+		//TODO: note that changing the controller and back/done both still work (but shouldn't), as they're outside of this logic flow
+		if (mainScreen.keysEnabled() || generalRoster.keysEnabled())
+			return;
+		
 		mainScreen.handleCommand(command);
 		
 		if (showingDetailedRoster)
@@ -420,6 +443,7 @@ public class TeamEditorParentScreen extends YesNoPopupScreen implements TeamEdit
 		newTeam.humanControlled = humanControlled;
 		teamUpdater.loadTeam(newTeam);
 		updateAiCoach(coach);
+		
 		
 		return;
 	}
@@ -519,11 +543,33 @@ public class TeamEditorParentScreen extends YesNoPopupScreen implements TeamEdit
 		return allButtons;
 	}
 	
+	private AbstractTeamSelectScreen getOriginTeamSelectScreen()
+	{
+		return (AbstractTeamSelectScreen) GameScreenManager.getInstance().getScreen(getOriginScreen());
+	}
+	
 	//these are only used for drag tracking at the moment
 	@Override
 	public void update()
 	{
 		AbstractTeamEditorSubScreen mainScreen = screenMappings.get(currentEditorScreen);
+		
+		if (mainScreen.keysEnabled())
+		{
+			pollForKeys(mainScreen);
+		}
+		
+		if (generalRoster.keysEnabled())
+		{
+			pollForKeys(generalRoster);
+		}
+		
+		//this is needed to cancel an active player swap with the mouse
+		if (Gdx.input.isTouched())
+		{
+			System.out.println("Mouse clicked!");
+			generalRoster.mouseClicked(null);
+		}
 		
 		if (!mainScreen.dragEnabled())
 			return;
@@ -541,6 +587,41 @@ public class TeamEditorParentScreen extends YesNoPopupScreen implements TeamEdit
 		}
 	}
 	
+	private void pollForKeys(AbstractTeamEditorSubScreen mainScreen)
+	{
+		String validCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		
+		if (Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE))
+		{
+			mainScreen.pressKey(GdxKeyMappings.BACKSPACE);
+			return;
+		}
+		
+		if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER))
+		{
+			mainScreen.pressKey(GdxKeyMappings.ENTER);
+			return;
+		}
+		
+		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE))
+		{
+			mainScreen.pressKey(GdxKeyMappings.ESCAPE);
+			return;
+		}
+		
+		for (int i = 0; i < validCharacters.length(); i++)
+		{
+			char character = validCharacters.charAt(i);
+			int keyValue = GdxKeyMappings.keyCode(character);
+			
+			if (Gdx.input.isKeyJustPressed(keyValue))
+			{
+				mainScreen.pressKey(String.valueOf(character));
+				return;
+			}
+		}
+	}
+
 	private Point convertMouseCoordinates(int x, int y)
 	{
 		int curWidth = Gdx.graphics.getWidth();

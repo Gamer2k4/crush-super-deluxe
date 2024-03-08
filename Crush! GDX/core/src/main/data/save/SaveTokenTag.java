@@ -23,6 +23,7 @@ public enum SaveTokenTag
 	P_ATT,	//player attributes
 	P_INJ,	//player injury attribute modifiers
 	P_SKL,	//player skills
+	P_QRK,	//player quirks
 	P_RTR,	//player roster index
 	P_WKS,	//player weeks out
 	P_ITP,	//player injury type

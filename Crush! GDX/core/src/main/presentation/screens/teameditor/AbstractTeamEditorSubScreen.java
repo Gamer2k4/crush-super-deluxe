@@ -30,6 +30,12 @@ public abstract class AbstractTeamEditorSubScreen implements ActionListener
 	protected static final String PLAYER_LABELS = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	public static final String REFRESH_STAGE = "REFRESH_STAGE";
 	
+	
+	private boolean isDoubleClick = false;
+	private long timeOfLastCommand = 0L;
+	private ScreenCommand lastCommand = null;
+	private static final long MINIMUM_DOUBLE_CLICK_TIME = 250L;
+	
 	protected AbstractTeamEditorSubScreen(TeamEditorParentScreen parentScreen)
 	{
 		refreshStageButton.setActionCommand(REFRESH_STAGE);
@@ -92,9 +98,40 @@ public abstract class AbstractTeamEditorSubScreen implements ActionListener
 	
 	protected abstract void refreshContent();
 	
-	protected abstract void handleCommand(ScreenCommand command);
+	@SuppressWarnings("unused")
+	protected void pressKey(String key)
+	{
+		return;
+	}
+	
+	protected void handleCommand(ScreenCommand command)
+	{
+		isDoubleClick = false;
+		
+		long currentTime = System.currentTimeMillis();
+		long timeSinceLastClick = currentTime - timeOfLastCommand;
+		timeOfLastCommand = currentTime;
+		
+		if (lastCommand == command && timeSinceLastClick <= MINIMUM_DOUBLE_CLICK_TIME)
+		{
+			isDoubleClick = true;
+			return;
+		}
+		
+		lastCommand = command;
+	}
+	
+	protected boolean isDoubleClick()
+	{
+		return isDoubleClick;
+	}
 	
 	protected boolean dragEnabled()
+	{
+		return false;
+	}
+	
+	protected boolean keysEnabled()
 	{
 		return false;
 	}

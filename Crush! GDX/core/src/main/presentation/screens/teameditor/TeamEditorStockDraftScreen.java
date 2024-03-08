@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 
 import main.data.entities.Player;
@@ -170,8 +171,8 @@ public class TeamEditorStockDraftScreen extends AbstractTeamEditorDraftScreen
 	{
 		List<Actor> actors = super.getActors();
 		
-		StaticImage playerImage = getPlayerImage(teamUpdater.getMainColor(), teamUpdater.getTrimColor());
-		actors.add(playerImage.getImage());
+		Image playerImage = getPlayerImage(teamUpdater.getMainColor(), teamUpdater.getTrimColor());
+		actors.add(playerImage);
 		
 		return actors;
 	}

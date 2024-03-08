@@ -323,6 +323,21 @@ public enum ScreenCommand
 		return (this.name().endsWith("VIEW") || this.equals(ScreenCommand.TOGGLE_ROSTER_VIEW));
 	}
 	
+	public boolean isArenaNameSelect()
+	{
+		return this.name().startsWith("ARENA_NAME_");
+	}
+	
+	public boolean isArenaSetSelect()
+	{
+		return this.name().startsWith("ARENA_SET_");
+	}
+	
+	public boolean isTeamColorSelect()
+	{
+		return this.name().startsWith("TEAM_COLOR_");
+	}
+	
 	public boolean isTeamSelect()
 	{
 		return this.name().endsWith("_TEAM_SELECT");

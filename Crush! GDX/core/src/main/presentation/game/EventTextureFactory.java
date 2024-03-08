@@ -397,6 +397,13 @@ public class EventTextureFactory
 			{
 				CrushTile stunStars = CrushTile.createTile(OFFSCREEN_COORDS, TileSpriteType.STUN_STARS);
 				Point coords = data.getLocationOfPlayer(player);
+				
+				if (coords == null)
+				{
+					Logger.warn("getHoveringSprites() - Player " + player.name + " has no location.");
+					continue;
+				}
+				
 				stunStars.setArenaPosition(coords);
 				hoveringSprites.add(stunStars);
 			}

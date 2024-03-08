@@ -11,7 +11,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 
 import main.data.DataImpl;
 import main.data.entities.Team;
-import main.logic.ai.coach.Coach;
 import main.presentation.ImageType;
 import main.presentation.common.ScreenCommand;
 import main.presentation.game.FontType;
@@ -88,7 +87,9 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 		
 		for (int i = 0; i < 3; i++)
 		{
-			teams[i].setTeam(teamsPlaying.get(i).clone());		//clone is important, so they don't get updated if the game is quit midway through
+			Team team = teamsPlaying.get(i);
+			teams[i].setTeam(team.clone());		//clone is important, so they don't get updated if the game is quit midway through
+			handlePregameEffects(team);
 		}
 		
 		super.paintHelmetImages();	//not perfect, because it just paints them on top of the existing helmet actors, but it should be fine for now
@@ -366,21 +367,6 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 	}
 
 	@Override
-	public void updateTeam(int index, Team team)
-	{
-		teams[index].setTeam(team);
-		
-		if (!team.humanControlled)
-			teams[index].updateTeamByCoach();		//TODO: this is also triggering just upon leaving the team editor (which makes sense, since it's being "updated")
-	}
-
-	@Override
-	public void updateCoach(int index, Coach coach)
-	{
-		teams[index].setCoach(coach);
-	}
-
-	@Override
 	public ScreenType getVictoryScreenType()
 	{
 		return ScreenType.EXHIBITION_VICTORY;
@@ -400,5 +386,11 @@ public class ExhibitionTeamSelectScreen extends AbstractTeamSelectScreen
 			allButtons.addAll(getPopupButtons());
 		
 		return allButtons;
+	}
+
+	@Override
+	public boolean showScheduleButton()
+	{
+		return false;
 	}
 }

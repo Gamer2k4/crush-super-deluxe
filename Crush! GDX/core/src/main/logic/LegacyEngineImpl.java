@@ -632,6 +632,18 @@ public class LegacyEngineImpl implements Engine
 			Player p = localData.getPlayer(i);
 			
 			if (p == null) continue;
+			
+			if (p.getStatus() == Player.STS_LATE)
+			{
+//				Logger.output("Player [" + p.name + "] is running late...");
+				int lateChance = Randomizer.getRandomInt(1, 10);	//strictly speaking, they show up "1 to 10 turns later than expected," but this is good
+				if (lateChance == 10)								//enough (even though they might also show up on time)
+				{
+					p.status = Player.STS_DECK;
+//					Logger.output("\t...but he showed up!");
+				}
+			}
+			
 			if (p.getStatus() == Player.STS_DECK)
 			{
 				nextPlayer = p;
@@ -893,7 +905,7 @@ public class LegacyEngineImpl implements Engine
 			Logger.debug("ENGINE - CHECK: Ball carrier is being attacked.");
 		
 		//dodge, but only if the attacker wouldn't have fallen down
-		if (dodge && result > -20)
+		if (dodge && result >= -20)
 		{
 			Logger.debug("...but the defender dodged the attack.");
 			processAndOfferEvent(toRet, Event.check(theCommand.flags[0], theCommand.flags[1], Event.CHECK_DODGE, reflex));
@@ -1106,6 +1118,9 @@ public class LegacyEngineImpl implements Engine
 		Player ballCarrier = localData.getBallCarrier();
 		
 		if (ballCarrier == null)
+			return false;
+		
+		if (ballCarrier.status != Player.STS_OKAY)
 			return false;
 		
 		Point coords = localData.getLocationOfPlayer(ballCarrier);

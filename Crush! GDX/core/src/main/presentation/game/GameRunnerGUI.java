@@ -453,7 +453,7 @@ public abstract class GameRunnerGUI extends GameGUI
 		Logger.debug("\tCurrent player name is " + p.name);
 		
 		if (p.status == Player.STS_DEAD || p.status == Player.STS_LATE || p.status == Player.STS_DECK || p.status == Player.STS_BLOB
-				|| p.status == Player.STS_HURT || p.status == Player.STS_OUT)
+				|| p.status == Player.STS_HURT || p.status == Player.STS_OUT || p.status == Player.STS_EGO)
 		{
 			Logger.debug("\tPlayer is unable to act; setting current player index back to " + tempIndex);
 			curPlayerIndex = tempIndex;

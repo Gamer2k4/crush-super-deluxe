@@ -22,9 +22,11 @@ public class CursorManager
 	private CursorManager()
 	{
 		cursors = new HashMap<ImageType, Cursor>();
-		
+
+		cursors.put(ImageType.POINTER_HIDDEN, Gdx.graphics.newCursor(ImageFactory.getInstance().getPixMap(ImageType.POINTER_HIDDEN), 0, 0));
 		cursors.put(ImageType.POINTER_MAIN, Gdx.graphics.newCursor(ImageFactory.getInstance().getPixMap(ImageType.POINTER_MAIN), 0, 0));
 		cursors.put(ImageType.POINTER_CRUSH, Gdx.graphics.newCursor(ImageFactory.getInstance().getPixMap(ImageType.POINTER_CRUSH), 0, 0));
+		cursors.put(ImageType.POINTER_SWAP, Gdx.graphics.newCursor(ImageFactory.getInstance().getPixMap(ImageType.POINTER_SWAP), 0, 0));
 		cursors.put(ImageType.POINTER_COMP1, Gdx.graphics.newCursor(ImageFactory.getInstance().getPixMap(ImageType.POINTER_COMP1), 0, 0));
 		cursors.put(ImageType.POINTER_COMP2, Gdx.graphics.newCursor(ImageFactory.getInstance().getPixMap(ImageType.POINTER_COMP2), 0, 0));
 		cursors.put(ImageType.POINTER_COMP3, Gdx.graphics.newCursor(ImageFactory.getInstance().getPixMap(ImageType.POINTER_COMP3), 0, 0));
@@ -83,6 +85,11 @@ public class CursorManager
 		cursorTimer.scheduleAtFixedRate(task, 0, 250);
 	}
 	
+	public static Cursor hidden()
+	{
+		return getInstance().getCursor(ImageType.POINTER_HIDDEN);
+	}
+	
 	public static Cursor main()
 	{
 		return getInstance().getCursor(ImageType.POINTER_MAIN);
@@ -91,6 +98,11 @@ public class CursorManager
 	public static Cursor crush()
 	{
 		return getInstance().getCursor(ImageType.POINTER_CRUSH);
+	}
+	
+	public static Cursor swap()
+	{
+		return getInstance().getCursor(ImageType.POINTER_SWAP);
 	}
 	
 	public static Cursor computer()

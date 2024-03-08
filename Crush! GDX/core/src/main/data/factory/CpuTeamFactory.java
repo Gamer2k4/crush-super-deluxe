@@ -6,7 +6,10 @@ import java.util.List;
 
 import main.data.entities.Team;
 import main.data.load.NameLoader;
+import main.execute.DebugConstants;
 import main.logic.Randomizer;
+import main.presentation.common.image.ImageUtils;
+import main.presentation.common.image.TeamColorType;
 
 public class CpuTeamFactory extends RandomlyNamedEntityFactory
 {
@@ -62,8 +65,8 @@ public class CpuTeamFactory extends RandomlyNamedEntityFactory
 		//TODO: this is certainly incomplete
 		cpuTeam.teamName = generateRandomTeamName();
 		cpuTeam.coachName = generateRandomCoachName();
-		cpuTeam.teamColors = generateRandomTeamColors();
 		cpuTeam.homeField = Randomizer.getRandomInt(0, 19);
+		giveTeamNewRandomColors(cpuTeam);
 		
 		return cpuTeam;
 	}
@@ -78,6 +81,16 @@ public class CpuTeamFactory extends RandomlyNamedEntityFactory
 		return team;
 	}
 	
+	public Team giveTeamNewRandomColors(Team team)
+	{
+		if (DebugConstants.ONLY_USE_LEGACY_TEAM_COLORS)
+			team.teamColors = generateRandomLegacyTeamColors();
+		else
+			team.teamColors = generateRandomTeamColors();
+		
+		return team;
+	}
+	
 	private Color[] generateRandomTeamColors()
 	{
 		Color[] teamColors = new Color[2];
@@ -85,8 +98,25 @@ public class CpuTeamFactory extends RandomlyNamedEntityFactory
 		teamColors[0] = new Color(Randomizer.getRandomInt(0, 255), Randomizer.getRandomInt(0, 255), Randomizer.getRandomInt(0, 255));
 		teamColors[1] = new Color(Randomizer.getRandomInt(0, 255), Randomizer.getRandomInt(0, 255), Randomizer.getRandomInt(0, 255));
 		
-//		teamColors[0] = TeamColorType.GOLD.getColor();		//TODO: for debugging only
-//		teamColors[1] = TeamColorType.RED.getColor();		//TODO: for debugging only
+		return teamColors;
+	}
+	
+	private Color[] generateRandomLegacyTeamColors()
+	{
+		TeamColorType[] colorOptions = TeamColorType.values();
+		int totalColors = colorOptions.length;
+		
+		Color[] teamColors = new Color[2];
+		
+		teamColors[0] = colorOptions[Randomizer.getRandomInt(0, totalColors - 1)].getColor();
+		
+		//ensure the team has a different main and trim color
+		Color trimColor = new Color(teamColors[0].getRGB());
+		
+		while (ImageUtils.rgbEquals(teamColors[0], trimColor))
+			trimColor = colorOptions[Randomizer.getRandomInt(0, totalColors - 1)].getColor();
+		
+		teamColors[1] = trimColor;
 		
 		return teamColors;
 	}

@@ -12,7 +12,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import main.data.Data;
 import main.data.entities.Arena;
 import main.data.entities.Player;
-import main.data.entities.Skill;
 import main.data.entities.Team;
 import main.presentation.ImageType;
 import main.presentation.TeamColorsManager;
@@ -24,6 +23,7 @@ import main.presentation.legacy.common.LegacyUiConstants;
 public class EventButtonBarFactory
 {
 	private Data data;
+	private ArenaImageGenerator arenaImageGenerator = ArenaImageGenerator.getInstance(); 
 	
 	private GameText[][] playerNames = new GameText[3][9];
 	private GameText[] teamNames = new GameText[3];
@@ -240,12 +240,12 @@ public class EventButtonBarFactory
 			return minimap;
 		}
 		
-		ArenaImageGenerator.generateArenaImage(data.getArena(), ARENA_SIDE_LENGTH, TILE_SIZE);
+		arenaImageGenerator.generateArenaImage(data.getArena(), ARENA_SIDE_LENGTH, TILE_SIZE);
 		darkenPadsAndGoals();
 		addPlayerMinimapPoints();
-		ArenaImageGenerator.prepare();
+		arenaImageGenerator.prepare();
 		
-		Drawable minimapImage = ArenaImageGenerator.getArenaImage();
+		Drawable minimapImage = arenaImageGenerator.getArenaImage();
 		minimap.add(new StaticImage(minimapImage, new Point(MINIMAP_X_START, MINIMAP_Y_START)));
 		
 		return minimap;
@@ -257,14 +257,14 @@ public class EventButtonBarFactory
 		
 		for (Point padCoords : failedPadLocations)
 		{
-			ArenaImageGenerator.drawTile(padCoords.y + 1, padCoords.x + 1, ArenaImageGenerator.FLOOR_COLOR, TILE_SIZE);
+			arenaImageGenerator.drawTile(padCoords.y + 1, padCoords.x + 1, ArenaImageGenerator.FLOOR_COLOR, TILE_SIZE);
 		}
 		
 		List<Point> dimGoalLocations = data.getArena().getDimGoalLocations();
 		
 		for (Point padCoords : dimGoalLocations)
 		{
-			ArenaImageGenerator.drawTile(padCoords.y + 1, padCoords.x + 1, ArenaImageGenerator.DIM_GOAL_COLOR, TILE_SIZE);
+			arenaImageGenerator.drawTile(padCoords.y + 1, padCoords.x + 1, ArenaImageGenerator.DIM_GOAL_COLOR, TILE_SIZE);
 		}
 	}
 
@@ -280,10 +280,11 @@ public class EventButtonBarFactory
 				//this happens if a player gets blobbed; probably happens at other times
 				if (location == null) {
 					Logger.warn("addPlayerMinimapPoints() - Player " + player.name + " has no location.");
+					Logger.warn("\tPlayer properties: " + player.saveAsText());
 					continue;
 				}
 				
-				ArenaImageGenerator.drawTile(location.y + 1, location.x + 1, ImageUtils.gdxColor(pointColor), TILE_SIZE);	//coords are +1 to account for the map border
+				arenaImageGenerator.drawTile(location.y + 1, location.x + 1, ImageUtils.gdxColor(pointColor), TILE_SIZE);	//coords are +1 to account for the map border
 			}
 		}
 	}
@@ -396,6 +397,8 @@ public class EventButtonBarFactory
 				statusImage = ImageType.GAME_MASK_OUTSTATUS;
 			else if (status == Player.STS_LATE)
 				statusImage = ImageType.GAME_MASK_LATESTATUS;
+			else if (status == Player.STS_EGO)
+				statusImage = ImageType.GAME_MASK_EGOSTATUS;
 			
 			images.add(new StaticImage(statusImage, new Point(9 + (28 * i), 15)));
 		}

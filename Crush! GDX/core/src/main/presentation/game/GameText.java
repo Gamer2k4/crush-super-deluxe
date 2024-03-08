@@ -124,7 +124,7 @@ public class GameText
 		return GameText.getStringPixelLength(font, text);
 	}
 	
-	private static int getStringPixelLength(BitmapFont fontUsed, String text)
+	public static int getStringPixelLength(BitmapFont fontUsed, String text)
 	{
 		int length = 0;
 		

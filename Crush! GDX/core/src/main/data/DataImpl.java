@@ -236,6 +236,9 @@ public class DataImpl implements Data
 		if (player == null)
 			return null;
 		
+		if (player.getStatus() == Player.STS_EGO || player.getStatus() == Player.STS_LATE)
+			return player;
+		
 		//TODO: technically, this should be updated at the end of the game, not the beginning
 		//		if I do move this, it'll be to Team.advanceWeek()
 		if (player.getStatus() == Player.STS_OKAY || player.getStatus() == Player.STS_DOWN
@@ -297,6 +300,7 @@ public class DataImpl implements Data
 					player = null;						//TODO: if halls of fame exist, keep track of the player still
 				}
 				else if (player.status == Player.STS_LATE ||
+						 player.status == Player.STS_EGO ||
 						 player.status == Player.STS_OKAY || 
 						 player.status == Player.STS_DOWN ||
 						 player.status == Player.STS_STUN_DOWN || 

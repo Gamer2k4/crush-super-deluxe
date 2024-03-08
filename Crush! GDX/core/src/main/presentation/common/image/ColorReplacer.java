@@ -87,6 +87,13 @@ public class ColorReplacer extends AbstractColorReplacer
 		if (index == 0)
 			return new Color(31, 0, 0);	//special case for red
 		
-		return colorMap.getColor(index);
+		try {
+			return colorMap.getColor(index);
+		} catch (IllegalArgumentException iae)
+		{
+			System.out.println("Unknown color: " + index);
+			System.out.println("Original color: " + color + "; level: " + level);
+			return Color.CYAN;
+		}
 	}
 }

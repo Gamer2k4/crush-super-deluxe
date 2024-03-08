@@ -247,7 +247,7 @@ public class CrushGame extends Game implements ActionListener
 		ImageFactory.getInstance().dispose();
 		AudioManager.getInstance().dispose();
 		CursorManager.getInstance().dispose();
-		ArenaImageGenerator.dispose();
+		ArenaImageGenerator.getInstance().dispose();
 		GameText.dispose();
 		spriteBatch.dispose();
 	}
@@ -372,6 +372,7 @@ public class CrushGame extends Game implements ActionListener
 		}
 	}
 
+	@SuppressWarnings("incomplete-switch")
 	private void executeScreenCommand(ScreenCommand command)
 	{
 		if (command.isEditTeam())

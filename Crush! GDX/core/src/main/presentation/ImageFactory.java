@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
@@ -148,7 +149,9 @@ public class ImageFactory
 		addImage(ImageType.SCREEN_TEAM_EDITOR_POWER_MASK, "screens/editor/power_mask.png");
 		addImage(ImageType.SCREEN_TEAM_EDITOR_AGILITY_MASK, "screens/editor/agility_mask.png");
 		addImage(ImageType.SCREEN_TEAM_EDITOR_PSYCHE_MASK, "screens/editor/psyche_mask.png");
-//		fillTeamColorDiamonds();
+		
+		addImage(ImageType.SETTINGS_COLOR_PALETTE, "screens/editor/palette_underlay.png");
+		addImage(ImageType.DIAMOND_HIGHLIGHT, "screens/editor/diamond_highlight.png");
 		
 		addImage(ImageType.SCREEN_TEAM_EDITOR_ROSTER_GENERAL, "screens/editor/rosterg.png");
 		addImage(ImageType.SCREEN_TEAM_EDITOR_ROSTER_DETAILED, "screens/editor/rosterd.png");
@@ -207,8 +210,12 @@ public class ImageFactory
 	
 	private void addCursorImages()
 	{
+		
+		cursorImages.put(ImageType.POINTER_HIDDEN,  new Pixmap(32, 32, Format.RGBA8888));
+	
 		generateCursorPixmap(ImageType.POINTER_MAIN, "cursors/pointer_main.png");
 		generateCursorPixmap(ImageType.POINTER_CRUSH, "cursors/pointer_crush.png");
+		generateCursorPixmap(ImageType.POINTER_SWAP, "cursors/pointer_swap.png");
 		generateCursorPixmap(ImageType.POINTER_COMP1, "cursors/pointer_comp1.png");
 		generateCursorPixmap(ImageType.POINTER_COMP2, "cursors/pointer_comp2.png");
 		generateCursorPixmap(ImageType.POINTER_COMP3, "cursors/pointer_comp3.png");
@@ -319,6 +326,7 @@ public class ImageFactory
 	
 	private void addScreenButtons()
 	{
+		addImage(ImageType.BUTTON_15x35_CLICKED, "screens/buttons/button_15x35_clicked.png");
 		addImage(ImageType.BUTTON_72x17_NORMAL, "screens/buttons/button_72x17_normal.png");
 		addImage(ImageType.BUTTON_72x17_CLICKED, "screens/buttons/button_72x17_clicked.png");
 		addImage(ImageType.BUTTON_35x17_NORMAL, "screens/buttons/button_35x17_normal.png");
@@ -334,6 +342,8 @@ public class ImageFactory
 		addImage(ImageType.BUTTON_102x20_LEFTCLICK, "screens/buttons/button_102x20_left_click.png");
 		addImage(ImageType.BUTTON_102x20_RIGHTCLICK, "screens/buttons/button_102x20_right_click.png");
 		addImage(ImageType.BUTTON_STATS_ARROWS, "screens/buttons/arrows.png");
+		
+		images.put(ImageType.BUTTON_72x17_BLANK, new TextureRegionDrawable(new TextureRegion(getTexture(ImageType.SCREEN_TEAM_EDITOR_DRAFT), 30, 230, 72, 17)));
 	}
 	
 	private void extractButtonHighlights()

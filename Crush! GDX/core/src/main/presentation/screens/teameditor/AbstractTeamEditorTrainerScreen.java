@@ -55,7 +55,6 @@ public abstract class AbstractTeamEditorTrainerScreen extends AbstractTeamEditor
 		
 		Texture arrowSource = ImageFactory.getInstance().getTexture(ImageType.SCREEN_TEAM_EDITOR_POWER_MASK);
 		arrowHighlight = new TextureRegion(arrowSource, 158, 43, 9, 19);
-//		arrowHighlight = new TextureRegion(arrowSource, 0, 0, 100, 100);
 	}
 
 	private void definePageButtons()
@@ -173,6 +172,14 @@ public abstract class AbstractTeamEditorTrainerScreen extends AbstractTeamEditor
 			
 			if (skillPrereqValidator.isButtonEnabled(skill, player))
 				staticSprites.add(arrowSprite);
+			
+			//Nynax players won't have Leader, but mask the button anyway if they have Hive Overseer instead.
+			//The flow will then continue to the next iteration, since they'll fail the next check for already having the skill
+			if (skill == Skill.LEADER && player.hasSkill(Skill.HIVE_OVERSEER))
+			{
+				staticSprites.add(buttonMasks.get(skill));
+				staticSprites.add(arrowSprite);
+			}
 			
 			if (!player.hasSkill(skill))
 				continue;

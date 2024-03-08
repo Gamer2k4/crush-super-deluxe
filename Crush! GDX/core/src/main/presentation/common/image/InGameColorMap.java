@@ -194,7 +194,7 @@ public class InGameColorMap implements ColorMap
 		case 90:
 			return new Color(63, 0, 87);
 		case 91:
-			break; //TODO
+			return new Color(80, 0, 112);
 		case 92:
 			return new Color(103, 0, 143);
 		case 93:
@@ -242,7 +242,7 @@ public class InGameColorMap implements ColorMap
 		case 114:
 			return new Color(87, 0, 39);
 		case 115:
-			break;	//TODO
+			return new Color(112, 0, 48);
 		case 116:
 			return new Color(143, 0, 63);
 		case 117:
@@ -434,7 +434,7 @@ public class InGameColorMap implements ColorMap
 		case 210:
 			return new Color(87, 72, 63);
 		case 211:
-			break;	//TODO
+			return new Color(112, 96, 80);
 		case 212:
 			return new Color(143, 120, 103);
 		case 213:

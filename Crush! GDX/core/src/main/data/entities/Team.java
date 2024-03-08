@@ -10,6 +10,7 @@ import main.data.save.EntityMap;
 import main.data.save.SaveStringBuilder;
 import main.data.save.SaveToken;
 import main.data.save.SaveTokenTag;
+import main.logic.Randomizer;
 
 public class Team extends SaveableEntity
 {
@@ -199,6 +200,17 @@ public class Team extends SaveableEntity
 				unassignedGear.add(equipment);
 		}
 	}
+	
+	public void triggerHealChecks()
+	{
+		for (Player player : players)
+		{
+			if (player == null || Randomizer.getRandomInt(1, 50) < 50)
+				continue;
+			
+			player.healInjuries();
+		}
+	}
 
 	public void addPlayer(Player p)
 	{
@@ -273,13 +285,31 @@ public class Team extends SaveableEntity
 			if (player == null)
 				continue;
 			player.recoverInjuries(1);
-			//TODO: roll for quirks for each player
+			rollForQuirks(player);
 			
 			//this makes it hard to track equipment of AI teams in the team editor, but it means equipment can be reallocated each game
 			unequipItemsFromPlayer(player);
 		}
 		
 		return this;
+	}
+
+	private void rollForQuirks(Player player)
+	{
+		int quirkChance = 2;
+		
+		if (docbot[DOCBOT_THERAPY])
+			quirkChance = 1;
+		
+		int quirkRoll = Randomizer.getRandomInt(1, 100);
+		
+		if (quirkRoll <= quirkChance)
+		{
+			player.gainRandomQuirk();
+			
+			if (player.hasQuirk(Quirk.TECHNOPHOBIA))
+				unequipItemsFromPlayer(player);
+		}
 	}
 
 	private List<String> convertDocbotSettingsToList()
